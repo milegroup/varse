@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$USER_HOME$/Dropbox/Prys/Android/VARSE/VARSE.iml" filepath="$USER_HOME$/Dropbox/Prys/Android/VARSE/VARSE.iml" />
-      <module fileurl="file://$USER_HOME$/Dropbox/Prys/Android/VARSE/app/app.iml" filepath="$USER_HOME$/Dropbox/Prys/Android/VARSE/app/app.iml" />
+      <module fileurl="file://$USER_HOME$/Dropbox/Prys/Android/varse/app/app.iml" filepath="$USER_HOME$/Dropbox/Prys/Android/varse/app/app.iml" />
+      <module fileurl="file://$USER_HOME$/Dropbox/Prys/Android/varse/varse.iml" filepath="$USER_HOME$/Dropbox/Prys/Android/varse/varse.iml" />
     </modules>
   </component>
 </project>
