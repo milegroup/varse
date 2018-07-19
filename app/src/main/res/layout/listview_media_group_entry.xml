@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical|center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView      android:id="@+id/ivMediaGroupDesc"
+            android:contentDescription="@string/lblMediaFiles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_picture_group_button" />
+
+        <TextView       android:id="@+id/lblMediaGroupDesc"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical|center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.3">
+
+        <ImageButton android:id="@+id/btSortMediaGroupUp"
+            android:contentDescription="@string/lblSortUp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#00000000"
+            app:srcCompat="@drawable/ic_sort_up_button"/>
+
+        <ImageButton android:id="@+id/btSortMediaGroupDown"
+            android:contentDescription="@string/lblSortDown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#00000000"
+            app:srcCompat="@drawable/ic_sort_down_button"/>
+
+        <ImageButton android:id="@+id/btEditMediaGroup"
+            android:contentDescription="@string/lblMediaFiles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#00000000"
+            app:srcCompat="@drawable/ic_modify_button"/>
+
+        <ImageButton android:id="@+id/btDeleteMediaGroup"
+            android:contentDescription="@string/lblDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#00000000"
+            app:srcCompat="@drawable/ic_delete_button"/>
+    </LinearLayout>
+
+</LinearLayout>

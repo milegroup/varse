@@ -1,0 +1,100 @@
+<resources>
+    <string name="app_name">VARSE</string>
+    <string name="app_name_desc">VARiability for Studying Emotions</string>
+
+    <!-- Actions -->
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- Labels -->
+    <string name="lblUser">User</string>
+    <string name="lblUsers">Users</string>
+    <string name="lblAddUser">Add user</string>
+    <string name="lblEditUser">Edit user</string>
+
+    <string name="lblDeviceScan">Device Scan</string>
+    <string name="lblDevices">Devices</string>
+
+    <string name="lblExperiments">Experiments</string>
+    <string name="lblExperiment">Experiment</string>
+    <string name="lblPerformExperiment">Perform experiment</string>
+    <string name="lblTestHrBtDevice">Test HR BT</string>
+    <string name="lblEditExperiment">Edit experiment</string>
+    <string name="lblDeleteExperiment">Delete experiment</string>
+
+    <string name="lblResults">Results</string>
+
+    <string name="lblExport">Export</string>
+    <string name="lblImport">Import</string>
+    <string name="lblComms">Communications</string>
+    <string name="lblBack">Back</string>
+    <string name="lblName">Name</string>
+    <string name="lblDelete">Delete</string>
+
+    <string name="lblGroupManual">Manual group</string>
+    <string name="lblGroupVideos">Videos group</string>
+    <string name="lblGroupImages">Images group</string>
+    <string name="lblDuration">Duration</string>
+    <string name="lblMediaFiles">Media files</string>
+    <string name="lblMediaSelection">Select media</string>
+    <string name="lblSortUp">Sort up</string>
+    <string name="lblSortDown">Sort down</string>
+    <string name="lblLaunch">Launch</string>
+    <string name="lblEditGroup">Edit group</string>
+    <string name="lblEditActivity">Edit activity</string>
+    <string name="lblEditManualActivity">Edit manual activity</string>
+    <string name="lblGroups">Groups</string>
+    <string name="lblNoEntries">No entries</string>
+    <string name="lblActivities">Activities</string>
+    <string name="lblAddActivity">Add activity</string>
+    <string name="lblAddGroup">Add group</string>
+    <string name="lblRandomOrder">Random</string>
+    <string name="lblDemo">Demo</string>
+    <string name="lblTag">Tag</string>
+    <string name="lblRefresh">Refresh</string>
+    <string name="lblStartScan">Start scan</string>
+    <string name="lblStopScan">Stop scan</string>
+    <string name="lblActivateBluetooth">Please activate Bluetooth</string>
+    <string name="lblDevicesCleared">All devices cleared</string>
+    <string name="lblDeviceFound">Device found</string>
+    <string name="lblDevice">Device</string>
+    <string name="lblFilteringByService">Checking services</string>
+    <string name="lblConnected">Connected</string>
+    <string name="lblDisconnected">Disconnected</string>
+    <string name="lblRecord">Record</string>
+    <string name="lblYes">Yes</string>
+    <string name="lblNo">No</string>
+
+    <string name="msgAreYouSure">Are you sure?</string>
+    <string name="msgLoseData">You will lose all unsaved data</string>
+    <string name="msgFileNotFound">File not found</string>
+    <string name="msgIncompatibleMedia">Incompatible media</string>
+    <string name="msgMediaAlreadyAdded">Media already added</string>
+    <string name="msgStandby">Standby</string>
+    <string name="msgReadingHR">Reading HR</string>
+    <string name="msgExport">Experiment exported</string>
+
+    <!-- Errors -->
+    <string name="ErrStore">Unable to initialise storage</string>
+    <string name="ErrIO">Input/output error</string>
+    <string name="ErrExport">Error exporting</string>
+    <string name="ErrBlocked">Blocked in error state</string>
+    <string name="ErrNoBluetooth">Bluetooth is not supported</string>
+    <string name="ErrScanFailed">BlueTooth device scan failed</string>
+    <string name="ErrUnknownDevice">Unknown device</string>
+    <string name="ErrNoHR">No health profile detected</string>
+
+    <!-- Choices for time units -->
+    <string name="lblMinutes">Minutes</string>
+    <string name="lblSeconds">Seconds</string>
+    <string-array name="vTimeUnitChoices">
+        <item>@string/lblSeconds</item>
+        <item>@string/lblMinutes</item>
+    </string-array>
+    <string name="title_activity_edit_manual_entry">EditManualEntryActivity</string>
+    <string name="title_activity_discover_devices_services">DiscoverDevicesServicesActivity</string>
+    <string name="lblBpm">bpm</string>
+    <string name="title_activity_experiment_director">ExperimentDirector</string>
+
+</resources>

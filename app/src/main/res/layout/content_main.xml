@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.devbaltasarq.varse.ui.MainActivity"
+    tools:showIn="@layout/app_bar_main"
+    android:orientation="vertical"
+    android:layout_gravity="center_vertical|center_horizontal"
+    android:gravity="center_vertical|center_horizontal">
+
+    <TableLayout
+        android:padding="20dp"
+        android:layout_weight="0.9"
+        android:layout_gravity="center_vertical"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TableRow
+            android:padding="20dp"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView android:id="@+id/lblOptPerformExperiment"
+                android:layout_weight="0.9"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:text="@string/lblPerformExperiment" />
+
+            <ImageView android:id="@+id/imgOptPerformExperiment"
+                app:srcCompat="@drawable/ic_launch" />
+        </TableRow>
+
+        <TableRow
+            android:padding="20dp"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView android:id="@+id/lblOptExperiments"
+                android:layout_weight="0.9"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:text="@string/lblExperiments" />
+
+            <ImageView android:id="@+id/imgOptExperiments"
+                app:srcCompat="@drawable/ic_ecg" />
+        </TableRow>
+
+        <TableRow
+            android:padding="20dp"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView android:id="@+id/lblOptResults"
+                android:layout_weight="0.9"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:text="@string/lblResults" />
+
+            <ImageView android:id="@+id/imgOptResults"
+                app:srcCompat="@drawable/ic_chart" />
+        </TableRow>
+
+        <TableRow   android:id="@+id/trAppVersionRow"
+            android:padding="20dp"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone">
+
+            <TextView android:id="@+id/lblAppVersion"
+                android:layout_weight="1"
+                android:textStyle="bold"
+                android:text=""
+                android:gravity="center_horizontal|center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </TableRow>
+    </TableLayout>
+</LinearLayout>

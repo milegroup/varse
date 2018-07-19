@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.devbaltasarq.varse"
+    android:installLocation="preferExternal">
+
+    <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <uses-feature android:name="android.hardware.location.gps" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_app_icon"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_app_icon"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <service
+            android:name=".core.bluetooth.BleService"
+            android:enabled="true" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.UsersActivity"
+            android:label="@string/lblUsers"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.ExperimentsActivity"
+            android:label="@string/lblExperiments"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.editexperiment.EditExperimentActivity"
+            android:label="@string/lblEditExperiment"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.editexperiment.editgroup.EditMediaGroupActivity"
+            android:label="@string/lblEditGroup"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.performexperiment.BluetoothLeScannerPerformExperimentActivity"
+            android:label="@string/lblPerformExperiment"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.editexperiment.editgroup.EditManualGroupActivity"
+            android:label="@string/lblEditGroup"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.editexperiment.editgroup.EditManualEntryActivity"
+            android:label="@string/lblEditManualActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.performexperiment.PerformExperimentActivity"
+            android:label="@string/lblPerformExperiment"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.performexperiment.TestHRDevice"
+            android:label="@string/lblTestHrBtDevice"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.performexperiment.ExperimentDirector"
+            android:label="@string/title_activity_experiment_director"
+            android:theme="@style/AppTheme.NoActionBar" />
+    </application>
+
+</manifest>

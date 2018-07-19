@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/menu_refresh_scan"
+        android:title="@string/lblRefresh"
+        android:checkable="false"
+        android:orderInCategory="1"
+        app:showAsAction="ifRoom"/>
+    <item android:id="@+id/menu_start_scan"
+        android:title="@string/lblStartScan"
+        android:orderInCategory="100"/>
+    <item android:id="@+id/menu_stop_scan"
+        android:title="@string/lblStopScan"
+        android:orderInCategory="101"/>
+</menu>

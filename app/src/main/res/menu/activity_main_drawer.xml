@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_perform_experiment"
+            android:icon="@drawable/ic_launch"
+            android:title="@string/lblPerformExperiment" />
+
+        <item
+            android:id="@+id/nav_experiments"
+            android:icon="@drawable/ic_ecg"
+            android:title="@string/lblExperiments" />
+        <item
+            android:id="@+id/nav_results"
+            android:icon="@drawable/ic_chart"
+            android:title="@string/lblResults" />
+    <!--    <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="@string/action_settings" /> -->
+    </group>
+
+    <item android:title="@string/lblComms">
+        <menu>
+            <item
+                android:id="@+id/nav_export"
+                android:icon="@drawable/ic_export"
+                android:title="@string/lblExport" />
+            <item
+                android:id="@+id/nav_import"
+                android:icon="@drawable/ic_import"
+                android:title="@string/lblImport" />
+        </menu>
+    </item>
+</menu>

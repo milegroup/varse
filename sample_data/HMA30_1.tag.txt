@@ -1,0 +1,4 @@
+Init_time	Event	Durat
+0:00:02.378608	Desagradables	90.473
+0:01:32.851197	Agradables	90.496
+0:03:03.347229	Neutras	90.607
