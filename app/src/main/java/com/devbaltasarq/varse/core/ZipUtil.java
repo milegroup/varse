@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -29,12 +30,13 @@ public final class ZipUtil {
     {
         try {
             Log.i( LogTagZip, "starting zipping to: " + zipFileName.getAbsolutePath() );
-            BufferedInputStream origin = null;
+            BufferedInputStream origin;
             FileOutputStream dest = new FileOutputStream( zipFileName );
             ZipOutputStream out = new ZipOutputStream( new BufferedOutputStream( dest ) );
 
             for (File file: files) {
                 Log.i( LogTagZip, "Adding: " + file );
+
                 FileInputStream fi = new FileInputStream( file );
                 origin = new BufferedInputStream( fi, MAX_BUFFER );
 
@@ -69,24 +71,39 @@ public final class ZipUtil {
     {
         Log.i(LogTagUnzip, "starting unzipping of: " + zipFile.getAbsolutePath() );
 
-        if ( targetDir.mkdirs() ) {
+        FileInputStream fin = new FileInputStream( zipFile );
+        unzip( fin, targetDir );
+    }
+
+    /** Unzips a file to a directory.
+     *
+     * @param zipFileIn an input stream from the zip file to unzip.
+     * @param targetDir the target directory.
+     * @throws IOException if something goes wrong with the file system.
+     */
+    public static void unzip(InputStream zipFileIn, File targetDir) throws IOException
+    {
+        Log.i(LogTagUnzip, "starting unzipping from stream" );
+
+        targetDir.mkdirs();
+
+        if ( targetDir.exists() ) {
             try {
-                FileInputStream fin = new FileInputStream(zipFile);
-                ZipInputStream zin = new ZipInputStream(fin);
+                ZipInputStream zin = new ZipInputStream( zipFileIn );
                 ZipEntry ze = null;
 
                 while ( ( ze = zin.getNextEntry() ) != null ) {
-
                     // Create dir if required while unzipping
                     if ( ze.isDirectory() ) {
                         if ( !new File( ze.getName() ).mkdirs() ) {
-                            final String msg = "could not createFake directory: " + ze.getName();
+                            final String msg = "could not create directory: " + ze.getName();
 
                             Log.e( LogTagUnzip, msg );
                             throw new IOException( msg );
                         }
                     } else {
-                        FileOutputStream fout = new FileOutputStream( targetDir + ze.getName() );
+                        FileOutputStream fout = new FileOutputStream(
+                                                    new File( targetDir, ze.getName() ) );
                         int count;
 
                         while ( ( count = zin.read( BUFFER, 0, MAX_BUFFER ) ) != -1 ) {
@@ -99,15 +116,15 @@ public final class ZipUtil {
                 }
 
                 zin.close();
-                Log.i(LogTagUnzip, "finished unzipping." );
+                Log.i( LogTagUnzip, "finished unzipping." );
             } catch (IOException exc) {
                 final String msg = "error unzipping: " + exc.getMessage();
 
-                Log.e(LogTagUnzip, msg );
+                Log.e( LogTagUnzip, msg );
                 throw new IOException( msg );
             }
         } else {
-            final String msg = "could not createFake directory: " + targetDir.getAbsolutePath();
+            final String msg = "could not create directory: " + targetDir.getAbsolutePath();
 
             Log.e( LogTagUnzip, msg );
             throw new IOException( msg );

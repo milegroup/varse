@@ -13,6 +13,7 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -64,6 +65,12 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         public String toString()
         {
             return this.getFile().getName();
+        }
+
+        @Override
+        public File[] enumerateAssociatedFiles()
+        {
+            return new File[]{ this.getFile() };
         }
 
         /** Writes the common properties of a media activity to JSON.
@@ -196,6 +203,14 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     }
 
     @Override
+    public MediaActivity[] get()
+    {
+        final Activity[] toret = super.get();
+
+        return Arrays.copyOf( toret, toret.length, MediaActivity[].class );
+    }
+
+    @Override
     public String toString()
     {
         final Object[] acts = this.get();
@@ -208,6 +223,20 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         }
 
         return toret;
+    }
+
+    @Override
+    public File[] enumerateAssociatedFiles()
+    {
+        final MediaActivity[] activities = this.get();
+        final int size = activities.length;
+        final ArrayList<File> toret = new ArrayList<>( size );
+
+        for(int i = 0; i < size; ++i) {
+            toret.addAll( Arrays.asList( activities[ i ].enumerateAssociatedFiles() ) );
+        }
+
+        return toret.toArray( new File[ 0 ] );
     }
 
     @Override

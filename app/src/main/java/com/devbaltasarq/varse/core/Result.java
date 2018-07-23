@@ -5,6 +5,7 @@ import android.util.JsonWriter;
 
 import org.json.JSONException;
 
+import java.io.File;
 import java.io.Reader;
 
 /** Represents the results of a given experiment. */
@@ -35,6 +36,12 @@ public class Result extends Persistent {
     }
 
     @Override
+    public Experiment getExperimentOwner()
+    {
+        return this.getExperiment();
+    }
+
+    @Override
     public int hashCode()
     {
         return ( 15 * this.getUser().hashCode() ) + ( 17 * this.getExperiment().hashCode() );
@@ -56,6 +63,12 @@ public class Result extends Persistent {
         }
 
         return toret;
+    }
+
+    @Override
+    public File[] enumerateAssociatedFiles()
+    {
+        return new File[ 0 ];
     }
 
     @Override

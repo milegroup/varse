@@ -91,7 +91,7 @@ public class PictureGroup extends MediaGroup {
                                  this.getTag().copy(),
                                  this.getTimeForPic().copy(),
                                  this.isRandom(),
-                                 this.getExperiment(),
+                                 this.getExperimentOwner(),
                                  this.copyActivities() );
     }
 

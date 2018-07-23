@@ -7,6 +7,7 @@ import android.util.Log;
 
 import org.json.JSONException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 
@@ -21,6 +22,12 @@ public class PartialObject extends Persistent {
         super( id );
         this.typeId = typeId;
         this.name = name;
+    }
+
+    @Override
+    public Experiment getExperimentOwner()
+    {
+        throw new Error( "getExperimentOwner() invoked in PartialObject!!" );
     }
 
     @Override

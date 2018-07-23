@@ -7,6 +7,7 @@ import android.support.v4.util.Pair;
 import android.util.JsonReader;
 import android.util.Log;
 
+import com.devbaltasarq.varse.core.experiment.MimeTools;
 import com.devbaltasarq.varse.core.experiment.Tag;
 
 import org.json.JSONException;
@@ -27,6 +28,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Random;
 
 
 /** Relates the database of JSON files to objects. */
@@ -47,9 +49,11 @@ public final class Orm {
     private static final String DIR_DB = "db";
     private static final String DIR_RES = "res";
     private static final String DIR_MEDIA_PREFIX = "media";
+    private static final String FILE_NAME_PART_SEPARATOR = "-";
     private static final String FIELD_EXT = "ext";
     public static final String FIELD_NAME = "name";
-    private static final String FILE_FORMAT = "id-$" + FIELD_ID + ".$" + FIELD_EXT;
+    private static final String FILE_FORMAT =
+            "id" + FILE_NAME_PART_SEPARATOR + "$" + FIELD_ID + ".$" + FIELD_EXT;
 
     /** Prepares the ORM to operate. */
     private Orm(Context context) throws IOException
@@ -87,13 +91,6 @@ public final class Orm {
         }
 
         return;
-    }
-
-    private int calculateNumFiles()
-    {
-        return this.filesUser.size()
-                + this.filesExperiment.size()
-                + this.filesResult.size();
     }
 
     private HashSet<File> getCacheForType(Persistent.TypeId typeId)
@@ -199,6 +196,39 @@ public final class Orm {
             .replace( "$" + FIELD_EXT, this.getExtFor( typeId ) );
     }
 
+    /** Extracts the id from the file name.
+      * Whatever this file is, the id between the '.' for the ext and the '-' separator.
+      * @param file the file to extract the id from.
+      * @return A long with the id.
+      * @throws Error if the file name does not contain an id.
+      */
+    private long parseIdFromFile(File file)
+    {
+        long toret;
+        final String fileName = file.getName();
+        final int separatorPos = fileName.indexOf( FILE_NAME_PART_SEPARATOR );
+
+        if ( separatorPos >= 0 ) {
+            int extSeparatorPos = fileName.indexOf( '.' );
+
+            if ( extSeparatorPos < 0 ) {
+                extSeparatorPos = fileName.length();
+            }
+
+            final String id = fileName.substring( separatorPos + 1, extSeparatorPos );
+
+            try {
+                toret = Long.parseLong( id );
+            } catch(NumberFormatException exc) {
+                throw new Error( "parseIdFromFile: malformed id: " + id );
+            }
+        } else {
+            throw new Error( "parseIdFromFile: separator not found in file name: " + fileName );
+        }
+
+        return toret;
+    }
+
     /** Removes object 'p' from the database.
       * @param p The object to remove.
       */
@@ -206,20 +236,31 @@ public final class Orm {
     {
         Id id = p.getId();
 
+        // Remove all associated objects
+        for(File mediaFile: p.enumerateAssociatedFiles()) {
+            final File f = new File( this.buildMediaDirectoryFor( p ),
+                                mediaFile.getName() );
+
+            f.delete();
+            Log.d( LogTag, "Associated file deleted: " + mediaFile );
+        }
+
+        // Remove the whole directory for media, if it is an experiment.
+        if ( p instanceof Experiment ) {
+            final File mediaDir = this.buildMediaDirectoryFor( p );
+
+            mediaDir.delete();
+        }
+
+        // Remove main object
         if ( id.isValid() ) {
-            try {
-                final File REMOVE_FILE = new File( this.dirDb, this.getFileNameFor( p ) );
+            final File REMOVE_FILE = new File( this.dirDb, this.getFileNameFor( p ) );
 
-                this.removeFromCache( REMOVE_FILE );
+            // Remove the main object
+            this.removeFromCache( REMOVE_FILE );
+            REMOVE_FILE.delete();
 
-                if ( !REMOVE_FILE.delete() ) {
-                    throw new IOException( "could not delete: " + REMOVE_FILE.getName() );
-                }
-
-                Log.i( LogTag, "Object deleted: " + p.getId() );
-            } catch(IOException exc) {
-                Log.e( LogTag, "removing: " + id.toString() + ": " + exc.getMessage() );
-            }
+            Log.d( LogTag, "Object deleted: " + p.getId() );
         }
 
         return;
@@ -248,23 +289,26 @@ public final class Orm {
     }
 
     /** Builds the name of the experiment's media directory.
-      * @param expr The experiment itself.
+      * @param p The experiment itself.
       * @return the name of the directory, as a string.
       */
-    private static String buildExperimentMediaDirectoryNameFor(@NonNull Experiment expr)
+    private static String buildMediaDirectoryNameFor(@NonNull Persistent p)
     {
-        return DIR_MEDIA_PREFIX + '-' + expr.getId().get();
+        final Experiment owner = p.getExperimentOwner();
+        final Id id = owner != null ? owner.getId() : p.getId();
+
+        return DIR_MEDIA_PREFIX + FILE_NAME_PART_SEPARATOR + id.get();
     }
 
     /** Builds the directory for the experiment's media.
-     * @param expr The experiment itself.
+     * @param p The experiment itself.
      * @return a File object for the experiment's media directory.
      */
-    private File buildExperimentMediaDirectoryFor(@NonNull Experiment expr)
+    private File buildMediaDirectoryFor(@NonNull Persistent p)
     {
         return new File(
                 this.dirRes,
-                buildExperimentMediaDirectoryNameFor( expr ) );
+                buildMediaDirectoryNameFor( p ) );
     }
 
     /** Stores a media file in the app's file system.
@@ -275,7 +319,14 @@ public final class Orm {
       */
     public File storeMedia(@NonNull Experiment expr, @NonNull String fileName, @NonNull InputStream inMedia) throws IOException
     {
-        final File experimentDirectory = this.buildExperimentMediaDirectoryFor( expr );
+        // Time to make the id persistent, if needed
+        // Otherwise, the experiment will have a true id, and the media file,
+        // a different, fake id.
+        if ( expr.getId().isFake() ) {
+            expr.updateIds();
+        }
+
+        final File experimentDirectory = this.buildMediaDirectoryFor( expr );
         final File mediaFile = new File( experimentDirectory, fileName );
 
         experimentDirectory.mkdirs();
@@ -296,7 +347,7 @@ public final class Orm {
       */
     public boolean existsMedia(@NonNull Experiment expr, @NonNull String fileName)
     {
-        final File experimentDirectory = this.buildExperimentMediaDirectoryFor( expr );
+        final File experimentDirectory = this.buildMediaDirectoryFor( expr );
         final File mediaFile = new File( experimentDirectory, fileName );
 
         return mediaFile.exists() && ( expr.locateMediaActivity( fileName ) != null );
@@ -307,9 +358,9 @@ public final class Orm {
      * @param fileName The name of the file to remove.
      * @throws IOException if something goes wrong deleting, or if the file does not exist.
      */
-    public File deleteMedia(@NonNull Experiment expr, @NonNull String fileName) throws IOException
+    public void deleteMedia(@NonNull Experiment expr, @NonNull String fileName) throws IOException
     {
-        final File experimentDirectory = this.buildExperimentMediaDirectoryFor( expr );
+        final File experimentDirectory = this.buildMediaDirectoryFor( expr );
         final File mediaFile = new File( experimentDirectory, fileName );
 
         if ( mediaFile.exists() ) {
@@ -319,7 +370,64 @@ public final class Orm {
             throw new IOException( errorMsg );
         }
 
-        return mediaFile;
+        return;
+    }
+
+    /** Collects the media files associated to a given experiment.
+     * @param expr the experiment to collect the files from.
+     * @return A new vector of File with the complete, absolute path.
+     */
+    private File[] collectMediaFilesFor(Experiment expr)
+    {
+        final File mediaDir = this.buildMediaDirectoryFor( expr );
+        final File[] assocFiles = expr.enumerateAssociatedFiles();
+        final File[] toret = new File[ assocFiles.length ];
+
+        // Build the complete path of the associated files
+        for(int i = 0; i < toret.length; ++i) {
+            toret[ i ] = new File( mediaDir, assocFiles[ i ].getName() );
+        }
+
+        return toret;
+    }
+
+    /** Checks the associated files (media files) to an experiment and discards
+      * the remaining ones.
+      * @param expr The experiment to purge media files from.
+      */
+    public void purgeOrphanMediaFor(Experiment expr)
+    {
+        final File mediaDir = this.buildMediaDirectoryFor( expr );
+        final File[] allFiles = mediaDir.listFiles();
+        final ArrayList<File> registeredMediaFiles = new ArrayList<>(
+                                        Arrays.asList( this.collectMediaFilesFor( expr ) ) );
+
+        // Look for each registered file in the actual file list
+        for(File f: allFiles) {
+            if ( !registeredMediaFiles.contains( f ) ) {
+                f.delete();
+            }
+        }
+
+        return;
+    }
+
+    /** Removes all media that does not pertain to an existing Experiment. */
+    public void purgeOrphanMedia()
+    {
+        final File[] mediaDirs = this.dirRes.listFiles();
+
+        for(File mediaDir: mediaDirs) {
+            final Id id = new Id( parseIdFromFile( mediaDir ) );
+            File exprFile = new File( this.dirDb,
+                                      this.getFileNameFor( id, Persistent.TypeId.Experiment ) );
+
+            if ( !this.existsInCache( exprFile ) ) {
+                removeTreeAt( mediaDir );
+            }
+        }
+
+        return;
     }
 
     /** Stores any data object.
@@ -334,7 +442,7 @@ public final class Orm {
     {
         // Assign a real id
         if ( p.getId().isFake() ) {
-            p.updateIds( this );
+            p.updateIds();
         }
 
         // Store the data
@@ -369,13 +477,76 @@ public final class Orm {
         }
     }
 
+    /** Imports an experiment from a zip file, previously exported.
+      * @param zipFileIn An input stream to the zip file.
+      * @return The retrieved experiment.
+      * @throws IOException if something goes wrong, like not enough space.
+      */
+    public Experiment importExperiment(InputStream zipFileIn) throws IOException
+    {
+        Experiment toret;
+        final File TEMP_DIR = new File( this.dirTmp,
+                                    "zip" + FILE_NAME_PART_SEPARATOR
+                                        + Long.toString( new Random().nextLong() ) );
+
+        try {
+            TEMP_DIR.mkdir();
+            ZipUtil.unzip( zipFileIn, TEMP_DIR );
+
+            final File[] allFiles = TEMP_DIR.listFiles();
+            File experimentFile = null;
+            final ArrayList<File> mediaFiles = new ArrayList<>( allFiles.length );
+            final String EXPERIMENT_EXTENSION = this.getExtFor( Persistent.TypeId.Experiment );
+
+            // Classify files
+            for(File f: allFiles) {
+                if ( MimeTools.extractFileExt( f ).equals( EXPERIMENT_EXTENSION ) ) {
+                    experimentFile = f;
+                } else {
+                    mediaFiles.add( f );
+                }
+            }
+
+            // Chk
+            if ( experimentFile == null ) {
+                throw new IOException( "fatal: experiment file was not found" );
+            }
+
+            // Load the experiment
+            try {
+                toret = (Experiment) Persistent.fromJSON(
+                                Persistent.TypeId.Experiment,
+                                openReaderFor( experimentFile ) );
+            } catch(JSONException exc)
+            {
+                throw new IOException( "error reading JSON: " + exc.getMessage() );
+            }
+
+            // Store the experiment
+            toret.updateIds();
+            this.store( toret );
+
+            // Prepare the media files
+            for(File f: mediaFiles) {
+                this.storeMedia( toret,
+                                    f.getName(),
+                                    new FileInputStream( f ) );
+            }
+
+        } finally {
+            removeTreeAt( TEMP_DIR );
+        }
+
+        return toret;
+    }
+
     /** Exports a given experiment.
       * @param dir the directory to export the experiment to.
      *             If null, then Downloads is chosen.
       * @param expr the experiment to export.
       * @throws IOException if something goes wrong, like a write fail.
       */
-    public void export(File dir, Experiment expr) throws IOException
+    public void exportExperiment(File dir, Experiment expr) throws IOException
     {
         final ArrayList<File> files = new ArrayList<>();
         final File TEMP_FILE = File.createTempFile(
@@ -388,10 +559,8 @@ public final class Orm {
         }
 
         try {
-            final File[] mediaFiles = expr.collectMediaFiles();
-
             this.store( expr );
-            files.addAll( Arrays.asList( mediaFiles ) );
+            files.addAll( Arrays.asList( this.collectMediaFilesFor( expr ) ) );
             files.add( new File( this.dirDb, this.getFileNameFor( expr ) ) );
 
             ZipUtil.zip(
@@ -399,7 +568,8 @@ public final class Orm {
                     TEMP_FILE );
 
             dir.mkdirs();
-            copy( TEMP_FILE, new File( dir, this.getFileNameFor( expr ) + ".zip" ) );
+            final File outputFileName = new File( dir, this.getFileNameFor( expr ) + ".zip" );
+            copy( TEMP_FILE, outputFileName );
         } catch(IOException exc)
         {
             throw new IOException(
@@ -421,12 +591,12 @@ public final class Orm {
      */
     public Persistent retrieve(Id id, Persistent.TypeId typeId) throws IOException
     {
-        Persistent toret = null;
+        Persistent toret;
         final File DATA_FILE = new File( this.dirDb, this.getFileNameFor( id, typeId ) );
         Reader reader = null;
 
         try {
-            reader = this.openReaderFor( DATA_FILE );
+            reader = openReaderFor( DATA_FILE );
 
             toret = Persistent.fromJSON( typeId, reader );
             Log.i( LogTag, "Retrieved: " + toret.toString() + " from: "
@@ -604,7 +774,7 @@ public final class Orm {
 
     private static Reader openReaderFor(File f) throws IOException
     {
-        BufferedReader toret = null;
+        BufferedReader toret;
 
         try {
             final InputStreamReader inputStreamReader = new InputStreamReader(
@@ -717,6 +887,31 @@ public final class Orm {
             } catch(IOException exc) {
                 Log.e( LogTag, "Copying file: error closing streams: " + exc.getMessage() );
             }
+        }
+
+        return;
+    }
+
+    private static void removeTreeAt(File dir)
+    {
+        if ( dir != null
+          || !dir.isDirectory() )
+        {
+            final String[] allFiles = dir.list();
+
+            for(String fileName: allFiles) {
+                File f = new File( dir, fileName );
+
+                if ( f.isDirectory() ) {
+                    removeTreeAt( f );
+                }
+
+                f.delete();
+            }
+
+            dir.delete();
+        } else {
+            Log.d( LogTag, "removeTreeAt: directory null or not a directory?" );
         }
 
         return;

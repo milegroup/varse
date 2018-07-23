@@ -182,4 +182,12 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
 
         return Arrays.copyOf( acts, acts.length, ManualActivity[].class );
     }
+
+    @Override
+    public ManualActivity[] get()
+    {
+        final Activity[] toret = super.get();
+
+        return Arrays.copyOf( toret, toret.length, ManualActivity[].class );
+    }
 }

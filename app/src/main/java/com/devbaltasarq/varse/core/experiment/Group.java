@@ -54,6 +54,12 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
             this.tag = tag;
         }
 
+        @Override
+        public Experiment getExperimentOwner()
+        {
+            return this.group.getExperimentOwner();
+        }
+
         /** Writes the common properties of an Activity to JSON.
          * @param jsonWriter The JSON writer to write to.
          * @throws IOException throws it when there are problems with the stream.
@@ -151,12 +157,12 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     }
 
     @Override
-    public void updateIds(Orm orm)
+    public void updateIds()
     {
-        super.updateIds( orm );
+        super.updateIds();
 
         for(Activity act: this.activities) {
-            act.updateIds( orm );
+            act.updateIds();
         }
 
         return;
@@ -303,7 +309,8 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     }
 
     /** @return the experiment this group pertains to. */
-    public Experiment getExperiment()
+    @Override
+    public Experiment getExperimentOwner()
     {
         return this.experiment;
     }

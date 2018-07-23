@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.ui.editexperiment.editgroup;
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 
 import com.devbaltasarq.varse.R;
+import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.experiment.Group;
@@ -216,10 +218,9 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     /** Stores the media file in the app's filesystem. */
     private void storeMedia(Uri uri)
     {
-        final String scheme = uri.getScheme();
-
-        if ( scheme != null
-          && scheme.equals( "content" ) )
+        if ( uri != null
+          && ( uri.getScheme().equals( ContentResolver.SCHEME_CONTENT )
+            || uri.getScheme().equals( ContentResolver.SCHEME_FILE ) ) )
         {
             try {
                 final Orm db = Orm.get();
@@ -227,10 +228,11 @@ public class EditMediaGroupActivity extends EditGroupActivity {
                 final InputStream in = this.getContentResolver().openInputStream( uri );
                 final MediaGroup mediaGroup = (MediaGroup) group;
                 final boolean isVideoGroup = mediaGroup.getFormat() == MediaGroup.Format.Video;
+                final Experiment experiment = group.getExperimentOwner();
 
-                if ( !db.existsMedia( group.getExperiment(), mediaFile.getName() ) ) {
+                if ( !db.existsMedia( experiment, mediaFile.getName() ) ) {
                     if ( MimeTools.isVideo( mediaFile ) == isVideoGroup ) {
-                        final File f = db.storeMedia( group.getExperiment(), mediaFile.getName(), in );
+                        final File f = db.storeMedia( experiment, mediaFile.getName(), in );
                         mediaGroup.add( new MediaGroup.MediaActivity( Id.create(), f ) );
                     } else {
                         this.showStatus( LogTag, this.getString( R.string.msgIncompatibleMedia ) );
@@ -257,21 +259,20 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     @Override
     public void deleteActivity(Group.Activity act)
     {
-        super.deleteActivity( act );
-
         final Orm db = Orm.get();
         final MediaGroup.MediaActivity mediaActivity = (MediaGroup.MediaActivity) act;
         final String fileName = mediaActivity.getFile().getName();
+        final Experiment owner = group.getExperimentOwner();
 
-        if ( db.existsMedia( group.getExperiment(), fileName ) ) {
+        if ( db.existsMedia( owner, fileName ) ) {
             try {
-                db.deleteMedia( group.getExperiment(), fileName );
+                db.deleteMedia( owner, fileName );
             } catch(IOException exc) {
                 this.showStatus( LogTag, exc.getMessage() );
             }
         }
 
-        return;
+        super.deleteActivity( act );
     }
 
     @Override

@@ -1,12 +1,15 @@
 package com.devbaltasarq.varse.ui;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -29,6 +32,7 @@ public class ExperimentsActivity extends AppActivity {
     public static final String LogTag = ExperimentsActivity.class.getSimpleName();
     public static final int RQC_ADD_EXPERIMENT = 76;
     public static final int RQC_EDIT_EXPERIMENT = 77;
+    public static final int RQC_ASK_PERMISSION = 77;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -61,8 +65,6 @@ public class ExperimentsActivity extends AppActivity {
     {
         super.onActivityResult( requestCode, resultCode, data );
 
-        final ListView lvExperiments = this.findViewById( R.id.lvExperiments );
-
         try {
             if ( resultCode == RSC_SAVE_DATA ) {
                 if ( requestCode == RQC_ADD_EXPERIMENT ) {
@@ -77,7 +79,12 @@ public class ExperimentsActivity extends AppActivity {
                     this.substituteExperiment( selectedExperiment );
                 }
 
-                ( (ArrayAdapter) lvExperiments.getAdapter() ).notifyDataSetChanged();
+                this.updateExperimentsList();
+
+                // Erase all the media that is not registered (not needed).
+                Orm.get().purgeOrphanMediaFor( selectedExperiment );
+            } else {
+                Orm.get().purgeOrphanMedia();
             }
         } catch(IOException exc) {
             this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
@@ -93,22 +100,24 @@ public class ExperimentsActivity extends AppActivity {
             final ListView lvExperiments = this.findViewById( R.id.lvExperiments );
             final PartialObject[] poEntries = Orm.get().enumerateExperiments();
 
+            // Prepare the list of experiments
             this.experimentEntries = new ArrayList<>( poEntries.length );
 
+            for(PartialObject po: poEntries) {
+                experimentEntries.add(
+                        new ListViewExperimentEntry(
+                                new Experiment( po.getId(), po.getName() ) ) );
+            }
+
+            // Prepare the list view
+            this.experimentsListAdapter =
+                    new ListViewExperimentEntryArrayAdapter(this, experimentEntries );
+            lvExperiments.setAdapter( this.experimentsListAdapter );
+
+            // Show the experiments list (or maybe not).
             if ( poEntries.length > 0 ) {
                 lblNoEntries.setVisibility( View.GONE );
                 lvExperiments.setVisibility( View.VISIBLE );
-
-                for (int i = 0; i < poEntries.length; ++i) {
-                    final PartialObject po = poEntries[ i ];
-
-                    experimentEntries.add(
-                            new ListViewExperimentEntry(
-                                    new Experiment( po.getId(), po.getName() ) ) );
-                }
-
-                lvExperiments.setAdapter(
-                        new ListViewExperimentEntryArrayAdapter(this, experimentEntries ) );
             } else {
                 lblNoEntries.setVisibility( View.VISIBLE );
                 lvExperiments.setVisibility( View.GONE );
@@ -116,6 +125,24 @@ public class ExperimentsActivity extends AppActivity {
         } catch(IOException exc)
         {
             this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+        }
+
+        return;
+    }
+
+    private void updateExperimentsList()
+    {
+        final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
+        final ListView lvExperiments = this.findViewById( R.id.lvExperiments );
+
+        this.experimentsListAdapter.notifyDataSetChanged();
+
+        if ( this.experimentEntries.size() == 0 ) {
+            lblNoEntries.setVisibility( View.VISIBLE );
+            lvExperiments.setVisibility( View.GONE );
+        } else {
+            lblNoEntries.setVisibility( View.GONE );
+            lvExperiments.setVisibility( View.VISIBLE );
         }
 
         return;
@@ -140,12 +167,13 @@ public class ExperimentsActivity extends AppActivity {
 
     public void substituteExperiment(Experiment expr)
     {
+        // Solve the entries issue
         for(int i = 0; i < this.experimentEntries.size(); ++i)
         {
-            final ListViewExperimentEntry foundExpr = this.experimentEntries.get( i );
+            final ListViewExperimentEntry foundExprListEntry = this.experimentEntries.get( i );
 
-            if ( foundExpr.getExperiment().getId().equals( expr.getId() ) ) {
-                foundExpr.setExperiment( expr );
+            if ( foundExprListEntry.getExperiment().getId().equals( expr.getId() ) ) {
+                foundExprListEntry.setExperiment( expr );
             }
         }
 
@@ -154,8 +182,18 @@ public class ExperimentsActivity extends AppActivity {
 
     public void deleteExperiment(int position, Experiment e)
     {
-        Orm.get().remove( e );
-        this.experimentEntries.remove( position );
+        loadExperiment( e.getId() );
+
+        if ( selectedExperiment != null ) {
+            Orm.get().remove( selectedExperiment );
+            this.experimentEntries.remove( position );
+            this.updateExperimentsList();
+        } else {
+            this.showStatus( LogTag, this.getString( R.string.ErrDeleting )
+                                        + ": " + e.toString() );
+        }
+
+        return;
     }
 
     public void launchExperiment(Experiment e)
@@ -197,18 +235,36 @@ public class ExperimentsActivity extends AppActivity {
 
     public void exportExperiment(Experiment e)
     {
+        final String PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+        final int RESULT_REQUEST = ContextCompat.checkSelfPermission( this, PERMISSION );
+
+        this.loadExperiment( e.getId() );
+
+        if ( RESULT_REQUEST != PackageManager.PERMISSION_GRANTED ) {
+            ActivityCompat.requestPermissions( this,
+                    new String[]{ PERMISSION },
+                    RQC_ASK_PERMISSION );
+        } else {
+            this.doExportExperiment( selectedExperiment );
+        }
+
+        return;
+    }
+
+    private void doExportExperiment(Experiment e)
+    {
         final Orm db = Orm.get();
 
         try {
-            db.export( null, e );
+            db.exportExperiment( null, e );
             this.showStatus( LogTag,
-                    this.getString( R.string.msgExport )
+                    this.getString( R.string.msgExported)
                             + ": '" + e.getName() + '\'' );
         } catch(IOException exc)
         {
             this.showStatus( LogTag,
                     this.getString( R.string.ErrExport )
-                    + ": '" + e.getName() + '\'' );
+                            + ": '" + e.getName() + '\'' );
         }
 
         return;
@@ -220,6 +276,26 @@ public class ExperimentsActivity extends AppActivity {
         return false;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        switch ( requestCode ) {
+            case RQC_ASK_PERMISSION: {
+                // If request is cancelled, the result arrays are empty.
+                if ( grantResults.length > 0
+                  && grantResults[ 0 ] == PackageManager.PERMISSION_GRANTED ) {
+                    doExportExperiment( selectedExperiment );
+                } else {
+                    this.showStatus( LogTag, this.getString( R.string.ErrPermissionDenied ) );
+                }
+                return;
+            }
+        }
+
+        return;
+    }
+
     public static Experiment selectedExperiment;
     private ArrayList<ListViewExperimentEntry> experimentEntries;
+    private ListViewExperimentEntryArrayAdapter experimentsListAdapter;
 }

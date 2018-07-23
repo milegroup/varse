@@ -41,6 +41,12 @@ public class Experiment extends Persistent {
     }
 
     @Override
+    public Experiment getExperimentOwner()
+    {
+        return this;
+    }
+
+    @Override
     public int hashCode()
     {
         int toret = 13 * this.getName().hashCode();
@@ -83,12 +89,12 @@ public class Experiment extends Persistent {
     }
 
     @Override
-    public void updateIds(Orm orm)
+    public void updateIds()
     {
-        super.updateIds( orm );
+        super.updateIds();
 
         for(Group grp: this.groups) {
-            grp.updateIds( orm );
+            grp.updateIds();
         }
 
         return;
@@ -109,6 +115,10 @@ public class Experiment extends Persistent {
     /** Replaces the media groups of the experiments with new ones. */
     public void replaceGroups(Group[] files)
     {
+        for(Group grp: this.groups) {
+            this.removeGroup( grp );
+        }
+
         this.groups.clear();
         this.groups.addAll( Arrays.asList( files ) );
 
@@ -118,9 +128,10 @@ public class Experiment extends Persistent {
     }
 
     /** Removes a given file from the media list. */
-    public void removeGroup(Group g)
+    public void removeGroup(Group grp)
     {
-        this.groups.remove( g );
+        Orm.get().remove( grp );
+        this.groups.remove( grp );
     }
 
     /** Swaps a given media file with the previous one. */
@@ -257,6 +268,18 @@ public class Experiment extends Persistent {
     }
 
     @Override
+    public File[] enumerateAssociatedFiles()
+    {
+        ArrayList<File> toret = new ArrayList<>();
+
+        for(Group grp: this.getGroups()) {
+            toret.addAll( Arrays.asList( grp.enumerateAssociatedFiles() ) );
+        }
+
+        return toret.toArray( new File[ 0 ] );
+    }
+
+    @Override
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
         this.writeIdToJSON( jsonWriter );
@@ -270,23 +293,6 @@ public class Experiment extends Persistent {
             jsonWriter.endObject();
         }
         jsonWriter.endArray();
-    }
-
-    public File[] collectMediaFiles()
-    {
-        ArrayList<File> toret = new ArrayList<>();
-
-        for(Group grp: this.groups) {
-            if ( grp instanceof MediaGroup ) {
-                final MediaGroup mgrp = (MediaGroup) grp;
-
-                for(MediaGroup.MediaActivity act: mgrp.get()) {
-                    toret.add( act.getFile() );
-                }
-            }
-        }
-
-        return toret.toArray( new File[ toret.size() ] );
     }
 
     /** Creates a new experiment, from JSON data.

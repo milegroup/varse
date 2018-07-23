@@ -5,6 +5,7 @@ import android.util.JsonWriter;
 import android.util.Log;
 import org.json.JSONException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -57,10 +58,13 @@ public abstract class Persistent implements Identifiable {
     }
 
     /** Assigns new ids to this object. Useful when storing the object for the first time. */
-    public void updateIds(Orm orm)
+    public void updateIds()
     {
         this.id = Id.create();
     }
+
+    /** @return the experiment this object pertains to. */
+    public abstract Experiment getExperimentOwner();
 
     /** @return The id of this object. */
     @Override
@@ -95,6 +99,12 @@ public abstract class Persistent implements Identifiable {
         }
 
         return;
+    }
+
+    /** Enumerates all associated files to this persistent. */
+    public File[] enumerateAssociatedFiles()
+    {
+        return new File[ 0 ];
     }
 
     /** Returns a an enum value for this object's type.

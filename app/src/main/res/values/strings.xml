@@ -73,17 +73,21 @@
     <string name="msgMediaAlreadyAdded">Media already added</string>
     <string name="msgStandby">Standby</string>
     <string name="msgReadingHR">Reading HR</string>
-    <string name="msgExport">Experiment exported</string>
+    <string name="msgExported">Experiment exported</string>
+    <string name="msgImported">Experiment imported</string>
 
     <!-- Errors -->
     <string name="ErrStore">Unable to initialise storage</string>
     <string name="ErrIO">Input/output error</string>
+    <string name="ErrDeleting">Error deleting from storage</string>
     <string name="ErrExport">Error exporting</string>
     <string name="ErrBlocked">Blocked in error state</string>
     <string name="ErrNoBluetooth">Bluetooth is not supported</string>
     <string name="ErrScanFailed">BlueTooth device scan failed</string>
     <string name="ErrUnknownDevice">Unknown device</string>
     <string name="ErrNoHR">No health profile detected</string>
+    <string name="ErrPermissionDenied">Permission denied</string>
+    <string name="ErrUnsupportedFileType">Unsupported file type</string>
 
     <!-- Choices for time units -->
     <string name="lblMinutes">Minutes</string>

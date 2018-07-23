@@ -62,7 +62,7 @@ public class VideoGroup extends MediaGroup {
         return new VideoGroup( id,
                                this.getTag().copy(),
                                this.isRandom(),
-                               this.getExperiment(),
+                               this.getExperimentOwner(),
                                this.copyActivities() );
     }
 }

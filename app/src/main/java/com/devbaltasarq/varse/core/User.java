@@ -6,6 +6,7 @@ import android.util.Log;
 
 import org.json.JSONException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 
@@ -20,6 +21,12 @@ public class User extends Persistent {
     {
         super( id );
         this.name = name;
+    }
+
+    @Override
+    public Experiment getExperimentOwner()
+    {
+        return null;
     }
 
     @Override

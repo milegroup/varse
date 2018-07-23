@@ -1,6 +1,8 @@
 package com.devbaltasarq.varse.ui;
 
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -12,6 +14,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.MimeTypeMap;
 import android.widget.ImageView;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -22,11 +25,13 @@ import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 public class MainActivity extends AppActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
     private static final String LogTag = MainActivity.class.getSimpleName();
+    private static final int RQC_PICK_ZIP_FILE = 0x813;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -130,7 +135,7 @@ public class MainActivity extends AppActivity
                     break;
                 case R.id.nav_import:
                 case R.id.action_import:
-                    this.showStatus( LogTag, "Not implemented" );
+                    this.pickZipFile();
                     toret = true;
                     break;
             }
@@ -192,6 +197,71 @@ public class MainActivity extends AppActivity
     public boolean askBeforeLeaving()
     {
         return false;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult( requestCode, resultCode, data );
+
+        if ( requestCode == RQC_PICK_ZIP_FILE
+          && resultCode == RESULT_OK )
+        {
+            final Uri uri = data.getData();
+
+            if ( uri != null ) {
+                final String FILE_EXTENSION = MimeTypeMap.getFileExtensionFromUrl( uri
+                        .toString().toLowerCase() );
+
+                if ( FILE_EXTENSION.equals( "zip" ) ) {
+                    this.importZipFile( uri );
+                    this.showStatus( LogTag, this.getString( R.string.msgImported) );
+                } else {
+                    this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
+                }
+            } else {
+                this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
+            }
+        }
+
+        return;
+    }
+
+    /** Launch file browser. */
+    private void pickZipFile()
+    {
+        final Intent intent = new Intent();
+
+        // Launch
+        intent.setType( "*/*" );
+        intent.setAction( Intent.ACTION_GET_CONTENT );
+
+        this.startActivityForResult(
+                Intent.createChooser( intent, this.getString( R.string.lblMediaSelection ) ),
+                RQC_PICK_ZIP_FILE );
+    }
+
+    /** Import the experiment file. */
+    private void importZipFile(Uri uri)
+    {
+        try {
+            final Orm db = Orm.get();
+
+            if ( uri != null
+              && ( uri.getScheme().equals( ContentResolver.SCHEME_CONTENT )
+               ||  uri.getScheme().equals( ContentResolver.SCHEME_FILE ) ) )
+            {
+                final InputStream zipFileIn = this.getContentResolver().openInputStream( uri );
+
+                db.importExperiment( zipFileIn );
+            } else {
+                this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
+            }
+        } catch(IOException exc)
+        {
+            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            Log.e( LogTag, "Importing experiment: " + exc.getMessage() );
+        }
     }
 
     private boolean block;

@@ -1,7 +1,13 @@
 package com.devbaltasarq.varse.core.bluetooth;
 
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
+import android.os.Handler;
+
+import java.util.UUID;
 
 public final class DemoBluetoothDevice {
     private static String DemoDeviceName = "demo BT device";
@@ -10,6 +16,7 @@ public final class DemoBluetoothDevice {
     /** Creates the bluetooth demo device. */
     private DemoBluetoothDevice()
     {
+        this.handler = new Handler();
         btGattWrapper = BluetoothGattWrapper.get();
     }
 
@@ -28,8 +35,24 @@ public final class DemoBluetoothDevice {
     /** Connects to the demo device. */
     public BluetoothGattWrapper connect(Context cntxt, BluetoothGattCallback callBack)
     {
-        context = cntxt;
+        final UUID UUID_HR_MEASUREMENT_CHR = BluetoothUtils.UUID_HR_MEASUREMENT_CHR;
+        final BluetoothGattCharacteristic HR_CHR = new BluetoothGattCharacteristic( UUID_HR_MEASUREMENT_CHR, 0, 0 );
+
+        this.context = cntxt;
         readingGattCallback = callBack;
+        this.handler = new Handler();
+
+        callBack.onCharacteristicRead(
+                null,
+                HR_CHR,
+                BluetoothGatt.GATT_SUCCESS
+        );
+
+        this.sendHR = () -> {
+            callBack.onCharacteristicChanged( null, HR_CHR );
+            this.handler.postDelayed( this.sendHR,2000);
+        };
+
         return btGattWrapper;
     }
 
@@ -43,7 +66,9 @@ public final class DemoBluetoothDevice {
         return device;
     }
 
-    private static Context context;
+    private Handler handler;
+    private Context context;
+    private Runnable sendHR;
     private static BluetoothGattCallback readingGattCallback;
     private static BluetoothGattWrapper btGattWrapper;
     private static DemoBluetoothDevice device;
