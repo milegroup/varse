@@ -78,7 +78,7 @@ public class PartialObject extends Persistent {
         Persistent.TypeId typeId = null;
         Id id = null;
         String name = null;
-        JsonReader jsonReader = null;
+        JsonReader jsonReader;
 
         try {
             jsonReader = new JsonReader( reader );
@@ -99,8 +99,8 @@ public class PartialObject extends Persistent {
                 }
 
                 if ( id != null
-                        && typeId != null
-                        && name != null )
+                  && typeId != null
+                  && name != null )
                 {
                     break;
                 }

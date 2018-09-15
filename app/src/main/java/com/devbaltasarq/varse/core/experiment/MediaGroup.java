@@ -1,10 +1,12 @@
 package com.devbaltasarq.varse.core.experiment;
 
 
+import android.media.MediaMetadataRetriever;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
 
+import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
@@ -53,6 +55,22 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         public TypeId getTypeId()
         {
             return TypeId.MediaActivity;
+        }
+
+        @Override
+        public Duration getTime()
+        {
+            final MediaGroup MEDIA_GROUP = ( (MediaGroup) this.getGroup() );
+            Duration toret;
+
+            if ( MEDIA_GROUP.getFormat() == Format.Picture ) {
+                toret = MEDIA_GROUP.getTimeForEachActivity();
+            } else {
+                toret = new Duration( calculateVideoDuration( Orm.get(), this ) );
+            }
+
+
+            return toret;
         }
 
         /** @return the file subject to this activity. */
@@ -122,6 +140,34 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         public MediaActivity copy(Id id)
         {
             return new MediaActivity( id, this.getFile() );
+        }
+
+        /** @return the time in seconds for the duration of this video.
+          * @param orm The ORM object (in order to qualify the file).
+          * @param mact The media activity,
+          * @return the time of the video, in seconds.
+          * @see Orm
+          */
+        public static int calculateVideoDuration(Orm orm, MediaActivity mact)
+        {
+            final MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            final File mediaFile = new File(
+                    orm.buildMediaDirectoryFor( mact.getExperimentOwner() ),
+                    mact.getFile().getName() );
+            int toret = 5;
+
+            try {
+                retriever.setDataSource( mediaFile.getPath() );
+                String strTime = retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_DURATION );
+                toret = Integer.parseInt(strTime) / 1000;
+            } catch(IllegalArgumentException exc) {
+                Log.e( LogTag, "unable to calculate video length for' "
+                                + mediaFile.getPath()
+                                + "' invalid path: " + exc.getMessage() );
+            }
+
+            retriever.release();
+            return toret;
         }
 
         private File file;

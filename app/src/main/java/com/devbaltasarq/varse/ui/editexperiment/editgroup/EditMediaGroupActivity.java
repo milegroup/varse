@@ -153,7 +153,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         if ( group instanceof PictureGroup ) {
             final PictureGroup pictureGroup = (PictureGroup) group;
 
-            fillInDurationInUI( pictureGroup.getTimeForPic(), cbTimeUnit, edTime );
+            fillInDurationInUI( pictureGroup.getTimeForEachActivity(), cbTimeUnit, edTime );
         }
 
         this.showActivities();
@@ -188,7 +188,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         if ( group instanceof PictureGroup ) {
             final PictureGroup pictureGroup = (PictureGroup) group;
 
-            fillInDurationInObj( pictureGroup.getTimeForPic(), cbTimeUnit, edDuration );
+            fillInDurationInObj( pictureGroup.getTimeForEachActivity(), cbTimeUnit, edDuration );
         }
 
         return;

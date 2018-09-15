@@ -634,7 +634,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
             if ( userNames.length > 0 ) {
                 cbUsers.setText( userNames[ 0 ] );
-                cbUsers.setSelection( 0, cbUsers.getText().toString().length() );
+                cbUsers.setSelection( 0, userNames[ 0 ].length() );
             }
 
             // Spinner experiments

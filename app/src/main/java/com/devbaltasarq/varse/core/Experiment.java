@@ -100,6 +100,18 @@ public class Experiment extends Persistent {
         return;
     }
 
+    /** @return the total number of activities in this experiment. */
+    public int getNumActivities()
+    {
+        int toret = 0;
+
+        for(Group g: this.groups) {
+            toret += g.size();
+        }
+
+        return toret;
+    }
+
     @Override
     public TypeId getTypeId()
     {
@@ -259,6 +271,20 @@ public class Experiment extends Persistent {
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    /** @return the time needed to perform this experiment.
+      *  @see Duration
+      */
+    public Duration calculateTimeNeeded()
+    {
+        int toret = 0;
+
+        for (Group g: this.groups) {
+            toret += g.calculateTimeNeeded().getTimeInSeconds();
+        }
+
+        return new Duration( toret );
     }
 
     @Override

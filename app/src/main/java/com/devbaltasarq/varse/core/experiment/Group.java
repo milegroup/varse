@@ -44,15 +44,23 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
             return this.group;
         }
 
+        /** @return The tag for this activity. */
         public Tag getTag()
         {
             return tag;
         }
 
+        /** Change the tag for this activity.
+          * @param tag The tag, as a Tag object.
+          * @see Tag
+          */
         public void setTag(Tag tag)
         {
             this.tag = tag;
         }
+
+        /** @return the time needed for this activity to complete. */
+        public abstract Duration getTime();
 
         @Override
         public Experiment getExperimentOwner()
@@ -166,6 +174,21 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         }
 
         return;
+    }
+
+    /** @return the time needed for each activity. */
+    public Duration getTimeForEachActivity()
+    {
+        return this.timeForEachActivity;
+    }
+
+    /** Changes the time for each activity in this group.
+      * @param time The new time to spend in this activity.
+      * @see Duration
+      */
+    public void setTimeForEachActivity(Duration time)
+    {
+        this.timeForEachActivity = time;
     }
 
     /** Removes the given activity.
@@ -346,6 +369,15 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         jsonWriter.endArray();
     }
 
+    /** @return the number of seconds that this experiment will take.
+     *  @see Duration
+     */
+    public Duration calculateTimeNeeded()
+    {
+        return new Duration( this.activities.size()
+                              * this.getTimeForEachActivity().getTimeInSeconds() );
+    }
+
     public static Group fromJSON(Reader rd) throws JSONException
     {
         final JsonReader jsonReader = new JsonReader( rd );
@@ -493,6 +525,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     }
 
     private boolean random;
+    private Duration timeForEachActivity;
     private ArrayList<Activity> activities;
     private Experiment experiment;
 }

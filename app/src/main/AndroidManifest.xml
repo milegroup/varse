@@ -76,7 +76,11 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.performexperiment.ExperimentDirector"
-            android:label="@string/title_activity_experiment_director"
+            android:label="@string/lblPerformExperiment"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".ui.ResultsActivity"
+            android:label="@string/lblResults"
             android:theme="@style/AppTheme.NoActionBar" />
     </application>
 

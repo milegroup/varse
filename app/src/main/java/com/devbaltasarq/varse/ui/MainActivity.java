@@ -19,9 +19,16 @@ import android.widget.ImageView;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;
+import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.PartialObject;
+import com.devbaltasarq.varse.core.Persistent;
+import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
+import com.devbaltasarq.varse.core.bluetooth.DemoBluetoothDevice;
+import com.devbaltasarq.varse.ui.performexperiment.ExperimentDirector;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
 import java.io.IOException;
@@ -31,7 +38,7 @@ public class MainActivity extends AppActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
     private static final String LogTag = MainActivity.class.getSimpleName();
-    private static final int RQC_PICK_ZIP_FILE = 0x813;
+    private static final int RQC_PICK_FILE = 0x813;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -80,12 +87,14 @@ public class MainActivity extends AppActivity
         this.block = false;
     }
 
+    private static boolean firstTimeStart = true;
     @Override
     public void onStart()
     {
         super.onStart();
 
         try {
+            // Initialize the database
             Orm.init( this.getApplicationContext() );
         } catch(IOException exc)
         {
@@ -125,17 +134,20 @@ public class MainActivity extends AppActivity
                 case R.id.imgOptExperiments:
                 case R.id.lblOptExperiments:
                 case R.id.nav_experiments:
-                case R.id.imgOptResults:
-                case R.id.lblOptResults:
-                case R.id.nav_results:
                 case R.id.nav_export:
                 case R.id.action_export:
                     this.startActivity( new Intent( this, ExperimentsActivity.class ) );
                     toret = true;
                     break;
+                case R.id.imgOptResults:
+                case R.id.lblOptResults:
+                case R.id.nav_results:
+                    this.startActivity( new Intent( this, ResultsActivity.class ) );
+                    toret = true;
+                    break;
                 case R.id.nav_import:
                 case R.id.action_import:
-                    this.pickZipFile();
+                    this.pickFile();
                     toret = true;
                     break;
             }
@@ -204,7 +216,7 @@ public class MainActivity extends AppActivity
     {
         super.onActivityResult( requestCode, resultCode, data );
 
-        if ( requestCode == RQC_PICK_ZIP_FILE
+        if ( requestCode == RQC_PICK_FILE
           && resultCode == RESULT_OK )
         {
             final Uri uri = data.getData();
@@ -212,9 +224,12 @@ public class MainActivity extends AppActivity
             if ( uri != null ) {
                 final String FILE_EXTENSION = MimeTypeMap.getFileExtensionFromUrl( uri
                         .toString().toLowerCase() );
+                final String RES_FILE_EXT = Orm.getFileExtFor( Persistent.TypeId.Result ).toLowerCase();
 
-                if ( FILE_EXTENSION.equals( "zip" ) ) {
-                    this.importZipFile( uri );
+                if ( FILE_EXTENSION.equals( "zip" )
+                  || FILE_EXTENSION.equals( RES_FILE_EXT ) )
+                {
+                    this.importFile( uri );
                     this.showStatus( LogTag, this.getString( R.string.msgImported) );
                 } else {
                     this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
@@ -228,7 +243,7 @@ public class MainActivity extends AppActivity
     }
 
     /** Launch file browser. */
-    private void pickZipFile()
+    private void pickFile()
     {
         final Intent intent = new Intent();
 
@@ -238,11 +253,11 @@ public class MainActivity extends AppActivity
 
         this.startActivityForResult(
                 Intent.createChooser( intent, this.getString( R.string.lblMediaSelection ) ),
-                RQC_PICK_ZIP_FILE );
+                RQC_PICK_FILE);
     }
 
     /** Import the experiment file. */
-    private void importZipFile(Uri uri)
+    private void importFile(Uri uri)
     {
         try {
             final Orm db = Orm.get();
@@ -251,16 +266,22 @@ public class MainActivity extends AppActivity
               && ( uri.getScheme().equals( ContentResolver.SCHEME_CONTENT )
                ||  uri.getScheme().equals( ContentResolver.SCHEME_FILE ) ) )
             {
-                final InputStream zipFileIn = this.getContentResolver().openInputStream( uri );
+                final InputStream fileIn = this.getContentResolver().openInputStream( uri );
+                final String FILE_EXT = Orm.extractFileExt( uri.getLastPathSegment() );
 
-                db.importExperiment( zipFileIn );
+                if ( FILE_EXT.equalsIgnoreCase( Orm.getFileExtFor( Persistent.TypeId.Result ) ) )
+                {
+                    db.importResult( fileIn );
+                } else {
+                    db.importExperiment( fileIn );
+                }
             } else {
                 this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
             }
         } catch(IOException exc)
         {
             this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
-            Log.e( LogTag, "Importing experiment: " + exc.getMessage() );
+            Log.e( LogTag, "Importing: '" + uri + "': " + exc.getMessage() );
         }
     }
 

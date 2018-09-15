@@ -146,9 +146,9 @@ public abstract class Persistent implements Identifiable {
     {
         Id toret = null;
 
-        toret = new Id( jsonReader.nextLong() );
-
-        if ( toret == null ) {
+        try {
+            toret = new Id( jsonReader.nextLong() );
+        } catch(IOException exc) {
             throw new JSONException( "read id: no valid data" );
         }
 

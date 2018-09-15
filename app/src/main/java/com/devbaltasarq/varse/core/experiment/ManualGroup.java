@@ -12,12 +12,13 @@ import com.devbaltasarq.varse.core.Orm;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.util.Arrays;
 
 
 /** Represents a group made of manual activities. */
 public class ManualGroup extends Group<ManualGroup.ManualActivity> {
+    public static final String LogTag = ManualGroup.class.getSimpleName();
+
     /** Represents a manual activity, running for a given time. */
     public static class ManualActivity extends Group.Activity {
         public static String LogTag = "ManualActivity";
@@ -61,6 +62,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
             return toret;
         }
 
+        @Override
         public Duration getTime()
         {
             return time;
@@ -159,6 +161,36 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
     public ManualGroup(Id id, boolean rnd, Experiment expr, ManualActivity[] acts)
     {
         super( id, rnd, expr, acts );
+    }
+
+    @Override
+    public void setTimeForEachActivity(Duration time) throws NoSuchMethodError
+    {
+        final String msg = "manual group cannot change its time as a whole";
+
+        Log.e(LogTag, msg );
+        throw new NoSuchMethodError( msg );
+    }
+
+    @Override
+    public Duration getTimeForEachActivity() throws NoSuchMethodError
+    {
+        final String msg = "manual group holds activities with individual times";
+
+        Log.e(LogTag, msg );
+        throw new NoSuchMethodError( msg );
+    }
+
+    @Override
+    public Duration calculateTimeNeeded()
+    {
+        int toret = 0;
+
+        for(ManualActivity mact: this.get()) {
+            toret += mact.getTime().getTimeInSeconds();
+        }
+
+        return new Duration( toret );
     }
 
     @Override

@@ -63,6 +63,7 @@
     <string name="lblConnected">Connected</string>
     <string name="lblDisconnected">Disconnected</string>
     <string name="lblRecord">Record</string>
+    <string name="lblBpm">bpm</string>
     <string name="lblYes">Yes</string>
     <string name="lblNo">No</string>
 
@@ -73,8 +74,8 @@
     <string name="msgMediaAlreadyAdded">Media already added</string>
     <string name="msgStandby">Standby</string>
     <string name="msgReadingHR">Reading HR</string>
-    <string name="msgExported">Experiment exported</string>
-    <string name="msgImported">Experiment imported</string>
+    <string name="msgExported">Data set exported</string>
+    <string name="msgImported">Data set imported</string>
 
     <!-- Errors -->
     <string name="ErrStore">Unable to initialise storage</string>
@@ -88,6 +89,7 @@
     <string name="ErrNoHR">No health profile detected</string>
     <string name="ErrPermissionDenied">Permission denied</string>
     <string name="ErrUnsupportedFileType">Unsupported file type</string>
+    <string name="ErrUnableToPerformExperiment">Unable to perform experiment</string>
 
     <!-- Choices for time units -->
     <string name="lblMinutes">Minutes</string>
@@ -96,9 +98,4 @@
         <item>@string/lblSeconds</item>
         <item>@string/lblMinutes</item>
     </string-array>
-    <string name="title_activity_edit_manual_entry">EditManualEntryActivity</string>
-    <string name="title_activity_discover_devices_services">DiscoverDevicesServicesActivity</string>
-    <string name="lblBpm">bpm</string>
-    <string name="title_activity_experiment_director">ExperimentDirector</string>
-
 </resources>

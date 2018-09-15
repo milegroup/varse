@@ -1,5 +1,7 @@
 package com.devbaltasarq.varse.core.experiment;
 
+import com.devbaltasarq.varse.core.Orm;
+
 import java.io.File;
 import java.util.HashMap;
 
@@ -89,7 +91,7 @@ public final class MimeTools {
     public static String getMimeFor(File f)
     {
         init();
-        final String toret = mimeForExtension.get( extractFileExt( f ) );
+        final String toret = mimeForExtension.get( Orm.extractFileExt( f ) );
 
         if ( toret == null ) {
             throw new IllegalArgumentException( "unknown mime type for: " + f.toString() );
@@ -119,22 +121,6 @@ public final class MimeTools {
     public static boolean isVideo(File f)
     {
         return ( getMimeFor( f ).contains( "video" ) );
-    }
-
-    public static String extractFileExt(File f)
-    {
-        String toret = "";
-
-        if ( f != null ) {
-            final String name = f.getName();
-            int pos = name.lastIndexOf( '.' );
-
-            if ( pos >= 0 ) {
-                toret = name.substring( pos + 1 );
-            }
-        }
-
-        return toret.toLowerCase();
     }
 
     private static HashMap<String, String> extensionForMime;

@@ -62,4 +62,15 @@
         android:src="@drawable/ic_launch_button"
         android:layout_gravity="bottom|right|end" />
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fbSkip"
+        android:visibility="gone"
+        android:layout_margin="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:tint="#ffffff"
+        android:src="@drawable/ic_skip_track_button"
+        android:layout_gravity="bottom|right|end" />
+
 </android.support.design.widget.CoordinatorLayout>
