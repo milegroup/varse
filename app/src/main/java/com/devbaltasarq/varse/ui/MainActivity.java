@@ -19,16 +19,10 @@ import android.widget.ImageView;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;
-import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Orm;
-import com.devbaltasarq.varse.core.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
-import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
-import com.devbaltasarq.varse.core.bluetooth.DemoBluetoothDevice;
-import com.devbaltasarq.varse.ui.performexperiment.ExperimentDirector;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
 import java.io.IOException;
@@ -87,23 +81,22 @@ public class MainActivity extends AppActivity
         this.block = false;
     }
 
-    private static boolean firstTimeStart = true;
     @Override
     public void onStart()
     {
         super.onStart();
 
-        try {
-            // Initialize the database
-            Orm.init( this.getApplicationContext() );
-        } catch(IOException exc)
-        {
-            block = true;
-            Log.e( LogTag, "app blocked, storage not ready; " + exc.getMessage() );
-            this.showStatus( LogTag, this.getString( R.string.ErrStore ) );
-        }
+        // Initialize the database
+        Orm.init( this.getApplicationContext() );
+    }
 
-        return;
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        // Initialize the database
+        Orm.get().removeCache( this.getApplicationContext() );
     }
 
     private void toggleAppVersionShown()
@@ -230,7 +223,6 @@ public class MainActivity extends AppActivity
                   || FILE_EXTENSION.equals( RES_FILE_EXT ) )
                 {
                     this.importFile( uri );
-                    this.showStatus( LogTag, this.getString( R.string.msgImported) );
                 } else {
                     this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
                 }
@@ -271,9 +263,18 @@ public class MainActivity extends AppActivity
 
                 if ( FILE_EXT.equalsIgnoreCase( Orm.getFileExtFor( Persistent.TypeId.Result ) ) )
                 {
+                    final String LBL_RESULT = this.getString( R.string.lblResult );
+
                     db.importResult( fileIn );
+                    this.showStatus( LogTag, this.getString( R.string.msgImported )
+                            + ": " + LBL_RESULT );
+
                 } else {
+                    final String LBL_EXPERIMENT = this.getString( R.string.lblExperiment );
+
                     db.importExperiment( fileIn );
+                    this.showStatus( LogTag, this.getString( R.string.msgImported )
+                            + ": " + LBL_EXPERIMENT );
                 }
             } else {
                 this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );

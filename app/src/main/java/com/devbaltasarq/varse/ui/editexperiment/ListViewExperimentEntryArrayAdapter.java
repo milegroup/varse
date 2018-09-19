@@ -36,6 +36,7 @@ public class ListViewExperimentEntryArrayAdapter extends ArrayAdapter<ListViewEx
         final ImageButton btModify = convertView.findViewById( R.id.btEditUser);
         final ImageButton btDelete = convertView.findViewById( R.id.btDeleteExperiment );
         final ImageButton btExport = convertView.findViewById( R.id.btExportExperiment );
+        final ImageButton btShowResults = convertView.findViewById( R.id.btShowResultsExperiment );
         final TextView lblExperimentDesc = convertView.findViewById( R.id.lblExperimentDesc );
         final ExperimentsActivity cntxt = (ExperimentsActivity) ListViewExperimentEntryArrayAdapter.this.getContext();
 
@@ -45,6 +46,7 @@ public class ListViewExperimentEntryArrayAdapter extends ArrayAdapter<ListViewEx
         btModify.setOnClickListener( (v) -> cntxt.editExperiment( expr ) );
         btDelete.setOnClickListener( (v) -> cntxt.deleteExperiment( position, expr ) );
         btExport.setOnClickListener( (v) -> cntxt.exportExperiment( expr ) );
+        btShowResults.setOnClickListener( (v) -> cntxt.launchExperimentResults( expr ) );
 
         return convertView;
     }

@@ -24,6 +24,7 @@
     <string name="lblDeleteExperiment">Delete experiment</string>
 
     <string name="lblResults">Results</string>
+    <string name="lblResult">Result</string>
 
     <string name="lblExport">Export</string>
     <string name="lblImport">Import</string>
@@ -76,6 +77,7 @@
     <string name="msgReadingHR">Reading HR</string>
     <string name="msgExported">Data set exported</string>
     <string name="msgImported">Data set imported</string>
+    <string name="msgFinishedExperiment">Experiment performed</string>
 
     <!-- Errors -->
     <string name="ErrStore">Unable to initialise storage</string>

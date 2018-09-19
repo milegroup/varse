@@ -694,15 +694,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             userName = userName.trim();
 
             try {
-                final Orm dataStore = Orm.get();
-                final User existingUser = dataStore.lookForUserByName( userName );
-
-                if ( existingUser != null ) {
-                    usr = existingUser;
-                } else {
-                    usr = new User( Id.create(), userName );
-                    dataStore.store( usr );
-                }
+                usr = Orm.get().createOrRetrieveUserByName( userName );
             } catch(IOException exc)
             {
                 Log.d(LogTag, exc.getMessage()

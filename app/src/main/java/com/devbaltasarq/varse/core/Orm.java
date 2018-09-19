@@ -72,12 +72,13 @@ public final class Orm {
             + ".$" + FIELD_EXT;
 
     /** Prepares the ORM to operate. */
-    private Orm(Context context) throws IOException
+    private Orm(Context context)
     {
         Log.i( LogTag, "Preparing store..." );
 
         this.createDirectories( context );
-        this.createCache();
+        this.removeCache( context );
+        this.createCaches();
 
         Log.i( LogTag, "Store ready at: " + this.dirDb.getAbsolutePath() );
         Log.i( LogTag, "    #user files: " + this.filesUser.size() );
@@ -93,8 +94,18 @@ public final class Orm {
         this.dirTmp = context.getCacheDir();
     }
 
+    /** Removes all files in cache. */
+    public void removeCache(Context context)
+    {
+        if ( this.dirTmp != null ) {
+            removeTreeAt( this.dirTmp );
+        }
+
+        this.dirTmp = context.getCacheDir();
+    }
+
     /** Create the cache of files. */
-    private void createCache()
+    private void createCaches()
     {
         final File[] fileList = this.dirDb.listFiles();
         this.filesUser = new HashSet<>();
@@ -103,34 +114,64 @@ public final class Orm {
         this.resultsPerExperiment = new HashMap<>();
 
         for (File f: fileList) {
-            this.updateCache( f );
+            this.updateCaches( f );
         }
 
         return;
     }
 
-    private void updateCache(File f)
+    /** Updates all file caches.
+      * @param p The persistent object to update.
+      * @param f The corresponding file to the object, calculated if null.
+      */
+    private void updateCaches(Persistent p, File f)
     {
-        final Persistent.TypeId typeId = this.getTypeIdForExt( f );
+        if ( f == null ) {
+            f = new File( this.dirDb, this.getFileNameFor( p ) );
+        }
 
-        this.addToCache( f );
+        this.addToGeneralCache( f );
 
-        if ( typeId == Persistent.TypeId.Result ) {
-            final Id exprId = new Id( this.parseExperimentIdFromResultFile( f ) );
-            ArrayList<File> resFileList = this.resultsPerExperiment.get( exprId );
-
-            if ( resFileList == null ) {
-                resFileList = new ArrayList<>();
-                this.resultsPerExperiment.put( exprId, resFileList );
-            }
-
-            resFileList.add( f );
+        if ( p.getTypeId() == Persistent.TypeId.Result ) {
+            this.addToResultsCache( f, ( (Result) p ).getExperiment().getId() );
         }
     }
 
+    /** Updates all caches.
+      * @param f The file to include in all caches.
+      */
+    private void updateCaches(File f)
+    {
+        final Persistent.TypeId typeId = this.getTypeIdForExt( f );
+
+        this.addToGeneralCache( f );
+
+        if ( typeId == Persistent.TypeId.Result ) {
+            final Id exprId = new Id( this.parseExperimentIdFromResultFile( f ) );
+            this.addToResultsCache( f, exprId );
+        }
+    }
+
+    /** Adds a result file to the results cache.
+      * @param f The file corresponding to a Result object.
+      * @param exprId The experiment id this results was obtained from.
+      */
+    private void addToResultsCache(File f, Id exprId)
+    {
+        ArrayList<File> resFileList = this.resultsPerExperiment.get( exprId );
+
+        if ( resFileList == null ) {
+            resFileList = new ArrayList<>();
+            this.resultsPerExperiment.put( exprId, resFileList );
+        }
+
+        resFileList.add( f );
+    }
+
+    /** @return the general cache corresponding to the object of the type. */
     private HashSet<File> getCacheForType(Persistent.TypeId typeId)
     {
-        HashSet<File> toret = null;
+        HashSet<File> toret;
 
         if ( typeId == Persistent.TypeId.User ) {
             toret = this.filesUser;
@@ -149,12 +190,56 @@ public final class Orm {
         return toret;
     }
 
-    private void removeFromCache(File f)
+    /** Removes the object from all caches.
+      * @param p The object to remove from all caches.
+      * @param f The file corresponding to that object, calculated if null.
+      */
+    private void removeFromAllCaches(Persistent p, File f)
+    {
+        if ( f == null ) {
+            f = new File( this.dirDb, this.getFileNameFor( p ) );
+        }
+
+        if ( p.getTypeId() == Persistent.TypeId.Result ) {
+            this.removeFromResultsCache( (Result) p, f );
+        }
+
+        this.removeFromGeneralCache( f );
+
+    }
+
+    /** Removes the result from the results cache.
+      * @param res The result object itself.
+      * @param f The corresponding file to the results object, recalculated if null.
+      */
+    private void removeFromResultsCache(Result res, File f)
+    {
+        if ( f == null ) {
+            f = new File( this.dirDb, this.getFileNameFor( res ) );
+        }
+
+        // Look for it in the results by experiment cache
+        ArrayList<File> fileList = this.resultsPerExperiment.get( res.getExperiment().getId() );
+
+        if ( fileList != null ) {
+            fileList.remove( f );
+        }
+
+        return;
+    }
+
+    /** Remove a file from the general cache.
+      *  @param f Tje file to remove.
+      */
+    private void removeFromGeneralCache(File f)
     {
         this.getCacheForType( this.getTypeIdForExt( f ) ).remove( f );
     }
 
-    private void addToCache(File f)
+    /** Add a file to the general cache.
+      * @param f The file to add.
+      */
+    private void addToGeneralCache(File f)
     {
         final HashSet<File> cachedList = this.getCacheForType( this.getTypeIdForExt( f ) );
 
@@ -179,9 +264,9 @@ public final class Orm {
      */
     private Persistent.TypeId getTypeIdForExt(File f)
     {
-        final String ExtUser = this.getFileExtFor( Persistent.TypeId.User );
-        final String ExtExperiment = this.getFileExtFor( Persistent.TypeId.Experiment );
-        final String ExtResult = this.getFileExtFor( Persistent.TypeId.Result );
+        final String ExtUser = getFileExtFor( Persistent.TypeId.User );
+        final String ExtExperiment = getFileExtFor( Persistent.TypeId.Experiment );
+        final String ExtResult = getFileExtFor( Persistent.TypeId.Result );
         Persistent.TypeId toret = null;
 
         if ( f.getName().endsWith( ExtUser ) ) {
@@ -208,15 +293,49 @@ public final class Orm {
     /** @return the appropriate data file name for this object. */
     private String getFileNameFor(Id id, Persistent.TypeId typeId)
     {
-        if ( BuildConfig.DEBUG
-          && typeId == Persistent.TypeId.Result )
-        {
-            throw new InternalError( "need more info building file name for result: " + id );
+        String toret = "";
+
+        if ( typeId == Persistent.TypeId.Result ) {
+            try {
+                for(PartialObject po: this.enumerateObjects( Persistent.TypeId.Result ))
+                {
+                    if ( po.getId().equals( id ) ) {
+                        final String resultInfo = po.getName();
+
+                        final Id exprId = new Id( Result.parseExperimentIdFromName( resultInfo ) );
+                        final Id userId = new Id( Result.parseUserIdFromName( resultInfo ) );
+
+                        toret = this.getFileNameForResult( id, exprId, userId );
+                        break;
+                    }
+                }
+            } catch(IOException exc) {
+                final String ERROR_MESSAGE = "error retrieving result with id: " + id.get() + ": "
+                                        + exc.getMessage();
+                Log.e( LogTag, ERROR_MESSAGE );
+                throw new Error( ERROR_MESSAGE );
+            }
+        } else {
+            toret = REGULAR_FILE_FORMAT
+                    .replace( "$" + FIELD_ID, id.toString() )
+                    .replace( "$" + FIELD_EXT, getFileExtFor( typeId ) );
         }
 
-        return REGULAR_FILE_FORMAT
+        return toret;
+    }
+
+    /** @return the name for a the corresponding result file.
+      * @param id The id of the result file.
+      * @param exprId The experiment id for the result data set file.
+      * @param userId The user id for the result data set file.
+      */
+    private String getFileNameForResult(Id id, Id exprId, Id userId)
+    {
+        return RESULT_FILE_FORMAT
                 .replace( "$" + FIELD_ID, id.toString() )
-                .replace( "$" + FIELD_EXT, this.getFileExtFor( typeId ) );
+                .replace( "$" + FIELD_EXT, getFileExtFor( Persistent.TypeId.Result ) )
+                .replace( "$" + FIELD_EXPERIMENT_ID, exprId.toString() )
+                .replace( "$" + FIELD_USER_ID, userId.toString() );
     }
 
     /** @return the appropriate data file name for this object. */
@@ -225,17 +344,15 @@ public final class Orm {
         String toret;
 
         if ( typeId == Persistent.TypeId.Result ) {
-            Result res = (Result) p;
+            final Result res = (Result) p;
 
-            toret = RESULT_FILE_FORMAT
-                    .replace( "$" + FIELD_ID, p.getId().toString() )
-                    .replace( "$" + FIELD_EXT, this.getFileExtFor( typeId ) )
-                    .replace( "$" + FIELD_EXPERIMENT_ID, res.getExperiment().getId().toString() )
-                    .replace( "$" + FIELD_USER_ID, res.getUser().getId().toString() );
+            toret = getFileNameForResult(   p.getId(),
+                                            res.getExperiment().getId(),
+                                            res.getUser().getId() );
         } else {
             toret = REGULAR_FILE_FORMAT
                     .replace( "$" + FIELD_ID, p.getId().toString() )
-                    .replace( "$" + FIELD_EXT, this.getFileExtFor( typeId ) );
+                    .replace( "$" + FIELD_EXT, getFileExtFor( typeId ) );
         }
 
         return toret;
@@ -251,7 +368,7 @@ public final class Orm {
     {
         final String fileName = file.getName();
         final int separatorPos = fileName.indexOf( FILE_NAME_PART_SEPARATOR );
-        long toret = -1;
+        long toret;
 
         if ( separatorPos >= 0 ) {
             int extSeparatorPos = fileName.lastIndexOf( '.' );
@@ -283,7 +400,7 @@ public final class Orm {
     {
         final String fileName = f.getName();
         int exprIdPos = fileName.indexOf( FIELD_EXPERIMENT_ID );
-        long toret = -1;
+        long toret;
 
         if ( exprIdPos >= 0 ) {
             int extSeparatorPos = fileName.lastIndexOf( '.' );
@@ -312,14 +429,15 @@ public final class Orm {
       */
     public void remove(Persistent p)
     {
-        Id id = p.getId();
-
         // Remove all associated objects
         for(File mediaFile: p.enumerateAssociatedFiles()) {
             final File f = new File( this.buildMediaDirectoryFor( p ),
                                 mediaFile.getName() );
 
-            f.delete();
+            if ( !f.delete() ) {
+                Log.e( LogTag, "Error deleting: " + f );
+            }
+
             Log.d( LogTag, "Associated file deleted: " + mediaFile );
         }
 
@@ -327,50 +445,29 @@ public final class Orm {
         if ( p instanceof Experiment ) {
             final File mediaDir = this.buildMediaDirectoryFor( p );
 
-            mediaDir.delete();
+            if ( !mediaDir.delete() ) {
+                Log.e( LogTag, "Error deleting media dir: " + mediaDir );
+            }
         }
 
         // Remove main object
-        if ( id.isValid() ) {
-            final File REMOVE_FILE = new File( this.dirDb, this.getFileNameFor( p ) );
+        final File REMOVE_FILE = new File( this.dirDb, this.getFileNameFor( p ) );
 
-            // Remove the main object
-            this.removeFromCache( REMOVE_FILE );
-            REMOVE_FILE.delete();
+        // Is it a results object?
+        this.removeFromAllCaches( p, REMOVE_FILE );
 
-            Log.d( LogTag, "Object deleted: " + p.getId() );
+        if ( !REMOVE_FILE.delete() ) {
+            Log.e( LogTag, "Error removing file: " + REMOVE_FILE );
         }
 
-        return;
-    }
-
-    /** Determines the existence of an object in a table.
-      * @param id The identifier of the object.
-      * @param typeId The type id of the object.
-      * @return true if exists, false otherwise.
-      */
-    public boolean exists(Id id, Persistent.TypeId typeId)
-    {
-        boolean toret = true;
-        final File POSSIBLE_FILE = new File( this.dirDb, this.getFileNameFor( id, typeId ) );
-
-        if ( this.existsInCache( POSSIBLE_FILE )
-          || POSSIBLE_FILE.exists() )
-        {
-            Log.i( LogTag, "exists: found: " + POSSIBLE_FILE.getName() );
-        } else {
-            toret = false;
-            Log.i( LogTag, "exists: not found: " + POSSIBLE_FILE.getName() );
-        }
-
-        return toret;
+        Log.d( LogTag, "Object deleted: " + p.getId() );
     }
 
     /** Builds the name of the experiment's media directory.
       * @param p The experiment itself.
       * @return the name of the directory, as a string.
       */
-    public static String buildMediaDirectoryNameFor(@NonNull Persistent p)
+    private static String buildMediaDirectoryNameFor(@NonNull Persistent p)
     {
         final Experiment owner = p.getExperimentOwner();
         final Id id = owner != null ? owner.getId() : p.getId();
@@ -441,10 +538,8 @@ public final class Orm {
         final File experimentDirectory = this.buildMediaDirectoryFor( expr );
         final File mediaFile = new File( experimentDirectory, fileName );
 
-        if ( mediaFile.exists() ) {
-            mediaFile.delete();
-        } else {
-            final String errorMsg = "unable to find media file: " + fileName;
+        if ( !mediaFile.delete() ) {
+            final String errorMsg = "unable to delete media file: " + fileName;
             throw new IOException( errorMsg );
         }
 
@@ -483,7 +578,9 @@ public final class Orm {
         // Look for each registered file in the actual file list
         for(File f: allFiles) {
             if ( !registeredMediaFiles.contains( f ) ) {
-                f.delete();
+                if ( !f.delete() ) {
+                    Log.e( LogTag, "Error deleting file: " + f );
+                }
             }
         }
 
@@ -522,7 +619,7 @@ public final class Orm {
         this.store( this.dirDb, p );
     }
 
-    public void store(File dir, Persistent p) throws IOException
+    private void store(File dir, Persistent p) throws IOException
     {
         // Assign a real id
         if ( p.getId().isFake() ) {
@@ -541,8 +638,12 @@ public final class Orm {
             writer = openWriterFor( TEMP_FILE );
             p.toJSON( writer );
             close( writer );
-            TEMP_FILE.renameTo( DATA_FILE );
-            this.updateCache( DATA_FILE );
+            if ( !TEMP_FILE.renameTo( DATA_FILE ) ) {
+                Log.d( LogTag, "Unable to move: " + DATA_FILE );
+                Log.d( LogTag, "Trying to copy: " + TEMP_FILE + " to: " + DATA_FILE );
+                copy( TEMP_FILE, DATA_FILE );
+            }
+            this.updateCaches( p, DATA_FILE );
             Log.i( LogTag, "Finished storing." );
         } catch(IOException exc) {
             final String msg = "I/O error writing: "
@@ -556,7 +657,9 @@ public final class Orm {
             throw new IOException( msg );
         } finally {
           close( writer );
-          TEMP_FILE.delete();
+          if ( !TEMP_FILE.delete() ) {
+              Log.e( LogTag, "Error removing file: " + TEMP_FILE );
+          }
         }
     }
 
@@ -570,13 +673,16 @@ public final class Orm {
         Result toret = null;
 
         try {
-            toret = Result.fromJSON( openReaderFor( zipFileIn ) );
+            final Reader fileReader = openReaderFor( zipFileIn );
+
+            toret = Result.fromJSON( fileReader );
+            close( fileReader );
 
             // Store the result data set
             toret.updateIds();
             this.store( toret );
         } catch(JSONException exc) {
-            Log.d( LogTag, "unable to import result file: " + exc.getMessage() );
+            Log.e( LogTag, "unable to import result file: " + exc.getMessage() );
         }
 
         return toret;
@@ -601,7 +707,7 @@ public final class Orm {
             final File[] allFiles = TEMP_DIR.listFiles();
             File experimentFile = null;
             final ArrayList<File> mediaFiles = new ArrayList<>( allFiles.length );
-            final String EXPERIMENT_EXTENSION = this.getFileExtFor( Persistent.TypeId.Experiment );
+            final String EXPERIMENT_EXTENSION = getFileExtFor( Persistent.TypeId.Experiment );
 
             // Classify files
             for(File f: allFiles) {
@@ -665,7 +771,7 @@ public final class Orm {
             this.store( res );
 
             // Dest
-            final File OUTPUT_FILE = new File( dir, RES_FILE_NAME + ".zip" );
+            final File OUTPUT_FILE = new File( dir, RES_FILE_NAME );
             dir.mkdirs();
             copy( ORG_FILE, OUTPUT_FILE );
         } catch(IOException exc) {
@@ -714,13 +820,20 @@ public final class Orm {
                             + expr.getName()
                             + "': " + exc.getMessage() );
         } finally {
-            TEMP_FILE.delete();
+            if ( !TEMP_FILE.delete() ) {
+                Log.e( LogTag, "Error removing: " + TEMP_FILE );
+            }
         }
 
         return;
     }
 
-    public User createOrRetrieveUser(String usrName) throws IOException
+    /** Retrieves the user from the database or just creates (and stores) it.
+     * @param usrName The name of the user to retrieve.
+     * @return The user (retrieved or created).
+     * @throws IOException IF something goes wrong retrieving or creating the user.
+     */
+    public User createOrRetrieveUserByName(String usrName) throws IOException
     {
         User toret = null;
 
@@ -733,14 +846,13 @@ public final class Orm {
 
         // Create it
         if ( toret == null ) {
-            toret = new User( Id.create(), usrName );
-            this.store( toret );
+            toret = this.createNewUser( Id.create(), usrName );
         }
 
         return toret;
     }
 
-    public User createOrRetrieveUser(Id userId)
+    public User createOrRetrieveUserById(Id userId) throws IOException
     {
         User toret = null;
 
@@ -754,10 +866,27 @@ public final class Orm {
 
         // Create it
         if ( toret == null ) {
-            toret = new User( userId, FIELD_USER_ID + "-" + userId );
+            toret = this.createNewUser( userId, null );
         }
 
         return toret;
+    }
+
+    /** Call by the createOrRetrieveUser... *Important* should not exist yet.
+      * @param userId
+      */
+    private User createNewUser(Id userId, String name) throws IOException
+    {
+        if ( name == null
+          || name.trim().isEmpty() )
+        {
+            name = FIELD_USER_ID + "-" + userId;
+        }
+
+        final User usr = new User( userId, name );
+
+        this.store( usr );
+        return usr;
     }
 
     /** Retrieves a single object from a table, given its id.
@@ -789,7 +918,7 @@ public final class Orm {
             Log.e( LogTag, msg );
             throw new IOException( msg );
         } finally {
-            this.close( reader );
+            close( reader );
         }
 
         return toret;
@@ -831,7 +960,7 @@ public final class Orm {
     private PartialObject[] enumerateObjects(Collection<File> fileList) throws IOException
     {
         if ( fileList == null ) {
-            fileList = new ArrayList<File>( 0 );
+            fileList = new ArrayList<>( 0 );
         }
 
         // Convert to partial objects
@@ -845,7 +974,7 @@ public final class Orm {
     }
 
     /** @return A persistent object, provided its name and the type of object. */
-    public PartialObject lookForObjByName(String name, Persistent.TypeId typeId) throws IOException
+    private PartialObject lookForObjByName(String name, Persistent.TypeId typeId) throws IOException
     {
         HashSet<File> fileList = this.filesExperiment;
 
@@ -875,16 +1004,25 @@ public final class Orm {
     public User lookForUserByName(String name) throws IOException
     {
         final PartialObject user = this.lookForObjByName( name, Persistent.TypeId.User );
+        User toret = null;
 
-        return (User) this.retrieve( user.getId(), Persistent.TypeId.User );
+        if ( user != null ) {
+            toret = (User) this.retrieve( user.getId(), Persistent.TypeId.User );
+        }
+
+        return toret;
     }
 
     public Experiment lookForExperimentByName(String name) throws IOException
     {
         final PartialObject expr = this.lookForObjByName( name, Persistent.TypeId.Experiment );
+        Experiment toret = null;
 
-        return (Experiment) this.retrieve( expr.getId(), Persistent.TypeId.Experiment );
+        if ( expr != null ) {
+            toret = (Experiment) this.retrieve( expr.getId(), Persistent.TypeId.Experiment );
+        }
 
+        return toret;
     }
 
     /** Enumerates all users, getting a vector containing their id's and names. */
@@ -906,7 +1044,7 @@ public final class Orm {
     }
 
     /** Enumerates all object names, given an array of partial object. */
-    public String[] enumerateObjNames(PartialObject[] objs) throws IOException
+    public String[] enumerateObjNames(PartialObject[] objs)
     {
         final String[] toret = new String[ objs.length ];
 
@@ -953,7 +1091,7 @@ public final class Orm {
 
     public static Writer openWriterFor(File f) throws IOException
     {
-        BufferedWriter toret = null;
+        BufferedWriter toret;
 
         try {
             final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
@@ -969,9 +1107,9 @@ public final class Orm {
         return toret;
     }
 
-    public static Reader openReaderFor(File f) throws IOException
+    public static BufferedReader openReaderFor(File f) throws IOException
     {
-        Reader toret = null;
+        BufferedReader toret;
 
         try {
             toret = openReaderFor( new FileInputStream( f ) );
@@ -983,7 +1121,7 @@ public final class Orm {
         return toret;
     }
 
-    private static Reader openReaderFor(InputStream inStream)
+    private static BufferedReader openReaderFor(InputStream inStream)
     {
         final InputStreamReader inputStreamReader = new InputStreamReader(
                 inStream,
@@ -1001,7 +1139,7 @@ public final class Orm {
             }
         } catch(IOException exc)
         {
-            Log.e( LogTag, "closing writer" );
+            Log.e( LogTag, "closing writer: " + exc.getMessage() );
         }
     }
 
@@ -1014,7 +1152,7 @@ public final class Orm {
             }
         } catch(IOException exc)
         {
-            Log.e( LogTag, "closing reader" );
+            Log.e( LogTag, "closing reader: " + exc.getMessage() );
         }
     }
 
@@ -1027,15 +1165,20 @@ public final class Orm {
             }
         } catch(IOException exc)
         {
-            Log.e( LogTag, "closing json reader" );
+            Log.e( LogTag, "closing json reader: " + exc.getMessage() );
         }
     }
 
+    /** Copies a given file to a destination, overwriting if necessary.
+      * @param source The File object of the source file.
+      * @param dest The File object of the destination file.
+      * @throws IOException if something goes wrong while copying.
+      */
     private static void copy(File source, File dest) throws IOException
     {
-        final String errorMsg = "error copying " + source + " -> " + dest + ": ";
-        InputStream is = null;
-        OutputStream os = null;
+        final String errorMsg = "error copying: " + source + " to: " + dest + ": ";
+        InputStream is;
+        OutputStream os;
 
         try {
             is = new FileInputStream( source );
@@ -1051,6 +1194,11 @@ public final class Orm {
         return;
     }
 
+    /** Copies data from a given stream to a destination File, overwriting if necessary.
+     * @param is The input stream object to copy from.
+     * @param dest The File object of the destination file.
+     * @throws IOException if something goes wrong while copying.
+     */
     private static void copy(InputStream is, File dest) throws IOException
     {
         final String errorMsg = "error copying input stream -> " + dest + ": ";
@@ -1069,6 +1217,11 @@ public final class Orm {
         return;
     }
 
+    /** Copies from a stream to another one.
+     * @param is The input stream object to copy from.
+     * @param os The output stream object of the destination.
+     * @throws IOException if something goes wrong while copying.
+     */
     private static void copy(InputStream is, OutputStream os) throws IOException
     {
         final byte[] buffer = new byte[1024];
@@ -1095,6 +1248,9 @@ public final class Orm {
         return;
     }
 
+    /** Removes a whole dir and all its subdirectories, recursively.
+      * @param dir The directory to remove.
+      */
     private static void removeTreeAt(File dir)
     {
         if ( dir != null
@@ -1109,10 +1265,14 @@ public final class Orm {
                     removeTreeAt( f );
                 }
 
-                f.delete();
+                if ( !f.delete() ) {
+                    Log.e( LogTag, "Error deleting directory: " + f );
+                }
             }
 
-            dir.delete();
+            if ( !dir.delete() ) {
+                Log.e( LogTag, "Error deleting directory: " + dir );
+            }
         } else {
             Log.d( LogTag, "removeTreeAt: directory null or not a directory?" );
         }
@@ -1133,7 +1293,7 @@ public final class Orm {
       */
     public static String extractFileExt(String fileName)
     {
-        final int posDot = fileName.lastIndexOf(".");
+        final int posDot = fileName.trim().lastIndexOf(".");
         String toret = "";
 
         if ( posDot >= 0
@@ -1178,10 +1338,8 @@ public final class Orm {
         return instance;
     }
 
-    /** Initialises the already open database.
-     * @return The Orm singleton object.
-     */
-    public static void init(Context context) throws IOException
+    /** Initialises the already open database. */
+    public static void init(Context context)
     {
         if ( instance == null ) {
             instance = new Orm( context );

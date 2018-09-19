@@ -57,6 +57,26 @@ public class Duration {
         return toret;
     }
 
+    /** Sets this duration to a given number of seconds.
+      * @param secs the new number of seconds.
+      * @return itself.
+      */
+    public Duration set(int secs)
+    {
+        this.secs = secs;
+        return this;
+    }
+
+    /** Adds a number of seconds to this duration.
+      * @param secs the number of seconds to add.
+      * @return itself.
+      */
+    public Duration add(int secs)
+    {
+        this.secs += secs;
+        return this;
+    }
+
     /** @return The whole time in seconds. */
     public int getTimeInSeconds()
     {
@@ -106,6 +126,13 @@ public class Duration {
         if ( mode == TimeUnit.Minutes ) {
             this.secs = ( (int) (60 * timeValue) );
         }
+    }
+
+    /** @return the duration in the format 00:00, minutes and secs. */
+    public String toChronoString()
+    {
+        return String.format(
+                "%02d:%02d", this.getMinutes(), this.getSeconds() );
     }
 
     @Override

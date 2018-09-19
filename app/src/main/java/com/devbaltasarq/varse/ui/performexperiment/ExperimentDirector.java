@@ -1,18 +1,17 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
 import android.app.AlertDialog;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -21,7 +20,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.VideoView;
 
-import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
@@ -34,7 +32,6 @@ import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.ui.AppActivity;
-import com.devbaltasarq.varse.ui.MainActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,7 +96,6 @@ public class ExperimentDirector extends AppActivity {
         final Chronometer crCrono = this.findViewById( R.id.crCrono );
 
         crCrono.stop();
-        this.finish();
     }
 
     @Override
@@ -169,6 +165,8 @@ public class ExperimentDirector extends AppActivity {
                             ( ( SystemClock.elapsedRealtime() - crono.getBase() ) / 1000 )
                             - this.accumulatedTime;
 
+            Log.d( LogTag, "Elapsed time: " + seconds + '"' );
+
             if ( seconds >= timeToSpendInActivity ) {
                 this.skipCurrentActivity();
             }
@@ -179,17 +177,30 @@ public class ExperimentDirector extends AppActivity {
         return;
     }
 
+    /** @return the elapsed time, in millis, from the start of the experiment. */
+    private long getElapsedExperimentTime()
+    {
+        final Chronometer crono = this.findViewById( R.id.crCrono );
+
+        return SystemClock.elapsedRealtime() - crono.getBase();
+    }
+
+    /** @return the elapsed time, in seconds, from the start of the experiment. */
+    private int getElapsedActivityTime()
+    {
+        return (int) ( this.getElapsedExperimentTime() / 1000 ) - this.accumulatedTime;
+    }
+
     /** Skips current activity. */
     private void skipCurrentActivity()
     {
         if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
-            final Chronometer crono = this.findViewById( R.id.crCrono );
-            final Group.Activity activity = this.activitiesToPlay[ this.currentActivityIndex ];
-            final long elapsedTime = SystemClock.elapsedRealtime() - crono.getBase();
-            final int seconds = (int) ( elapsedTime / 1000 ) - this.accumulatedTime;
+            final long elapsedTime = this.getElapsedExperimentTime();
+            final int secondsInAct = this.getElapsedActivityTime();
+
 
             ++this.currentActivityIndex;
-            this.accumulatedTime += seconds;
+            this.accumulatedTime += secondsInAct;
 
             if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
                 Group.Activity act = this.activitiesToPlay[ this.currentActivityIndex ];
@@ -289,9 +300,19 @@ public class ExperimentDirector extends AppActivity {
         crCrono.stop();
 
         try {
+            final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
+
+            dlg.setTitle( this.experiment.getName() );
+            dlg.setMessage( R.string.msgFinishedExperiment );
+            dlg.setCancelable( false );
+            dlg.setPositiveButton( R.string.lblBack, (dlgintf, i) -> {
+                this.askBeforeExit = false;
+                this.finish();
+            } );
+
             this.orm.store( this.result );
-            this.askBeforeExit = false;
-            this.finish();
+            Log.i( LogTag, this.getString( R.string.msgFinishedExperiment ) );
+            dlg.create().show();
         } catch(IOException exc) {
             this.showStatus( LogTag, "unable to save experiment result" );
         }
@@ -303,24 +324,24 @@ public class ExperimentDirector extends AppActivity {
         final Chronometer crCrono = this.findViewById( R.id.crCrono );
         final TextView lblMaxTime = this.findViewById( R.id.lblMaxTime );
         final Duration timeNeeded = this.experiment.calculateTimeNeeded();
-        String strTime = String.format( "%02d:%02d",
-                                        timeNeeded.getMinutes(),
-                                        timeNeeded.getSeconds() );
 
+        // Prepare the UI
         this.prepareUIForExperiment();
-        lblMaxTime.setText( strTime );
-        this.currentActivityIndex = 0;
-        this.accumulatedTime = 0;
-        this.showActivity();
+        lblMaxTime.setText( timeNeeded.toChronoString() );
 
-        final long currentTime = System.currentTimeMillis();
+        // Create the result object
+        final long currentTime = SystemClock.elapsedRealtime();
         this.result = new Result( Id.create(), currentTime, this.user, this.experiment );
         this.result.add(
                 new Result.ActivityChangeEvent(
                         currentTime,
                         this.activitiesToPlay[ 0 ].getTag().toString() ) );
 
+        // Prepare crono and launch
         crCrono.setBase( currentTime );
+        this.currentActivityIndex = 0;
+        this.accumulatedTime = 0;
+        this.showActivity();
         crCrono.start();
     }
 
@@ -405,6 +426,7 @@ public class ExperimentDirector extends AppActivity {
 
     private void showActivity(int i)
     {
+        final TextView lblMaxActTime = this.findViewById( R.id.lblMaxActTime );
         final Group.Activity activity = this.activitiesToPlay[ i ];
         final Group group = activity.getGroup();
 
@@ -427,7 +449,9 @@ public class ExperimentDirector extends AppActivity {
             this.loadManualActivity( (ManualGroup.ManualActivity) activity );
         }
 
-        return;
+        final int exprTimeSecs = (int) Math.round( (double) this.getElapsedExperimentTime() / 1000 );
+        final Duration durationDelta = new Duration( activity.getTime().getTimeInSeconds() );
+        lblMaxActTime.setText( durationDelta.add( exprTimeSecs ).toChronoString() );
     }
 
     private static int[] createSequence(int max, boolean shuffle)

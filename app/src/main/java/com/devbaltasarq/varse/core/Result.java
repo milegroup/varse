@@ -405,13 +405,16 @@ public class Result extends Persistent {
                 final long timeSinceLastAct = time - timeLastActivity;
 
                 // Experiment's elapsed time
-                int hours = (int) time / ( 60 * 60 * 1000 );
-                int remaining = (int) time % ( 60 * 60 * 1000 );
-                int mins = remaining / 60;
-                int secs = remaining % 60;
+                final double totalSecs = ( (double) time ) / 1000;
+                int hours = (int) ( totalSecs / 3600 );
+                double remaining = totalSecs % 3600;
+                int mins = (int) ( remaining / 60 );
+                double secs = remaining % 60;
+                final String timeStamp = String.format( "%02d:%02d:%05.2f", hours, mins, secs );
+                final String timeDuration = String.format( "%05.2f", ( (double) timeSinceLastAct ) / 1000 );
 
                 tagsStream.write( '\t' );
-                tagsStream.write( String.format( "%02d:%02d%02d", hours, mins, secs ) );
+                tagsStream.write( timeStamp );
 
                 // Activity tag
                 tagsStream.write( '\t' );
@@ -419,7 +422,7 @@ public class Result extends Persistent {
 
                 // Duration
                 tagsStream.write( '\t' );
-                tagsStream.write( String.format( "%05.2f", timeSinceLastAct / 1000 ) );
+                tagsStream.write( timeDuration );
 
                 // Update time since last activity and finish
                 timeLastActivity = time;
@@ -558,7 +561,7 @@ public class Result extends Persistent {
 
             try {
                 final Experiment expr = (Experiment) orm.retrieve( experimentId, TypeId.Experiment );
-                final User usr = orm.createOrRetrieveUser( userId );
+                final User usr = orm.createOrRetrieveUserById( userId );
 
                 toret = new Result( id, dateTime, usr, expr );
                 toret.addAll( events );
@@ -593,7 +596,9 @@ public class Result extends Persistent {
         final String strId = parseName( resName )[ 1 ];
 
         if ( strId.charAt( 0 ) != 'i' ) {
-            throw new Error( "malformed result name looking for id" );
+            throw new Error( "malformed result name looking for id: "
+                    + strId
+                    + "/" + resName );
         }
 
         return Long.parseLong( strId.substring( 1 ) );
@@ -607,7 +612,9 @@ public class Result extends Persistent {
         final String strTime = parseName( resName )[ 2 ];
 
         if ( strTime.charAt( 0 ) != 't' ) {
-            throw new Error( "malformed result name looking for time" );
+            throw new Error( "malformed result name looking for time: "
+                    + strTime
+                    + "/" + resName );
         }
 
         return Long.parseLong( strTime.substring( 1 ) );
@@ -621,7 +628,9 @@ public class Result extends Persistent {
         final String strUserId = parseName( resName )[ 3 ];
 
         if ( strUserId.charAt( 0 ) != 'u' ) {
-            throw new Error( "malformed result name looking for user's id" );
+            throw new Error( "malformed result name looking for user's id: "
+                    + strUserId
+                    + "/" + resName );
         }
 
         return Long.parseLong( strUserId.substring( 1 ) );
@@ -632,10 +641,12 @@ public class Result extends Persistent {
      */
     public static long parseExperimentIdFromName(String resName)
     {
-        final String strExperimentId = parseName( resName )[ 3 ];
+        final String strExperimentId = parseName( resName )[ 4 ];
 
         if ( strExperimentId.charAt( 0 ) != 'e' ) {
-            throw new Error( "malformed result name looking for experiment's id" );
+            throw new Error( "malformed result name looking for experiment's id: "
+                                + strExperimentId
+                                + "/" + resName );
         }
 
         return Long.parseLong( strExperimentId.substring( 1 ) );

@@ -91,7 +91,9 @@ public final class MimeTools {
     public static String getMimeFor(File f)
     {
         init();
-        final String toret = mimeForExtension.get( Orm.extractFileExt( f ) );
+
+        final String FILE_EXT = Orm.extractFileExt( f ).trim().toLowerCase();
+        final String toret = mimeForExtension.get( FILE_EXT );
 
         if ( toret == null ) {
             throw new IllegalArgumentException( "unknown mime type for: " + f.toString() );

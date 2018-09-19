@@ -1,6 +1,7 @@
 package com.devbaltasarq.varse.ui;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -32,7 +33,7 @@ public class ExperimentsActivity extends AppActivity {
     public static final String LogTag = ExperimentsActivity.class.getSimpleName();
     public static final int RQC_ADD_EXPERIMENT = 76;
     public static final int RQC_EDIT_EXPERIMENT = 77;
-    public static final int RQC_ASK_PERMISSION = 77;
+    public static final int RQC_ASK_PERMISSION = 78;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -182,18 +183,42 @@ public class ExperimentsActivity extends AppActivity {
 
     public void deleteExperiment(int position, Experiment e)
     {
-        loadExperiment( e.getId() );
+        AlertDialog.Builder dlg = new AlertDialog.Builder( this );
 
-        if ( selectedExperiment != null ) {
-            Orm.get().remove( selectedExperiment );
-            this.experimentEntries.remove( position );
-            this.updateExperimentsList();
-        } else {
-            this.showStatus( LogTag, this.getString( R.string.ErrDeleting )
-                                        + ": " + e.toString() );
+        dlg.setTitle( this.getString( R.string.lblDelete )
+                + " " + this.getString( R.string.lblExperiment ).toLowerCase() );
+        dlg.setMessage( this.getString( R.string.msgAreYouSure ) );
+        dlg.setPositiveButton( R.string.lblDelete, (dlgIntf, i) -> {
+            loadExperiment( e.getId() );
+
+            if ( selectedExperiment != null ) {
+                Orm.get().remove( selectedExperiment );
+                this.experimentEntries.remove( position );
+                this.updateExperimentsList();
+            } else {
+                this.showStatus( LogTag, this.getString( R.string.ErrDeleting )
+                                            + ": " + e.toString() );
+            }
+        });
+        dlg.setNegativeButton( R.string.lblNo, null );
+        dlg.create().show();
+    }
+
+    public void launchExperimentResults(Experiment e)
+    {
+        final Intent showResultsIntent = new Intent( this, ResultsActivity.class );
+
+        try {
+             selectedExperiment = (Experiment)
+                                  Orm.get().retrieve( e.getId(), Persistent.TypeId.Experiment );
+        } catch(IOException exc) {
+            this.showStatus( LogTag,
+                             this.getString( R.string.msgFileNotFound )
+                             + ": " + this.getString(R.string.lblExperiment ) );
         }
 
-        return;
+        ResultsActivity.experiment = selectedExperiment;
+        this.startActivity( showResultsIntent );
     }
 
     public void launchExperiment(Experiment e)
@@ -253,17 +278,20 @@ public class ExperimentsActivity extends AppActivity {
 
     private void doExportExperiment(Experiment e)
     {
+        final String lblExperiment = this.getString( R.string.lblExperiment );
         final Orm db = Orm.get();
 
         try {
             db.exportExperiment( null, e );
             this.showStatus( LogTag,
-                    this.getString( R.string.msgExported)
+                    this.getString( R.string.msgExported )
+                            + ": " + lblExperiment
                             + ": '" + e.getName() + '\'' );
         } catch(IOException exc)
         {
             this.showStatus( LogTag,
                     this.getString( R.string.ErrExport )
+                            + ": " + lblExperiment
                             + ": '" + e.getName() + '\'' );
         }
 

@@ -242,6 +242,8 @@ public class EditMediaGroupActivity extends EditGroupActivity {
                 }
             } catch(IOException exc) {
                 this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            } catch(IllegalArgumentException exc) {
+                this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
             }
         } else {
             this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );

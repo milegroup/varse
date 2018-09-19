@@ -96,6 +96,16 @@
                 android:layout_height="wrap_content"
                 android:textSize="32sp"
                 android:text="/" />
+            <TextView   android:id="@+id/lblMaxActTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="32sp"
+                android:text="00:00" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="32sp"
+                android:text="/" />
             <TextView   android:id="@+id/lblMaxTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
