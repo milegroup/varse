@@ -20,7 +20,7 @@ public class BluetoothDeviceWrapper {
         this.demoDevice = null;
     }
 
-    /** Creates a new wrapper, with a demo device. */
+    /** Creates a new wrapper, with the demo device. */
     public BluetoothDeviceWrapper(@NonNull DemoBluetoothDevice demo)
     {
         this.demoDevice = demo;
@@ -93,17 +93,17 @@ public class BluetoothDeviceWrapper {
       * @return A BluetoothGatt object.
       * @see BluetoothGatt
     */
-    public BluetoothGattWrapper connect(Context cntxt, BluetoothGattCallback callBack)
+    public BluetoothGatt connect(Context cntxt, BluetoothGattCallback callBack)
     {
-        BluetoothGattWrapper toret = null;
+        BluetoothGatt toret = null;
 
         if ( isDemo() ) {
-            toret = this.demoDevice.connect( cntxt, callBack );
+            this.demoDevice.connect( callBack );
         } else {
             final BluetoothGatt btGatt = this.btDevice.connectGatt( cntxt, false, callBack );
 
             if ( btGatt != null ) {
-                toret = new BluetoothGattWrapper( btGatt );
+                toret = btGatt;
                 Log.d( LogTag, "Connected to device." );
             } else {
                 Log.e( LogTag, "Could not connect to device." );

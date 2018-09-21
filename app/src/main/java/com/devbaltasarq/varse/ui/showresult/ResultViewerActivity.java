@@ -152,19 +152,21 @@ public class ResultViewerActivity extends AppActivity {
                 if (numLines != 0) { // Ignores first line
                     Log.i(LogTag + ".Tags",line);
                     String[] parts = line.trim().split(" +|\t");
-                    episodesType.add(parts[1]);
-
                     String[] hms = parts[0].split(":");
+
                     try {
                         Float init = 3600.0f * Float.parseFloat(hms[0]) + 60.0f*Float.parseFloat(hms[1]) + Float.parseFloat(hms[2]);
-                        episodesInits.add(init);
-
                         Float end = init + Float.parseFloat(parts[2]);
-                        episodesEnds.add(end);
+
 
                         Log.i(LogTag + ".Tags", "Tag: "+parts[1]);
                         Log.i(LogTag + ".Tags", "Init: "+parts[0]+" ("+init+" seconds)");
                         Log.i(LogTag + ".Tags", "End: "+end+" seconds");
+
+                        // ONly now create the episode time marks
+                        episodesType.add(parts[1]);
+                        episodesInits.add(init);
+                        episodesEnds.add(end);
                     } catch(NumberFormatException exc) {
                         Log.e( LogTag, "floating point conversion error: " + exc.getMessage() );
                         return;

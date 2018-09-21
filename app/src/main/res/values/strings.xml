@@ -65,6 +65,7 @@
     <string name="lblDisconnected">Disconnected</string>
     <string name="lblRecord">Record</string>
     <string name="lblBpm">bpm</string>
+    <string name="lblRR">rr</string>
     <string name="lblYes">Yes</string>
     <string name="lblNo">No</string>
 

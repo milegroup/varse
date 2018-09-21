@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.core.bluetooth;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -9,11 +10,17 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.util.Log;
 
 import java.util.UUID;
+
+import static android.content.Context.BIND_AUTO_CREATE;
 
 
 public class BluetoothUtils {
@@ -30,25 +37,6 @@ public class BluetoothUtils {
 
         if ( bluetoothManager != null ) {
             toret = bluetoothManager.getAdapter();
-        }
-
-        return toret;
-    }
-
-    /** @return the HR characteristic from a GATT connection to a device. */
-    public static BluetoothGattCharacteristic getHeartRateChar(BluetoothGattWrapper gattw)
-    {
-        BluetoothGattCharacteristic toret = null;
-
-        if ( gattw.isDemo() ) {
-            toret = new BluetoothGattCharacteristic(
-                            UUID_HR_MEASUREMENT_CHR,
-                            BluetoothGattCharacteristic.PROPERTY_READ
-                                    | BluetoothGattCharacteristic.PROPERTY_BROADCAST
-                                    | BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-                            BluetoothGattCharacteristic.PERMISSION_READ );
-        } else {
-            toret = getHeartRateChar( gattw.getBtGatt() );
         }
 
         return toret;
@@ -89,8 +77,6 @@ public class BluetoothUtils {
                                                     final GattServiceConsumer hrServiceDiscovered,
                                                     final GattServiceConsumer hrServiceNotAvailable)
     {
-        final BluetoothAdapter bluetoothAdapter = getBluetoothAdapter( cntxt );
-
         return new BluetoothGattCallback() {
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
@@ -180,5 +166,147 @@ public class BluetoothUtils {
                 }
             }
         };
+    }
+
+    /** @return a receiver for the events fired by the service. */
+    public static BroadcastReceiver createBroadcastReceiverCallBack(final String MSG_CONNECTED,
+                                                                    final String MSG_DISCONNECTED)
+    {
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent)
+            {
+                final String action = intent.getAction();
+                final HRListenerActivity hrListenerAct = (HRListenerActivity) context;
+
+                // ACTION_GATT_CONNECTED: connected to a GATT server.
+                if ( BleService.ACTION_GATT_CONNECTED.equals( action ) ) {
+                    hrListenerAct.showStatus( MSG_CONNECTED );
+                }
+                else
+                // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
+                if ( BleService.ACTION_GATT_DISCONNECTED.equals( action ) ) {
+                    hrListenerAct.showStatus( MSG_DISCONNECTED );
+                }
+                else
+                if ( BleService.ACTION_GATT_SERVICES_DISCOVERED.equals( action ) ) {
+                    final BluetoothGattCharacteristic hrGattCharacteristic =
+                            BluetoothUtils.getHeartRateChar( hrListenerAct.getService().getGatt() );
+
+                    hrListenerAct.getService().readCharacteristic( hrGattCharacteristic );
+                    Log.d( LogTag, "Reading hr..." );
+                } else {
+                    // ACTION_DATA_AVAILABLE: received data from the device.
+                    //                        This can be a result of read or notification operations.
+                    if ( BleService.ACTION_DATA_AVAILABLE.equals( action ) ) {
+                        hrListenerAct.receiveBpm( intent );
+                    }
+                }
+            }
+        };
+    }
+
+    /** @return An intent filter suitable for HR measurement. */
+    public static IntentFilter createBroadcastReceiverIntentFilter()
+    {
+        final IntentFilter intentFilter = new IntentFilter();
+
+        intentFilter.addAction( BleService.ACTION_GATT_CONNECTED );
+        intentFilter.addAction( BleService.ACTION_GATT_DISCONNECTED );
+        intentFilter.addAction( BleService.ACTION_GATT_SERVICES_DISCOVERED );
+        intentFilter.addAction( BleService.ACTION_DATA_AVAILABLE );
+
+        return intentFilter;
+    }
+
+    /** @return A suitable BleService. */
+    private static void createBleService(HRListenerActivity activity, IBinder service)
+    {
+        Log.d( LogTag, "Binding service..." );
+
+        activity.setService( ( (BleService.LocalBinder) service ).getService() );
+        activity.getService().initialize( activity.getBtDevice() );
+
+        Log.d( LogTag, "Service bound." );
+    }
+
+    public static ServiceConnection createServiceConnectionCallBack(final HRListenerActivity activity)
+    {
+        return new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName componentName, IBinder service)
+            {
+                BluetoothUtils.createBleService( activity, service );
+
+                Log.d( LogTag, "Connecting to service..." );
+                final boolean result = activity.getService().connect();
+
+                Log.d( LogTag, "Connect request result: " + result );
+
+                if ( result ) {
+                    Activity context = (Activity) activity;
+                    context.registerReceiver( activity.getBroadcastReceiver(),
+                            BluetoothUtils.createBroadcastReceiverIntentFilter() );
+                }
+
+                return;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName componentName)
+            {
+                BluetoothUtils.closeBluetoothConnections( activity );
+            }
+        };
+    }
+
+    /** Turns down all services and callbacks needed to connect to the band. */
+    public static void closeBluetoothConnections(HRListenerActivity activity)
+    {
+        final Activity context = (Activity) activity;
+
+        Log.d( LogTag, "Closing connections." );
+
+        // Unregister receiver
+        try {
+            context.unregisterReceiver( activity.getBroadcastReceiver() );
+        } catch(IllegalArgumentException exc) {
+            Log.e( LogTag, "closing: not registered yet: " + exc.getMessage() );
+        }
+
+        // Disconnect the service
+        if ( activity.getService() != null ) {
+            activity.getService().close();
+        }
+
+        // Unbind the service
+        if ( activity.getServiceConnection() != null ) {
+            try {
+                context.unbindService( activity.getServiceConnection() );
+            } catch(IllegalArgumentException exc) {
+                Log.e( LogTag, "closing: service not bound yet: " + exc.getMessage() );
+            }
+        }
+
+        // Disconnect the demo bt device, provided it is being used
+        if ( activity.getBtDevice().isDemo() ) {
+            activity.getBtDevice().getDemoDevice().disconnect();
+        }
+
+        Log.d( LogTag, "Connections closed." );
+    }
+
+    /** Turns on all services and callbacks needed to connect to the band. */
+    public static void openBluetoothConnections(HRListenerActivity activity, final String conn, final String disconn)
+    {
+        final Activity context = (Activity) activity;
+        final Intent gattServiceIntent = new Intent( context, BleService.class );
+
+        activity.setServiceConnection( BluetoothUtils.createServiceConnectionCallBack( activity ) );
+        activity.setBroadcastReceiver( BluetoothUtils.createBroadcastReceiverCallBack( conn, disconn ) );
+        context.bindService( gattServiceIntent, activity.getServiceConnection(), BIND_AUTO_CREATE );
+
+        Log.d( LogTag, "Binding service for: " + activity.getBtDevice().getName() );
+        // Follow up, once the service is bound, in createServiceConnectionCallback()
     }
 }

@@ -72,6 +72,26 @@
                     android:layout_height="wrap_content"
                     android:textSize="24sp" />
             </ScrollView>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_weight=".4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lblDevice"
+                    android:textSize="24sp" />
+
+                <TextView   android:id="@+id/lblConnectionStatus"
+                    android:layout_weight=".6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="24sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <FrameLayout    android:id="@+id/flContainer"

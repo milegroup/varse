@@ -1,14 +1,15 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
+import android.app.Activity;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -16,16 +17,14 @@ import android.widget.TextView;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.bluetooth.BleService;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
-import com.devbaltasarq.varse.core.bluetooth.BluetoothGattWrapper;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
+import com.devbaltasarq.varse.core.bluetooth.HRListenerActivity;
 import com.devbaltasarq.varse.ui.AppActivity;
-
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 
 /** Shows an activity in which the user can see the obtained bpm data.
   * The device is taken from the static attribute PerformExperimentActivity. */
-public class TestHRDevice extends AppActivity {
+public class TestHRDevice extends AppActivity implements HRListenerActivity {
     private static String LogTag = TestHRDevice.class.getSimpleName();
 
     @Override
@@ -44,10 +43,11 @@ public class TestHRDevice extends AppActivity {
         // Set device
         this.btDevice = PerformExperimentActivity.chosenBtDevice;
         lblDeviceName.setText( this.btDevice.getName() );
+    }
 
-        // Prepare callbacks and bind
-        this.serviceConnection = this.createServiceConnectionCallBack();
-        this.broadcastReceiver = this.createBroadcastReceiverCallBack();
+    public void showStatus(String msg)
+    {
+        this.showStatus( LogTag, msg );
     }
 
     @Override
@@ -55,7 +55,9 @@ public class TestHRDevice extends AppActivity {
     {
         super.onResume();
 
-        this.openConnections();
+        BluetoothUtils.openBluetoothConnections( this,
+                                                    this.getString( R.string.lblConnected ),
+                                                    this.getString( R.string.lblDisconnected ) );
         this.showInactive();
 
         Log.d( LogTag, "UI started, service tried to bound." );
@@ -66,7 +68,7 @@ public class TestHRDevice extends AppActivity {
     {
         super.onPause();
 
-        this.closeConnections();
+        BluetoothUtils.closeBluetoothConnections( this );
         this.showInactive();
 
         Log.d( LogTag, "UI finished, closed connections." );
@@ -78,173 +80,130 @@ public class TestHRDevice extends AppActivity {
         return false;
     }
 
-    /** Turns on all services and callbacks needed to connect to the band. */
-    private void openConnections()
+    /** Extracts the info received from the HR service.
+     * @param intent The key-value extra collection has at least
+     *                BleService.HEART_RATE_TAG for heart rate information (as int),
+     *                and it can also have BleService.RR_TAG for the rr info (as int).
+     */
+    public void receiveBpm(Intent intent)
     {
-        final Intent gattServiceIntent = new Intent( this, BleService.class );
+        final int hr = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
+        final int rr = intent.getIntExtra( BleService.RR_TAG, -1 );
+        String strHr = "";
+        String strRr = "";
 
-        this.bindService( gattServiceIntent, this.serviceConnection, BIND_AUTO_CREATE );
+        if ( hr >= 0 ) {
+            strHr = Integer.toString( hr );
+        }
 
-        Log.d( LogTag, "Binding service for: " + btDevice.getName() );
+        if ( rr >= 0 ) {
+            strRr = Integer.toString( rr );
+        }
 
-        // Follow up, once the service is bound, in createServiceConnectionCallback()
+        this.showBpm( strHr, strRr );
     }
 
-    /** Turns down all services and callbacks needed to connect to the band. */
-    private void closeConnections()
-    {
-        Log.d( LogTag, "Closing connections." );
-
-        // Remove the task of watching the heart rate
-        if ( this.exec != null ) {
-            this.exec.shutdownNow();
-            this.exec = null;
-        }
-
-        // Unregister receiver
-        try {
-            this.unregisterReceiver( this.broadcastReceiver );
-        } catch(IllegalArgumentException exc) {
-            Log.e( LogTag, "closing: not registered yet: " + exc.getMessage() );
-        }
-
-        // Disconnect the service
-        if ( this.bleService != null ) {
-            this.bleService.close();
-            this.bleService = null;
-        }
-
-        // Unbind the service
-        if ( this.serviceConnection != null ) {
-            try {
-                this.unbindService( this.serviceConnection );
-            } catch(IllegalArgumentException exc) {
-                Log.e( LogTag, "closing: service not bound yet: " + exc.getMessage() );
-            }
-
-            this.serviceConnection = null;
-        }
-
-        Log.d( LogTag, "Connections closed." );
-    }
-
-    /** Launches a request to find the heart rate measurement from the bluetooth band. */
-    private void askForBpm()
-    {
-        if ( this.hrChar == null ) {
-            this.hrChar = BluetoothUtils.getHeartRateChar( this.bleService.getGatt() );
-        }
-
-        this.bleService.readCharacteristic( this.hrChar );
-        this.showStatus( LogTag, this.getString( R.string.msgReadingHR ) + "..." );
-    }
-
-    private void showHR(final String hrm)
+    /** Shows the info in the appropriate labels. */
+    private void showBpm(String bpm, String rr)
     {
         final TextView lblBpm = this.findViewById( R.id.lblBpm );
+        final TextView lblRR = this.findViewById( R.id.lblRR );
 
-        TestHRDevice.this.runOnUiThread( () -> lblBpm.setText( hrm ) );
+
+        if ( bpm != null
+          && !bpm.isEmpty()  )
+        {
+            TestHRDevice.this.runOnUiThread( () -> lblBpm.setText( bpm ) );
+        } else {
+            this.showInactive();
+        }
+
+        if ( rr != null
+          && !rr.isEmpty()  )
+        {
+            TestHRDevice.this.runOnUiThread( () -> lblRR.setText( rr ) );
+        } else {
+            this.showInactive();
+        }
+
+        return;
     }
 
     /** Puts a -- in the label, so the user knows the BPM are not being measured. */
-    private void showInactive()
+    private void showHRInactive()
     {
         TestHRDevice.this.runOnUiThread( () -> {
             final TextView lblBpm = this.findViewById( R.id.lblBpm );
 
             lblBpm.setText( "--" );
-            this.showStatus( LogTag, this.getString( R.string.msgStandby ) );
         });
     }
 
-    /** @return a receiver for the events fired by the service. */
-    private BroadcastReceiver createBroadcastReceiverCallBack()
+    /** Puts a -- in the label, so the user knows the RR are not being measured. */
+    private void showRRInactive()
     {
-        return new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent)
-            {
-                final String action = intent.getAction();
-                final TestHRDevice cntxt = TestHRDevice.this;
+        TestHRDevice.this.runOnUiThread( () -> {
+            final TextView lblRR = this.findViewById( R.id.lblRR );
 
-                // ACTION_GATT_CONNECTED: connected to a GATT server.
-                if ( BleService.ACTION_GATT_CONNECTED.equals( action ) ) {
-                    cntxt.showStatus( LogTag, cntxt.getString( R.string.lblConnected ) );
-                }
-                else
-                // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-                if ( BleService.ACTION_GATT_DISCONNECTED.equals( action ) ) {
-                    cntxt.showStatus( LogTag, cntxt.getString( R.string.lblDisconnected ) );
-                }
-                else
-                if ( BleService.ACTION_GATT_SERVICES_DISCOVERED.equals( action ) ) {
-                    final BluetoothGattWrapper gatt = TestHRDevice.this.bleService.getGatt();
-
-                    cntxt.hrChar = BluetoothUtils.getHeartRateChar( gatt );
-                    cntxt.askForBpm();
-                }
-                else
-                // ACTION_DATA_AVAILABLE: received data from the device.
-                //                        This can be a result of read or notification operations.
-                if ( BleService.ACTION_DATA_AVAILABLE.equals( action ) ) {
-                    TestHRDevice.this.showHR( intent.getStringExtra( BleService.HEART_RATE_TAG ) );
-                }
-            }
-        };
+            lblRR.setText( "--" );
+        });
     }
 
-    private ServiceConnection createServiceConnectionCallBack()
+    /** Puts a -- in all labels, so the user knows both the RRR the BPM are not being measured. */
+    private void showInactive()
     {
-        return new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName componentName, IBinder service)
-            {
-                Log.d( LogTag, "Creating service." );
-
-                TestHRDevice.this.bleService = ( (BleService.LocalBinder) service ).getService();
-                TestHRDevice.this.bleService.initialize( TestHRDevice.this.btDevice );
-
-                Log.d( LogTag, "Service bound, connecting." );
-
-                final boolean result = TestHRDevice.this.bleService.connect();
-
-                Log.d( LogTag, "Connect request result: " + result );
-
-                if ( result ) {
-                    TestHRDevice.this.registerReceiver(
-                        TestHRDevice.this.broadcastReceiver,
-                        createBroadcastReceiverIntentFilter() );
-                }
-
-                return;
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName componentName)
-            {
-                TestHRDevice.this.bleService.close();
-                TestHRDevice.this.bleService = null;
-                TestHRDevice.this.closeConnections();
-            }
-        };
+        this.showHRInactive();
+        this.showRRInactive();
     }
 
-    private static IntentFilter createBroadcastReceiverIntentFilter()
+    /** @return the BleService object used by this activity. */
+    @Override
+    public BleService getService()
     {
-        final IntentFilter intentFilter = new IntentFilter();
+        return this.bleService;
+    }
 
-        intentFilter.addAction( BleService.ACTION_GATT_CONNECTED );
-        intentFilter.addAction( BleService.ACTION_GATT_DISCONNECTED );
-        intentFilter.addAction( BleService.ACTION_GATT_SERVICES_DISCOVERED );
-        intentFilter.addAction( BleService.ACTION_DATA_AVAILABLE );
+    @Override
+    public void setService(BleService service)
+    {
+        this.bleService = service;
+    }
 
-        return intentFilter;
+    /** @return the BroadcastReceiver used by this activivty. */
+    @Override
+    public BroadcastReceiver getBroadcastReceiver()
+    {
+        return this.broadcastReceiver;
+    }
+
+    /** @return the device this activity will connect to. */
+    @Override
+    public BluetoothDeviceWrapper getBtDevice()
+    {
+        return this.btDevice;
+    }
+
+    /** @return the service connection for this activity. */
+    @Override
+    public ServiceConnection getServiceConnection()
+    {
+        return this.serviceConnection;
+    }
+
+    @Override
+    public void setServiceConnection(ServiceConnection serviceConnection)
+    {
+        this.serviceConnection = serviceConnection;
+    }
+
+    @Override
+    public void setBroadcastReceiver(BroadcastReceiver broadcastReceiver)
+    {
+        this.broadcastReceiver = broadcastReceiver;
     }
 
     private ServiceConnection serviceConnection;
     private BroadcastReceiver broadcastReceiver;
     private BleService bleService;
     private BluetoothDeviceWrapper btDevice;
-    private ScheduledThreadPoolExecutor exec;
-    private BluetoothGattCharacteristic hrChar;
 }

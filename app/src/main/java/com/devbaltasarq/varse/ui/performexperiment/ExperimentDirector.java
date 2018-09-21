@@ -1,6 +1,9 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -20,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.VideoView;
 
+import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
@@ -27,7 +31,10 @@ import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.User;
+import com.devbaltasarq.varse.core.bluetooth.BleService;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
+import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
+import com.devbaltasarq.varse.core.bluetooth.HRListenerActivity;
 import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
@@ -39,7 +46,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-public class ExperimentDirector extends AppActivity {
+public class ExperimentDirector extends AppActivity implements HRListenerActivity {
     public static final String LogTag = ExperimentDirector.class.getSimpleName();
 
     @Override
@@ -88,20 +95,57 @@ public class ExperimentDirector extends AppActivity {
         lblExperiment.setText( this.experiment.getName() );
     }
 
+    private void setAbleToLaunch(boolean isAble)
+    {
+        final FloatingActionButton fbLaunchNow = this.findViewById( R.id.fbLaunchNow );
+        final TextView lblConnectionStatus = this.findViewById( R.id.lblConnectionStatus );
+
+        if ( isAble ) {
+            lblConnectionStatus.setText( R.string.lblConnected );
+        } else {
+            lblConnectionStatus.setText( R.string.lblDisconnected );
+        }
+
+        this.readyToLaunch = isAble;
+        fbLaunchNow.setEnabled( isAble );
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        BluetoothUtils.openBluetoothConnections( this,
+                this.getString( R.string.lblConnected ),
+                this.getString( R.string.lblDisconnected ) );
+
+        this.setAbleToLaunch( false );
+    }
+
     @Override
     public void onPause()
     {
         super.onPause();
 
+        this.setAbleToLaunch( false );
+
         final Chronometer crCrono = this.findViewById( R.id.crCrono );
 
         crCrono.stop();
+        BluetoothUtils.closeBluetoothConnections( this );
+        Log.d( LogTag, "Director finished, stopped chrono, closed connections." );
     }
 
     @Override
     public boolean askBeforeLeaving()
     {
         return this.askBeforeExit;
+    }
+
+    @Override
+    public void showStatus(String msg)
+    {
+        this.showStatus( LogTag, msg );
     }
 
     /** Builds the picture box needed to show images. */
@@ -216,6 +260,41 @@ public class ExperimentDirector extends AppActivity {
         return;
     }
 
+    /** Extracts the info received from the HR service.
+     * @param intent The key-value extra collection has at least
+     *                BleService.HEART_RATE_TAG for heart rate information (as int),
+     *                and it can also have BleService.RR_TAG for the rr info (as int).
+     */
+    public void receiveBpm(Intent intent)
+    {
+        final int hr = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
+        final int rr = intent.getIntExtra( BleService.RR_TAG, -1 );
+
+        if ( BuildConfig.DEBUG ) {
+            if ( hr >= 0 ) {
+                Log.d( LogTag, "HR received: " + hr + "bpm" );
+            }
+
+            if ( rr >= 0 ) {
+                Log.d( LogTag, "RR received: " + rr + "millisecs" );
+            }
+        }
+
+        if ( rr >= 0 ) {
+            if ( !this.readyToLaunch ) {
+                this.setAbleToLaunch( true );
+            } else {
+                if ( this.result != null ) {
+                    this.result.add( new Result.BeatEvent(
+                                this.getElapsedExperimentTime(),
+                                rr ));
+                }
+            }
+        }
+
+        return;
+    }
+
     /** Creates the description before the experiment starts. */
     private String buildDescription()
     {
@@ -224,8 +303,9 @@ public class ExperimentDirector extends AppActivity {
         // Groups of this experiment
         for(Group g: this.experiment.getGroups()) {
             if ( g instanceof ManualGroup ) {
-                toret.append( this.getString( R.string.lblGroupManual )
-                                + " - " + g.toString() );
+                toret.append( this.getString( R.string.lblGroupManual ) );
+                toret.append( " - " );
+                toret.append( g.toString() );
             } else {
                 toret.append( g.toString() );
             }
@@ -483,6 +563,52 @@ public class ExperimentDirector extends AppActivity {
         return toret;
     }
 
+    /** @return the BleService object used by this activity. */
+    @Override
+    public BleService getService()
+    {
+        return this.bleService;
+    }
+
+    @Override
+    public void setService(BleService service)
+    {
+        this.bleService = service;
+    }
+
+    /** @return the BroadcastReceiver used by this activivty. */
+    @Override
+    public BroadcastReceiver getBroadcastReceiver()
+    {
+        return this.broadcastReceiver;
+    }
+
+    /** @return the device this activity will connect to. */
+    @Override
+    public BluetoothDeviceWrapper getBtDevice()
+    {
+        return this.btDevice;
+    }
+
+    /** @return the service connection for this activity. */
+    @Override
+    public ServiceConnection getServiceConnection()
+    {
+        return this.serviceConnection;
+    }
+
+    @Override
+    public void setServiceConnection(ServiceConnection serviceConnection)
+    {
+        this.serviceConnection = serviceConnection;
+    }
+
+    @Override
+    public void setBroadcastReceiver(BroadcastReceiver broadcastReceiver)
+    {
+        this.broadcastReceiver = broadcastReceiver;
+    }
+
     private ImageView ivPictureBox;
     private TextView tvTextBox;
     private VideoView vVideoBox;
@@ -491,9 +617,14 @@ public class ExperimentDirector extends AppActivity {
     private int accumulatedTime;
     private User user;
     private Experiment experiment;
-    private BluetoothDeviceWrapper btDevice;
     private Group.Activity[] activitiesToPlay;
     private boolean askBeforeExit;
+    private boolean readyToLaunch;
     private Result result;
     private Orm orm;
+
+    private ServiceConnection serviceConnection;
+    private BroadcastReceiver broadcastReceiver;
+    private BleService bleService;
+    private BluetoothDeviceWrapper btDevice;
 }
