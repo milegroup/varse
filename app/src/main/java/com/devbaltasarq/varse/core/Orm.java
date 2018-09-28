@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
 
 
 /** Relates the database of JSON files to objects. */
@@ -1337,7 +1338,9 @@ public final class Orm {
       */
     public static String buildMediaFileNameForDbFromMediaFileName(String fileName)
     {
-        return Tag.encode( fileName );
+        // Android Studio complains here about API level
+        // This is an extra indirection to avoid calling directly Tag.encode( fileName ).
+        return fileNameConverter.apply( fileName );
     }
 
     /** Gets the already open database.
@@ -1355,13 +1358,20 @@ public final class Orm {
         return instance;
     }
 
-    /** Initialises the already open database. */
-    public static void init(Context context)
+    /** Initialises the already open database.
+     * @param context the application context this database will be working against.
+     * @param fileNameAdapter A lambda or referenced method of the signature: (String x) -> x
+     *                        this will convert file names to the needed standard, which is
+     *                        lowercase and no spaces ('_' instead).
+     * @see Function
+     */
+    public static void init(Context context, Function<String, String> fileNameAdapter)
     {
         if ( instance == null ) {
             instance = new Orm( context );
         }
 
+        fileNameConverter = fileNameAdapter;
         return;
     }
 
@@ -1372,6 +1382,8 @@ public final class Orm {
     private File dirDb;
     private File dirRes;
     private File dirTmp;
+
+    private static Function<String, String> fileNameConverter;
     private static Orm instance;
     private static File DIR_DOWNLOADS = Environment.getExternalStoragePublicDirectory(
                                                                 Environment.DIRECTORY_DOWNLOADS );

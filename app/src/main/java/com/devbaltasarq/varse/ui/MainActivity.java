@@ -23,6 +23,7 @@ import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.Persistent;
+import com.devbaltasarq.varse.core.experiment.Tag;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
 import java.io.IOException;
@@ -87,7 +88,7 @@ public class MainActivity extends AppActivity
         super.onStart();
 
         // Initialize the database
-        Orm.init( this.getApplicationContext() );
+        Orm.init( this.getApplicationContext(), Tag::encode );
     }
 
     @Override
