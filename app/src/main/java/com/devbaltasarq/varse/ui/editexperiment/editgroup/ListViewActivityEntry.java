@@ -10,11 +10,6 @@ public class ListViewActivityEntry {
         this.activity = act;
     }
 
-    public Group getGroup()
-    {
-        return this.activity.getGroup();
-    }
-
     public Group.Activity getActivity()
     {
         return this.activity;

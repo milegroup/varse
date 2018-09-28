@@ -15,13 +15,14 @@
         android:layout_height="match_parent">
 
         <LinearLayout   android:id="@+id/lyInfo"
-            android:layout_weight=".8"
+            android:layout_weight=".9"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical">
 
             <LinearLayout
+                android:layout_weight=".2"
                 android:orientation="horizontal"
                 android:padding="10dp"
                 android:layout_width="match_parent"
@@ -32,6 +33,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/lblDevice"
+                    android:textStyle="bold"
                     android:textSize="24sp" />
 
                 <TextView   android:id="@+id/lblDeviceName"
@@ -42,6 +44,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:layout_weight=".2"
                 android:orientation="horizontal"
                 android:padding="10dp"
                 android:layout_width="match_parent"
@@ -52,6 +55,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/lblRecord"
+                    android:textStyle="bold"
                     android:textSize="24sp" />
 
                 <TextView   android:id="@+id/lblRecord"
@@ -61,19 +65,25 @@
                     android:textSize="24sp" />
             </LinearLayout>
 
-            <ScrollView android:id="@+id/svScroll"
+            <TextView   android:id="@+id/lblNoEntries"
+                android:visibility="gone"
+                android:layout_weight=".4"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
+                android:textStyle="bold"
+                android:gravity="center_horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content" />
 
-                <TextView   android:id="@+id/lblExperimentDescription"
-                    android:padding="10dp"
-                    android:visibility="visible"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="24sp" />
-            </ScrollView>
+            <ListView   android:id="@+id/lvExperimentActivities"
+                android:layout_weight=".4"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                android:padding="10dp"
+                android:visibility="visible"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
             <LinearLayout
+                android:layout_weight=".2"
                 android:orientation="horizontal"
                 android:padding="10dp"
                 android:layout_width="match_parent"
@@ -84,9 +94,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/lblDevice"
+                    android:textStyle="bold"
                     android:textSize="24sp" />
 
                 <TextView   android:id="@+id/lblConnectionStatus"
+                    android:textColor="#ff0000"
                     android:layout_weight=".6"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -97,11 +109,12 @@
         <FrameLayout    android:id="@+id/flContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight=".8"
+            android:layout_weight=".9"
             android:layout_gravity="center_vertical">
         </FrameLayout>
 
         <LinearLayout
+            android:layout_weight=".1"
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

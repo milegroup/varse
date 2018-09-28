@@ -139,10 +139,9 @@ public class Experiment extends Persistent {
         }
     }
 
-    /** Removes a given file from the media list. */
+    /** Removes a given group from the media group list. */
     public void removeGroup(Group grp)
     {
-        Orm.get().remove( grp );
         this.groups.remove( grp );
     }
 
@@ -294,12 +293,12 @@ public class Experiment extends Persistent {
     }
 
     @Override
-    public File[] enumerateAssociatedFiles()
+    public File[] enumerateMediaFiles()
     {
         ArrayList<File> toret = new ArrayList<>();
 
         for(Group grp: this.getGroups()) {
-            toret.addAll( Arrays.asList( grp.enumerateAssociatedFiles() ) );
+            toret.addAll( Arrays.asList( grp.enumerateMediaFiles() ) );
         }
 
         return toret.toArray( new File[ 0 ] );

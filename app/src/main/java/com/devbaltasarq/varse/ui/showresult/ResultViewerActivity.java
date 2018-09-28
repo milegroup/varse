@@ -24,23 +24,25 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /** Represents the result data set as a graph on the screen.
   * public static File beatsFile y tagsFile deben ser cargadas primero.
   * @author Leandro
   */
 public class ResultViewerActivity extends AppActivity {
+    private static final String NONE_TAG = "__none*tag__";
     private static final String LogTag = ResultViewerActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        super.onCreate(savedInstanceState);
+        super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_result_viewer );
 
-        final ImageButton btCloseResultViewer = this.findViewById( R.id.btCloseResultViewer );
-
-        btCloseResultViewer.setOnClickListener( (v) -> this.finish() );
+        // Back button
+        ImageButton btBack = this.findViewById( R.id.btCloseResultViewer );
+        btBack.setOnClickListener( (v) -> this.finish() );
 
         // Check files exist
         if ( tagsFile == null
@@ -63,11 +65,14 @@ public class ResultViewerActivity extends AppActivity {
 
         // Loads data into dataRRnf (unfiltered RR in milliseconds)
         dataRRnf = new ArrayList<>();
+
+        // Loads tags file
         episodesInits = new ArrayList<>();
         episodesEnds = new ArrayList<>();
         episodesType = new ArrayList<>();
-        LoadData( beatsFile );
-        LoadTags( tagsFile );
+
+        this.loadData( beatsFile );
+        this.loadTags( tagsFile );
 
         if ( dataRRnf.size() > 0 ) {
             // Generates dataHRnf (unfiltered sequence of BPS values)
@@ -94,20 +99,24 @@ public class ResultViewerActivity extends AppActivity {
             Log.i(LogTag,"Last beat position: "+dataBeatTimes.get(dataBeatTimes.size()-1)+" seconds");
 
             // Creates a series of HR values linearly interpolated
-            xInterp = new ArrayList<>();
+            dataHRInterpX = new ArrayList<>();
             dataHRInterp = new ArrayList<>();
-            this.Interpolate();
+            Interpolate();
 
-            Log.i(LogTag,"length of xinterp: "+xInterp.size());
-            Log.i(LogTag,"First value: "+xInterp.get(0));
-            Log.i(LogTag,"Last value: "+xInterp.get(xInterp.size()-1));
+            Log.i(LogTag,"length of xinterp: "+ dataHRInterpX.size());
+            Log.i(LogTag,"First value: "+ dataHRInterpX.get(0));
+            Log.i(LogTag,"Last value: "+ dataHRInterpX.get(dataHRInterpX.size()-1));
 
             // Plots interpolated HR signal
-            this.makePlot();
-            this.Analyze();
+            makePlot();
+
+
+            Analyze();
         } else {
             this.showStatus( LogTag, "Empty data" );
         }
+
+        return;
     }
 
     @Override
@@ -116,10 +125,9 @@ public class ResultViewerActivity extends AppActivity {
         return false;
     }
 
-    private void LoadData(File f)
+    private void loadData(File f)
     {
         // Loads the data
-
         try {
             Log.i(LogTag,"Loading data");
             BufferedReader reader = Orm.openReaderFor( f );
@@ -136,10 +144,11 @@ public class ResultViewerActivity extends AppActivity {
 
         } catch (IOException exc) {
             this.showStatus( LogTag, "unable to load data file: " + f.getName() );
+            this.dataRRnf.clear();
         }
     }
 
-    private void LoadTags(File f) {
+    private void loadTags(File f) {
         // Loads episodic information
         Log.i(LogTag + ".Tags","Loading tags");
         int numLines = 0;
@@ -155,15 +164,14 @@ public class ResultViewerActivity extends AppActivity {
                     String[] hms = parts[0].split(":");
 
                     try {
-                        Float init = 3600.0f * Float.parseFloat(hms[0]) + 60.0f*Float.parseFloat(hms[1]) + Float.parseFloat(hms[2]);
-                        Float end = init + Float.parseFloat(parts[2]);
-
+                        float init = 3600.0f * Float.parseFloat(hms[0]) + 60.0f*Float.parseFloat(hms[1]) + Float.parseFloat(hms[2]);
+                        float end = init + Float.parseFloat(parts[2]);
 
                         Log.i(LogTag + ".Tags", "Tag: "+parts[1]);
                         Log.i(LogTag + ".Tags", "Init: "+parts[0]+" ("+init+" seconds)");
                         Log.i(LogTag + ".Tags", "End: "+end+" seconds");
 
-                        // ONly now create the episode time marks
+                        // Only now create the episode time marks
                         episodesType.add(parts[1]);
                         episodesInits.add(init);
                         episodesEnds.add(end);
@@ -189,7 +197,7 @@ public class ResultViewerActivity extends AppActivity {
 
     private String findTag(float timeValue) {
         // Given a time value, it returns the tag
-        String tag="None";
+        String tag=NONE_TAG;
 
         for (int i=0; i<episodesType.size();i++) {
             if ((episodesInits.get(i)<=timeValue) && (episodesEnds.get(i)>=timeValue)) {
@@ -214,13 +222,13 @@ public class ResultViewerActivity extends AppActivity {
         return segment;
     }
 
+
     private void FilterData() {
         int winlength = 50, minbpm=24, maxbpm=198;
-        float last = 13.0f;
+        float ulast = 13.0f;
         dataRR = new ArrayList<>(dataRRnf);
         Log.i(LogTag,"I'm going to filter the signal");
 
-        float ulast = last;
         float umean = 1.5f * ulast;
         int index;
         index = 1;
@@ -254,10 +262,10 @@ public class ResultViewerActivity extends AppActivity {
         float step = 1.0f/freq;
 
         // Calculates positions in x axis
-        xInterp.add(xmin);
+        dataHRInterpX.add(xmin);
         float newValue = xmin+step;
         while (newValue<=xmax) {
-            xInterp.add(newValue);
+            dataHRInterpX.add(newValue);
             newValue += step;
         }
 
@@ -270,8 +278,8 @@ public class ResultViewerActivity extends AppActivity {
         leftHRVal = dataHR.get(leftHRIndex);
         rightHRVal = dataHR.get(rightHRIndex);
 
-        for (int xInterpIndex=0; xInterpIndex<xInterp.size(); xInterpIndex++ ){
-            if (xInterp.get(xInterpIndex)>=rightBeatPos) {
+        for (int xInterpIndex = 0; xInterpIndex< dataHRInterpX.size(); xInterpIndex++ ){
+            if (dataHRInterpX.get(xInterpIndex)>=rightBeatPos) {
                 leftHRIndex++;
                 rightHRIndex++;
                 leftBeatPos = dataBeatTimes.get(leftHRIndex);
@@ -281,7 +289,7 @@ public class ResultViewerActivity extends AppActivity {
             }
 
             // Estimate HR value in position
-            float HR = (rightHRVal-leftHRVal)*(xInterp.get(xInterpIndex)-leftBeatPos)/(rightBeatPos-leftBeatPos)+leftHRVal;
+            float HR = (rightHRVal-leftHRVal)*(dataHRInterpX.get(xInterpIndex)-leftBeatPos)/(rightBeatPos-leftBeatPos)+leftHRVal;
             dataHRInterp.add(HR);
 
         }
@@ -291,7 +299,7 @@ public class ResultViewerActivity extends AppActivity {
     private List<Float> getSegmentHRInterp(float beg, float end) {
         List<Float> segment = new ArrayList<>();
         for (int indexHR=0 ; indexHR<dataHRInterp.size() ; indexHR++) {
-            if  ( (xInterp.get(indexHR) >= beg) && (xInterp.get(indexHR) <= end) ) {
+            if  ( (dataHRInterpX.get(indexHR) >= beg) && (dataHRInterpX.get(indexHR) <= end) ) {
                 segment.add(dataHRInterp.get(indexHR));
             }
         }
@@ -307,60 +315,146 @@ public class ResultViewerActivity extends AppActivity {
         return segmentPadded;
     }
 
-
-
     private void Analyze() {
+        final StringBuilder text = new StringBuilder( "<h3>Signal data</h3>" );
+        final float FILTERED_RATE = 100.0f * (dataRRnf.size() - dataRR.size()) / dataRRnf.size();
 
-        String text="<h3>Signal data</h3>";
-        text += "<p>&nbsp;&nbsp;<b>Length of original RR signal</b>: " + String.format("%d", dataRRnf.size()) + " values</p>";
-        text += "<p>&nbsp;&nbsp;<b>Length of filtered RR signal</b>: " + String.format("%d", dataRR.size()) + " values</p>";
-        float filteredRate = 100.0f * (dataRRnf.size() - dataRR.size()) / dataRRnf.size();
-        text += "<p>&nbsp;&nbsp;<b>Beat rejection rate</b>: " + String.format("%.2f", filteredRate) + "%</p>";
-        text += "<p>&nbsp;&nbsp;<b>Interpolation frequency</b>: " + String.format("%.2f", freq) + " Hz</p>";
-        text += "<p>&nbsp;&nbsp;<b>Number of interpolated samples</b>: " + String.format("%d", dataHRInterp.size()) +"</p>";
+        text.append( "<p>&nbsp;&nbsp;<b>Length of original RR signal</b>: " );
+        text.append( String.format( Locale.getDefault(), "%d", dataRRnf.size()) );
+        text.append( " values</p>" );
+        text.append( "<p>&nbsp;&nbsp;<b>Length of filtered RR signal</b>: " );
+        text.append( String.format( Locale.getDefault(), "%d", dataRR.size()) );
+        text.append( " values</p>" );
 
+        text.append( "<p>&nbsp;&nbsp;<b>Beat rejection rate</b>: " );
+        text.append( String.format( Locale.getDefault(), "%.2f", FILTERED_RATE) );
+        text.append( "%</p>" );
+        text.append( "<p>&nbsp;&nbsp;<b>Interpolation frequency</b>: " );
+        text.append( String.format( Locale.getDefault(), "%.2f", freq) );
+        text.append( " Hz</p>" );
+        text.append( "<p>&nbsp;&nbsp;<b>Number of interpolated samples</b>: " );
+        text.append( String.format( Locale.getDefault(), "%d", dataHRInterp.size()) );
+        text.append( "</p>" );
 
         // ------------------------
 
-        text += "<br/><h3>HRV time-domain results</h3>";
-
-        text += "<p>&nbsp;&nbsp;<b>Mean RR (AVNN)</b>: " + String.format("%.2f", calculateMean(dataRR)) + " ms</p>";
-        text += "<p>&nbsp;&nbsp;<b>STD RR (SDNN)</b>: " + String.format("%.2f", calculateSTD(dataRR)) + " ms</p>";
-        text += "<p>&nbsp;&nbsp;<b>pNN50</b>: " + String.format("%.2f", calculatePNN50(dataRR)) + "%</p>";
-        text += "<p>&nbsp;&nbsp;<b>rMSSD</b>: " + String.format("%.2f", calculateRMSSD(dataRR)) + " ms</p>";
-        text += "<p>&nbsp;&nbsp;<b>normHRV</b>: " + String.format("%.2f", calculateNormHRV(dataRR)) + "</p>";
+        text.append( "<br/><h3>HRV time-domain results</h3>" );
+        text.append( "<p>&nbsp;&nbsp;<b>Mean RR (AVNN)</b>: " );
+        text.append( String.format( Locale.getDefault(), "%.2f", calculateMean(dataRR)) );
+        text.append( " ms</p>" );
+        text.append( "<p>&nbsp;&nbsp;<b>STD RR (SDNN)</b>: " );
+        text.append( String.format( Locale.getDefault(), "%.2f", calculateSTD(dataRR)) );
+        text.append( " ms</p>" );
+        text.append( "<p>&nbsp;&nbsp;<b>pNN50</b>: " );
+        text.append( String.format( Locale.getDefault(), "%.2f", calculatePNN50(dataRR)) );
+        text.append( "%</p>" );
+        text.append( "<p>&nbsp;&nbsp;<b>rMSSD</b>: " );
+        text.append( String.format( Locale.getDefault(), "%.2f", calculateRMSSD(dataRR)) );
+        text.append( " ms</p>" );
+        text.append( "<p>&nbsp;&nbsp;<b>normHRV</b>: " );
+        text.append( String.format( Locale.getDefault(), "%.2f", calculateNormHRV(dataRR)) );
+        text.append( "</p>" );
 
         // ------------------------
+        final List<Float> powerbands = calculateSpectrum(dataHRInterpX.get(0), dataHRInterpX.get(dataHRInterpX.size()-1));
 
-        text += "<br/><h3>HRV frequency-domain results</h3>";
+        text.append( "<br/><h3>HRV frequency-domain results</h3>" );
+        text.append( "<p>&nbsp;&nbsp;<b>Total power</b>: " );
+        text.append( String.format( Locale.getDefault(), "%.2f", powerbands.get(0)) );
+        text.append( " ms&sup2;</p>" );
 
-        calculateSpectrum(dataHRInterp);
+        if (powerbands.get(1)>0.0) {
+            text.append( "<p>&nbsp;&nbsp;<b>LF power</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", powerbands.get(1)) );
+            text.append( " ms&sup2;</p>" );
+        } else {
+            text.append( "<p>&nbsp;&nbsp;<b>LF power</b>: --</p>" );
+        }
+
+        if (powerbands.get(2)>0.0) {
+            text.append( "<p>&nbsp;&nbsp;<b>HF power</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", powerbands.get(2)) );
+            text.append( " ms&sup2;</p>" );
+        } else {
+            text.append( "<p>&nbsp;&nbsp;<b>HF power</b>: --</p>" );
+        }
+
+        if (powerbands.get(1)>0.0) {
+            text.append( "<p>&nbsp;&nbsp;<b>LF/HF ratio</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", powerbands.get(3)) );
+            text.append( "</p>" );
+        } else {
+            text.append( "<p>&nbsp;&nbsp;<b>LF/HF ratio</b>: --</p>" );
+        }
 
         // ------------------------
 
         for (int tagIndex = 0; tagIndex < numOfTags; tagIndex++) {
-            text += "<br/><h3> Tag: "+episodesType.get(tagIndex)+"</h3>";
             float length = episodesEnds.get(tagIndex)-episodesInits.get(tagIndex);
-            text += "<p>&nbsp;&nbsp;<b>Length</b>: " + String.format("%.2f", length) + " s</p>";
-
             List<Float> tagSegment = getSegmentRR(tagIndex);
-            text += "<p>&nbsp;&nbsp;<b>Mean RR (AVNN)</b>: " + String.format("%.2f", calculateMean(tagSegment)) + " ms</p>";
-            text += "<p>&nbsp;&nbsp;<b>STD RR (SDNN)</b>: " + String.format("%.2f", calculateSTD(tagSegment)) + " ms</p>";
-            text += "<p>&nbsp;&nbsp;<b>pNN50</b>: " + String.format("%.2f", calculatePNN50(tagSegment)) + "%</p>";
-            text += "<p>&nbsp;&nbsp;<b>rMSSD</b>: " + String.format("%.2f", calculateRMSSD(tagSegment)) + " ms</p>";
-            text += "<p>&nbsp;&nbsp;<b>normHRV</b>: " + String.format("%.2f", calculateNormHRV(tagSegment)) + "</p>";
 
+            text.append( "<br/><h3> Tag: " );
+            text.append( episodesType.get(tagIndex) );
+            text.append( "</h3>" );
+
+            text.append( "<p>&nbsp;&nbsp;<b>Length</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", length) );
+            text.append( " s</p>" );
+
+            text.append( "<p>&nbsp;&nbsp;<b>Mean RR (AVNN)</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", calculateMean(tagSegment)) );
+            text.append( " ms</p>" );
+
+            text.append( "<p>&nbsp;&nbsp;<b>STD RR (SDNN)</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", calculateSTD(tagSegment)) );
+            text.append( " ms</p>" );
+            text.append( "<p>&nbsp;&nbsp;<b>pNN50</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", calculatePNN50(tagSegment)) );
+            text.append( "%</p>" );
+            text.append( "<p>&nbsp;&nbsp;<b>rMSSD</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", calculateRMSSD(tagSegment)) );
+            text.append( " ms</p>" );
+            text.append( "<p>&nbsp;&nbsp;<b>normHRV</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", calculateNormHRV(tagSegment)) );
+            text.append( "</p>" );
+
+
+            List<Float> tagPowerbands = calculateSpectrum(episodesInits.get(tagIndex), episodesEnds.get(tagIndex));
+            text.append( "<p>&nbsp;&nbsp;<b>Total spectral power</b>: " );
+            text.append( String.format( Locale.getDefault(), "%.2f", tagPowerbands.get(0)) );
+            text.append( " ms&sup2;</p>" );
+
+            if (tagPowerbands.get(1)>0.0) {
+                text.append( "<p>&nbsp;&nbsp;<b>LF power</b>: " );
+                text.append( String.format( Locale.getDefault(), "%.2f", tagPowerbands.get(1)) );
+                text.append( " ms&sup2;</p>" );
+            } else {
+                text.append( "<p>&nbsp;&nbsp;<b>LF power</b>: --</p>" );
+            }
+
+            if (tagPowerbands.get(2)>0.0) {
+                text.append( "<p>&nbsp;&nbsp;<b>HF power</b>: " );
+                text.append( String.format( Locale.getDefault(), "%.2f", tagPowerbands.get(2)) );
+                text.append( " ms&sup2;</p>" );
+            } else {
+                text.append( "<p>&nbsp;&nbsp;<b>HF power</b>: --</p>" );
+            }
+
+            if (tagPowerbands.get(1)>0.0) {
+                text.append( "<p>&nbsp;&nbsp;<b>LF/HF ratio</b>: " );
+                text.append( String.format( Locale.getDefault(), "%.2f", tagPowerbands.get(3)) );
+                text.append( "</p>" );
+            } else {
+                text.append( "<p>&nbsp;&nbsp;<b>LF/HF ratio</b>: --</p>" );
+            }
         }
-
-
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            boxdata.setText(Html.fromHtml(text,Html.FROM_HTML_MODE_COMPACT));
+            boxdata.setText(Html.fromHtml(text.toString(),Html.FROM_HTML_MODE_COMPACT));
         } else {
-            boxdata.setText(Html.fromHtml(text));
+            boxdata.setText(Html.fromHtml(text.toString()));
         }
     }
-
 
     private float calculateMean(List<Float> signal) {
         float sum = 0.0f;
@@ -405,20 +499,19 @@ public class ResultViewerActivity extends AppActivity {
         return 100.0f * ((float)numBigIntervals/(float)numIntervals);
     }
 
-    private void calculateSpectrum(List<Float> dataHRInterp) {
-        Log.i(LogTag + ".SpecXX","Calculating spectrum");
-        Log.i(LogTag + ".SpecXX","Number of samples: "+dataHRInterp.size());
-        Log.i(LogTag + ".SpecXX","Minimum time: "+xInterp.get(0)+" seconds");
-        Log.i(LogTag + ".SpecXX","Maximum time: "+xInterp.get(xInterp.size()-1)+" seconds");
-        float analysisWindowLength = ( (xInterp.get(xInterp.size()-1))-xInterp.get(0) ) / 3.0f;
-        Log.i(LogTag + ".SpecXX","Analysis window length: "+ analysisWindowLength +" seconds");
+    private List<Float> calculateSpectrum(Float begSegment, Float endSegment) {
+        Log.i(LogTag + ".Spec","Calculating spectrum");
+        Log.i(LogTag + ".Spec","Minimum time: " + begSegment + " seconds");
+        Log.i(LogTag + ".Spec","Maximum time: " + endSegment + " seconds");
+        float analysisWindowLength = ( endSegment-begSegment ) / 3.0f;
+        Log.i(LogTag + ".Spec","Analysis window length: "+ analysisWindowLength +" seconds");
 
         // Five windows, length 1/3 of signal, overlap 50%
 
         float beg[] = new float[5];
         float end[] = new float[5];
 
-        beg[0] = xInterp.get(0);
+        beg[0] = begSegment;
         end[0] = beg[0] + analysisWindowLength;
 
         for (int index=1 ; index < 5; index++ ) {
@@ -427,12 +520,12 @@ public class ResultViewerActivity extends AppActivity {
         }
 
         for (int index=0; index < 5; index++) {
-            Log.i(LogTag + ".SpecXX","Window number "+ (index+1) +": ("+ beg[index] + "," + end[index] +") seconds");
+            Log.i(LogTag + ".Spec","Window number "+ (index+1) +": ("+ beg[index] + "," + end[index] +") seconds");
         }
 
         int maxSegmentLength = 0;
         for (int index=0; index<5; index++) {
-            List<Float> segmentTMP = new ArrayList<>();
+            List<Float> segmentTMP;
             segmentTMP = getSegmentHRInterp(beg[index],end[index]);
             if ( segmentTMP.size() > maxSegmentLength )
                 maxSegmentLength = segmentTMP.size();
@@ -440,52 +533,127 @@ public class ResultViewerActivity extends AppActivity {
 
         int paddedLength = (int) Math.pow(2,(int) Math.ceil(Math.log((double) maxSegmentLength) / Math.log(2.0)));
 
-        Log.i(LogTag + ".SpecXX","Max segment length: "+maxSegmentLength);
-        Log.i(LogTag + ".SpecXX","Padded length: "+paddedLength);
+        Log.i(LogTag + ".Spec","Max segment length: "+maxSegmentLength);
+        Log.i(LogTag + ".Spec","Padded length: "+paddedLength);
 
-        List<Float> HRSegment = getSegmentHRInterp(beg[0],end[0]);
-        Log.i(LogTag + ".SpecXX", "Segment 0 - number of samples: "+HRSegment.size());
-        double avg = 0.0;
-        for  (int index=0 ; index < HRSegment.size() ; index++) {
-            avg += HRSegment.get(index);
+
+        List<Float> SpectrumAvg = new ArrayList<>();
+        int SpectrumLength = paddedLength/2;
+
+
+        for (int windowIndex=0 ; windowIndex<5 ; windowIndex++) {
+            List<Float> RRSegment = getSegmentHRInterp(beg[windowIndex],end[windowIndex]);
+            for  (int index=0 ; index < RRSegment.size() ; index++) {
+                RRSegment.set(index,1000.0f/(RRSegment.get(index)/60.f));
+            }
+            Log.i(LogTag + ".Spec", "Segment "+(windowIndex+1)+" - number of samples: "+RRSegment.size());
+            double avg = 0.0;
+            for  (int index=0 ; index < RRSegment.size() ; index++) {
+                avg += RRSegment.get(index);
+            }
+            avg = avg / RRSegment.size();
+            for  (int index=0 ; index < RRSegment.size() ; index++) {
+                RRSegment.set( index , (float) (RRSegment.get(index)-avg) );
+            }
+
+            double[] hamWindow = makeHammingWindow(RRSegment.size());
+            for (int index=0 ; index < RRSegment.size() ; index++) {
+                RRSegment.set(index, (float) (RRSegment.get(index)*hamWindow[index]));
+            }
+
+            // writeFile("timeSignal.txt", RRSegment);
+
+            double[] RRSegmentPaddedX = padSegmentHRInterp(RRSegment, paddedLength);
+            //Log.i(LogTag + ".Spec", "Length of padded array: "+RRSegmentPaddedX.length);
+
+            /*
+            List<Double> RRSPtmp = new ArrayList<>();
+            for (double rrPaddedX: RRSegmentPaddedX) {
+                RRSPtmp.add( rrPaddedX );
+            }
+            writeFile("timeSignalPadded.txt", RRSPtmp);
+            */
+            double[] RRSegmentPaddedY = new double[RRSegmentPaddedX.length];
+
+            fft(RRSegmentPaddedX,RRSegmentPaddedY, RRSegmentPaddedX.length);
+            //Log.i(LogTag + ".Spec","Length of fft: "+RRSegmentPaddedX.length);
+
+            List<Float> Spectrum = new ArrayList<>();
+            for (int index=0 ; index<SpectrumLength ; index++) { // Only positive half of the spectrum
+                Spectrum.add((float) (Math.pow(RRSegmentPaddedX[index],2)+Math.pow(RRSegmentPaddedY[index],2)));
+            }
+            Log.i(LogTag + ".Spec","Length of spectrum: "+Spectrum.size());
+
+            if (windowIndex==0) {
+                for (int index=0 ; index<SpectrumLength ; index++) {
+                    SpectrumAvg.add(Spectrum.get(index));
+                }
+            } else {
+                for (int index=0 ; index<SpectrumLength ; index++) {
+                    float newValue = SpectrumAvg.get(index)+Spectrum.get(index);
+                    SpectrumAvg.set(index,newValue);
+                }
+            }
+
+        }  // for windowIndex
+
+        for (int index=0 ; index<SpectrumLength ; index++) {
+            SpectrumAvg.set(index,SpectrumAvg.get(index)/5.0f);
         }
-        avg = avg / HRSegment.size();
-        for  (int index=0 ; index < HRSegment.size() ; index++) {
-            HRSegment.set( index , (float) (HRSegment.get(index)-avg) );
+
+        List<Float> SpectrumAxis = new ArrayList<>();
+        for (int index=0 ; index<SpectrumLength ; index++) { // Only positive half of the spectrum
+            SpectrumAxis.add(index*(freq/2)/(SpectrumLength-1));
         }
 
-        double[] hamWindow = makeHammingWindow(HRSegment.size());
-        for (int index=0 ; index < HRSegment.size() ; index++) {
-            HRSegment.set(index, (float) (HRSegment.get(index)*hamWindow[index]));
+        // writeFile("Spectrum.txt", SpectrumAvg);
+
+        Log.i(LogTag + ".Spec","Length of spectrum axis: "+SpectrumAxis.size());
+
+        if ( SpectrumAxis.size() > 0 ) {
+            Log.i(LogTag + ".Spec","First sample of spectrum axis: "+SpectrumAxis.get(0));
+            Log.i(LogTag + ".Spec","Last sample of spectrum axis: "+SpectrumAxis.get(SpectrumLength-1));
         }
 
-        // writeFile("timeSignal.txt", HRSegment);
+        List<Float> results = new ArrayList<>();
 
-        double[] HRSegmentPaddedX = padSegmentHRInterp(HRSegment, paddedLength);
-        Log.i(LogTag + ".SpecXX", "Length of padded array: "+HRSegmentPaddedX.length);
+        float totalPower = powerInBand(SpectrumAvg, SpectrumAxis, totalPowerBeg, totalPowerEnd);
 
-        List<Double> HRSPtmp = new ArrayList<>();
-        for (int index=0 ; index < HRSegmentPaddedX.length ; index++) {
-            HRSPtmp.add(HRSegmentPaddedX[index]);
+        results.add(totalPower);
+
+        Log.i(LogTag + ".Spec", "Total power: "+totalPower);
+
+
+
+        float LFPower;
+        if ((endSegment-begSegment) > 40.0) {
+            // Minimum freq. in LF band is 0.05 Hz. Two cycles are required to estimate power
+            LFPower = powerInBand(SpectrumAvg, SpectrumAxis, LFPowerBeg, LFPowerEnd);
+        } else {
+            LFPower = -1.0f;
         }
-        // writeFile("timeSignalPadded.txt", HRSPtmp);
-        double[] HRSegmentPaddedY = new double[HRSegmentPaddedX.length];
+        results.add(LFPower);
+        Log.i(LogTag + ".Spec", "LF power: "+LFPower);
 
-        fft(HRSegmentPaddedX,HRSegmentPaddedY, HRSegmentPaddedX.length);
-
-        List<Float> Spectrum = new ArrayList<>();
-        for (int index=0 ; index<HRSegmentPaddedX.length ; index++) {
-            Spectrum.add((float) (Math.sqrt( Math.pow(HRSegmentPaddedX[index],2)+Math.pow(HRSegmentPaddedY[index],2) )));
+        float HFPower;
+        if ((endSegment-begSegment) > 13.33) {
+            HFPower = powerInBand(SpectrumAvg, SpectrumAxis, HFPowerBeg, HFPowerEnd);
+        } else {
+            HFPower = -1.0f;
         }
+        results.add(HFPower);
+        Log.i(LogTag + ".Spec", "HF power: "+HFPower);
+        Log.i(LogTag + ".Spec", "LF/HF ratio: "+LFPower/HFPower);
+        results.add(LFPower/HFPower);
 
-        // writeFile("spectrum.txt", Spectrum);
+        return results;
     }
 
-
-    public void fft(double[] x, double[] y, int n)
+    private void fft(double[] x, double[] y, int n)
     {
-        int i,j,k,n1,n2,a;
-        double c,s,e,t1,t2;
+        int i,j,k,n2,a;
+        int n1;
+        double c,s,t1,t2;
 
         int m = (int)(Math.log(n) / Math.log(2));
 
@@ -495,7 +663,6 @@ public class ResultViewerActivity extends AppActivity {
             cos[index] = Math.cos(-2*Math.PI*index/n);
             sin[index] = Math.sin(-2*Math.PI*index/n);
         }
-
 
         // Bit-reverse
         j = 0;
@@ -519,7 +686,6 @@ public class ResultViewerActivity extends AppActivity {
         }
 
         // FFT
-        n1 = 0;
         n2 = 1;
 
         for (i=0; i < m; i++) {
@@ -544,7 +710,8 @@ public class ResultViewerActivity extends AppActivity {
         }
     }
 
-    protected double[] makeHammingWindow(int windowLength) {
+
+    private double[] makeHammingWindow(int windowLength) {
         // Make a Hamming window:
         // w(n) = a0 - (1-a0)*cos( 2*PI*n/(N-1) )
         // a0 = 25/46
@@ -555,11 +722,42 @@ public class ResultViewerActivity extends AppActivity {
         return window;
     }
 
+    private float powerInBand(List<Float> spectrum, List<Float> spectrumAxis, float begFreq, float endFreq) {
+        float pp = 0.0f;
+        for (int index=0 ; index < spectrum.size() ; index++) {
+            if ( (spectrumAxis.get(index)>=begFreq) && (spectrumAxis.get(index)<=endFreq) ) {
+                pp = pp + spectrum.get(index);
+            }
+        }
+        pp = pp * hammingFactor;
+        pp = pp / (float)(2.0f*Math.pow(spectrum.size(),2.0f));
+        return pp;
+    }
+
+    /** Sets the color of the data line by tag or the color index.
+      * If the tag is none, then the color must be black.
+      * If the color index is greater than the MAX_TAGS or the array of colors,
+      * then it will be also black.
+      * @param lineDataSet The data for the graph.
+      * @param tag The tag, to compare to NONE_TAG.
+      * @param colorIndex The current color index.
+      */
+    private void setDataColorByTag(LineDataSet lineDataSet, String tag, int colorIndex)
+    {
+        int color = Color.BLACK;
+
+        if ( tag.equals( NONE_TAG )
+          && colorIndex < MAX_TAGS
+          && colorIndex < ColorTemplate.COLORFUL_COLORS.length )
+        {
+            color = ColorTemplate.COLORFUL_COLORS[ colorIndex ];
+        }
+
+        lineDataSet.setColor( color );
+    }
+
     private void makePlot() {
-
-        // Plots the signal
-
-        List<Entry> entries;
+       List<Entry> entries;
         LineDataSet dataSet;
         LineData lineData = new LineData();
         Legend myLegend = chart.getLegend();
@@ -568,21 +766,19 @@ public class ResultViewerActivity extends AppActivity {
         entries = new ArrayList<>();
         int index = 0;
         int colorIndex = 0;
-        String oldTag = "None";
-        String newTag="";
-        while (index < xInterp.size()) {
-            newTag = findTag(xInterp.get(index));
-            if (oldTag != newTag) {
-                Log.i(LogTag + ".Tag","Tag change instant: "+xInterp.get(index) + "  -  New tag: "+newTag);
+        String oldTag = NONE_TAG;
+        String newTag;
+
+        while (index < dataHRInterpX.size()) {
+            newTag = findTag(dataHRInterpX.get(index));
+            if (!oldTag.equals(newTag)) {
+                Log.i(LogTag + ".Tag","Tag change instant: "+ dataHRInterpX.get(index) + "  -  New tag: "+newTag);
                 dataSet = new LineDataSet(entries, oldTag);
-                if  (oldTag == "None") {
+                this.setDataColorByTag( dataSet, oldTag, colorIndex );
+
+                if  (oldTag.equals(NONE_TAG)) {
                     dataSet.setLabel("");
-                    dataSet.setColor(Color.BLACK);
                 } else {
-                    if (colorIndex>MAX_TAGS-1) {
-                        throw new IllegalArgumentException("Number of colors in the plot exceeded limit");
-                    }
-                    dataSet.setColor(ColorTemplate.COLORFUL_COLORS[colorIndex]);
                     LegendEntry newEntry = new LegendEntry(
                             oldTag, Legend.LegendForm.SQUARE, java.lang.Float.NaN, java.lang.Float.NaN,
                             null, ColorTemplate.COLORFUL_COLORS[colorIndex]);
@@ -594,18 +790,16 @@ public class ResultViewerActivity extends AppActivity {
                 entries = new ArrayList<>();
                 oldTag = newTag;
             }
-            entries.add(new Entry(xInterp.get(index), dataHRInterp.get(index)));
+            entries.add(new Entry(dataHRInterpX.get(index), dataHRInterp.get(index)));
             index++;
         }
+
         dataSet = new LineDataSet(entries, oldTag);
-        if  (oldTag == "None") {
+        this.setDataColorByTag( dataSet, oldTag, colorIndex );
+
+        if  (oldTag.equals(NONE_TAG)) {
             dataSet.setLabel("");
-            dataSet.setColor(Color.BLACK);
         } else {
-            if (colorIndex>MAX_TAGS-1) {
-                throw new IllegalArgumentException("Number of colors in the plot exceeded limit");
-            }
-            dataSet.setColor(ColorTemplate.COLORFUL_COLORS[colorIndex]);
             LegendEntry newEntry = new LegendEntry(
                     oldTag, Legend.LegendForm.SQUARE, java.lang.Float.NaN, java.lang.Float.NaN,
                     null, ColorTemplate.COLORFUL_COLORS[colorIndex]);
@@ -623,18 +817,28 @@ public class ResultViewerActivity extends AppActivity {
         myLegend.setCustom(myLegendEntries);
 
         chart.invalidate(); // refresh
-
     }
 
-    private LineChart chart;
-    private TextView boxdata;
-    private List<Float> dataRRnf, dataHRnf, dataBeatTimesnf, dataBeatTimes, dataRR, dataHR, xInterp, dataHRInterp;
-    private List<Float> episodesInits;
-    private List<Float> episodesEnds;
-    private List<String> episodesType;
-    private float freq = 4.0f;  // Interpolation frequency in hz.
-    private int numOfTags = 0;
-    private static int MAX_TAGS = 5;
+    LineChart chart;
+    TextView boxdata;
+    List<Float> dataRRnf, dataHRnf, dataBeatTimesnf, dataBeatTimes, dataRR, dataHR, dataHRInterpX, dataHRInterp;
+    List<Float> episodesInits;
+    List<Float> episodesEnds;
+    List<String> episodesType;
+    static float freq = 4.0f;  // Interpolation frequency in hz.
+    int numOfTags = 0;
+    static int MAX_TAGS = 5;
+
+    static float hammingFactor = 1.586f;
+
+    static float totalPowerBeg = 0.0f;
+    static float totalPowerEnd = 4.0f/2.0f;    // Beginning and end of total power band
+
+    static float LFPowerBeg = 0.05f;
+    static float LFPowerEnd = 0.15f;           // Beginning and end of LF band
+
+    static float HFPowerBeg = 0.15f;
+    static float HFPowerEnd = 0.4f;            // Beginning and end of HF band
 
     public static File beatsFile;
     public static File tagsFile;

@@ -8,7 +8,7 @@ public class Tag {
     /** Creates a new tag. */
     public Tag(String tag)
     {
-        this.tag = this.encode( tag );
+        this.tag = encode( tag );
     }
 
     @Override
@@ -38,8 +38,8 @@ public class Tag {
         this.tag = encode( newTag );
     }
 
-    /** Formats a tag to accomplish with standards. */
-    private String encode(String tag)
+    /** @return a string formatted as a tag needs to accomplish with standards. */
+    public static String encode(String tag)
     {
         if ( tag.trim().isEmpty() ) {
             throw new Error( "empty tag" );
@@ -58,13 +58,7 @@ public class Tag {
     @Override
     public String toString()
     {
-        String toret = this.tag;
-
-        if ( toret.length() > 1 ) {
-            toret = Character.toUpperCase( this.tag.charAt( 0 ) ) + this.tag.substring( 1 );
-        }
-
-        return toret.replace( '_', ' ' );
+        return this.tag;
     }
 
     private String tag;

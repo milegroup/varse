@@ -92,7 +92,7 @@
     <string name="ErrNoHR">No health profile detected</string>
     <string name="ErrPermissionDenied">Permission denied</string>
     <string name="ErrUnsupportedFileType">Unsupported file type</string>
-    <string name="ErrUnableToPerformExperiment">Unable to perform experiment</string>
+    <string name="ErrUnableToShowActivity">Unable to show activity</string>
 
     <!-- Choices for time units -->
     <string name="lblMinutes">Minutes</string>

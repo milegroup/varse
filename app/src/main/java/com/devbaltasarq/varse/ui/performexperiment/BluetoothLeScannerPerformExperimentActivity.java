@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BluetoothLeScannerPerformExperimentActivity extends AppActivity {
-    private final String LogTag = "PerformExperiment";
+    private final String LogTag = BluetoothLeScannerPerformExperimentActivity.class.getSimpleName();
     private static final int REQUEST_ENABLE_BT = 367;
     private static final long SCAN_PERIOD = 20000;  // Stop scanning after seconds*1000
 
@@ -99,26 +99,9 @@ public class BluetoothLeScannerPerformExperimentActivity extends AppActivity {
         final ImageButton btStartScan = this.findViewById( R.id.btStartScan );
         final ImageButton btStopScan = this.findViewById( R.id.btStopScan );
 
-        btClosePerformExperiment.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                BluetoothLeScannerPerformExperimentActivity.this.finish();
-            }
-        });
-
-        btStartScan.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                BluetoothLeScannerPerformExperimentActivity.this.scanLeDevices( true );
-            }
-        });
-
-        btStopScan.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                BluetoothLeScannerPerformExperimentActivity.this.scanLeDevices( false );
-            }
-        });
+        btClosePerformExperiment.setOnClickListener(  (v) -> this.finish() );
+        btStartScan.setOnClickListener( (v) -> this.scanLeDevices( true ) );
+        btStopScan.setOnClickListener( (v) -> this.scanLeDevices( false ) );
 
         this.createList();
         this.configBtLaunched = false;
@@ -380,32 +363,15 @@ public class BluetoothLeScannerPerformExperimentActivity extends AppActivity {
     {
         // Scan only for a given period
         this.clearDeviceListView();
-        this.handler.postDelayed( new Runnable() {
-            @Override
-            public void run()
-            {
+        this.handler.postDelayed( () -> {
                 final BluetoothLeScannerPerformExperimentActivity act = BluetoothLeScannerPerformExperimentActivity.this;
 
                 act.stopScanning();
 
-                runOnUiThread( new Runnable() {
-                    @Override
-                    public void run() {
-                        act.disableScanUI();
-                    }
-                });
-            }
+                runOnUiThread( () -> act.disableScanUI() );
         }, SCAN_PERIOD );
 
         this.scanning = true;
-        /*ScanSettings scanSettings = new ScanSettings.Builder()
-                                    .setScanMode( ScanSettings.SCAN_MODE_BALANCED )
-                                    .build();
-        this.bluetoothAdapter.getBluetoothLeScanner().startScan(
-                                    new ArrayList<ScanFilter>(){},
-                                    scanSettings,
-                                    this.scanCallback );
-                                    */
         this.bluetoothAdapter.getBluetoothLeScanner().startScan( this.scanCallback );
 
         // Prepare UI
@@ -509,12 +475,8 @@ public class BluetoothLeScannerPerformExperimentActivity extends AppActivity {
             {
                 super.onBatchScanResults( scanResults );
 
-                context.runOnUiThread( new Runnable() {
-                    @Override
-                    public void run() {
-                        context.showStatus( "Batched devices: " + scanResults.size() );
-                    }
-                });
+                context.runOnUiThread(
+                        () -> context.showStatus( "Batched devices: " + scanResults.size() ) );
             }
 
             @Override
@@ -522,12 +484,9 @@ public class BluetoothLeScannerPerformExperimentActivity extends AppActivity {
             {
                 super.onScanFailed( errorCode );
 
-                context.runOnUiThread( new Runnable() {
-                    @Override
-                    public void run() {
+                context.runOnUiThread( () -> {
                         context.showStatus( Log.ERROR, context.getString( R.string.ErrScanFailed ) );
                         context.scanLeDevices( false );
-                    }
                 });
             }
 
@@ -536,16 +495,13 @@ public class BluetoothLeScannerPerformExperimentActivity extends AppActivity {
             {
                 super.onScanResult( callbackType, scanResult );
 
-                context.runOnUiThread( new Runnable() {
-                    @Override
-                    public void run() {
+                context.runOnUiThread( () -> {
                         final BluetoothDevice btDevice = scanResult.getDevice();
                         final String infoMsg = context.getString( R.string.lblDeviceFound )
                                 + ": " + btDevice.getAddress();
 
                         context.showStatus( infoMsg );
                         context.addToDeviceListView( btDevice );
-                    }
                 });
             }
         };

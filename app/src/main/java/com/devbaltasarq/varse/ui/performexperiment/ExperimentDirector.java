@@ -6,10 +6,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
@@ -20,6 +20,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -39,6 +40,8 @@ import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.ui.AppActivity;
+import com.devbaltasarq.varse.ui.editexperiment.editgroup.ListViewActivityEntry;
+import com.devbaltasarq.varse.ui.editexperiment.editgroup.ListViewActivityEntryArrayAdapter;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +63,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final FloatingActionButton fbSkip = this.findViewById( R.id.fbSkip );
         final Toolbar toolbar = this.findViewById( R.id.toolbar );
         final Chronometer crCrono = this.findViewById( R.id.crCrono );
-        final TextView lblExperimentDescription = this.findViewById( R.id.lblExperimentDescription );
         final TextView lblRecord = this.findViewById( R.id.lblRecord );
         final TextView lblDeviceName = this.findViewById( R.id.lblDeviceName );
 
@@ -83,7 +85,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         // Prepare the UI for the start
         this.prepareUIForInitialDescription();
-        lblExperimentDescription.setText( this.buildDescription() );
+        this.showActivities();
 
         // Views
         btClose.setOnClickListener( (v) -> this.finish() );
@@ -101,9 +103,13 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final TextView lblConnectionStatus = this.findViewById( R.id.lblConnectionStatus );
 
         if ( isAble ) {
+            // "Connected" in "approval" color (e.g green).
             lblConnectionStatus.setText( R.string.lblConnected );
+            lblConnectionStatus.setTextColor( Color.parseColor( "#228B22" ) );
         } else {
+            // "Disconnected" in "denial" color (e.g red).
             lblConnectionStatus.setText( R.string.lblDisconnected );
+            lblConnectionStatus.setTextColor( Color.parseColor( "#8B0000" ) );
         }
 
         this.readyToLaunch = isAble;
@@ -148,6 +154,39 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.showStatus( LogTag, msg );
     }
 
+    private void showActivities()
+    {
+        final ListView lvActs = this.findViewById( R.id.lvExperimentActivities );
+        final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
+        final int NUM_ENTRIES = this.activitiesToPlay.length;
+
+        Log.i( LogTag, "starting showActivities()..." );
+        Log.i( LogTag, "entries: " + NUM_ENTRIES );
+
+        if ( NUM_ENTRIES > 0 ) {
+            final ListViewActivityEntryArrayAdapter actsAdapter;
+            final ListViewActivityEntry[] fileEntryList = new ListViewActivityEntry[ NUM_ENTRIES ];
+
+            // Create appropriate list
+            for(int i = 0; i < NUM_ENTRIES; ++i) {
+                fileEntryList[ i ] = new ListViewActivityEntry( this.activitiesToPlay[ i ] );
+            }
+
+            // Create adapter
+            actsAdapter = new ListViewActivityEntryArrayAdapter( this, fileEntryList );
+
+            lblNoEntries.setVisibility( View.GONE );
+            lvActs.setVisibility( View.VISIBLE );
+            lvActs.setAdapter( actsAdapter );
+        } else {
+            lblNoEntries.setVisibility( View.VISIBLE );
+            lvActs.setVisibility( View.GONE );
+            Log.i( LogTag, "    no entries" );
+        }
+
+        Log.i( LogTag, "finished showActivities()" );
+    }
+
     /** Builds the picture box needed to show images. */
     private ImageView buildPictureBox()
     {
@@ -157,6 +196,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT ) );
+        ivPictureBox.setLayerType( View.LAYER_TYPE_SOFTWARE, null );
         return ivPictureBox;
     }
 
@@ -242,7 +282,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             final long elapsedTime = this.getElapsedExperimentTime();
             final int secondsInAct = this.getElapsedActivityTime();
 
-
             ++this.currentActivityIndex;
             this.accumulatedTime += secondsInAct;
 
@@ -284,7 +323,9 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             if ( !this.readyToLaunch ) {
                 this.setAbleToLaunch( true );
             } else {
-                if ( this.result != null ) {
+                if ( this.result != null
+                  && !this.result.isPerformanceFinished() )
+                {
                     this.result.add( new Result.BeatEvent(
                                 this.getElapsedExperimentTime(),
                                 rr ));
@@ -293,29 +334,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         }
 
         return;
-    }
-
-    /** Creates the description before the experiment starts. */
-    private String buildDescription()
-    {
-        final StringBuilder toret = new StringBuilder();
-
-        // Groups of this experiment
-        for(Group g: this.experiment.getGroups()) {
-            if ( g instanceof ManualGroup ) {
-                toret.append( this.getString( R.string.lblGroupManual ) );
-                toret.append( " - " );
-                toret.append( g.toString() );
-            } else {
-                toret.append( g.toString() );
-            }
-
-            toret.append( ": " );
-            toret.append( g.calculateTimeNeeded() );
-            toret.append( '\n' );
-        }
-
-        return toret.toString();
     }
 
     /** Shows the description and hides the frame. */
@@ -378,6 +396,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final Chronometer crCrono = this.findViewById( R.id.crCrono );
 
         crCrono.stop();
+        this.result.markPerformanceIsFinished( this.getElapsedExperimentTime() );
 
         try {
             final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
@@ -409,22 +428,28 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.prepareUIForExperiment();
         lblMaxTime.setText( timeNeeded.toChronoString() );
 
-        // Create the result object
+        // Prepare crono
         final long currentTime = SystemClock.elapsedRealtime();
-        this.result = new Result( Id.create(), currentTime, this.user, this.experiment );
-        this.result.add(
-                new Result.ActivityChangeEvent(
-                        currentTime,
-                        this.activitiesToPlay[ 0 ].getTag().toString() ) );
-
-        // Prepare crono and launch
         crCrono.setBase( currentTime );
         this.currentActivityIndex = 0;
         this.accumulatedTime = 0;
         this.showActivity();
+
+        // Create the result object
+        this.result = new Result( Id.create(),
+                                  System.currentTimeMillis(),
+                                  this.user,
+                                  this.experiment );
+        this.result.add(
+                new Result.ActivityChangeEvent(
+                        0,
+                        this.activitiesToPlay[ 0 ].getTag().toString() ) );
+
+        // Start counting time
         crCrono.start();
     }
 
+    /** @return the list of activities to play, honoring the random attribute. */
     private Group.Activity[] buildActivitiesToPlay()
     {
         final Group.Activity[] toret = new Group.Activity[ this.experiment.getNumActivities() ];
@@ -454,11 +479,9 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                                     + ":\n" + f.getName();
 
         AlertDialog.Builder dlg = new AlertDialog.Builder( this );
-        dlg.setTitle( R.string.ErrUnableToPerformExperiment );
+        dlg.setTitle( R.string.ErrUnableToShowActivity );
         dlg.setMessage( ERROR_MSG );
-        dlg.setPositiveButton( R.string.lblBack, (d, i) -> this.finish() );
 
-        this.askBeforeExit = false;
         Log.e( LogTag, ERROR_MSG + "\n\t" + f.getAbsolutePath() );
         dlg.create().show();
     }

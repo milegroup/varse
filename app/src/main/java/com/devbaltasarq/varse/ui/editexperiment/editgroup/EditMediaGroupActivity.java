@@ -24,7 +24,6 @@ import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
-import com.devbaltasarq.varse.core.experiment.MimeTools;
 import com.devbaltasarq.varse.core.experiment.PictureGroup;
 import com.devbaltasarq.varse.core.experiment.VideoGroup;
 
@@ -215,36 +214,64 @@ public class EditMediaGroupActivity extends EditGroupActivity {
                 RQC_PICK_MEDIA);
     }
 
-    /** Stores the media file in the app's filesystem. */
-    private void storeMedia(Uri uri)
+    /** Stores the media in the db, and creates the media activity
+     * in the given media group.
+     * @param db the orm to operate with
+     * @param mediaGroup the mediagroup to create the media activity into
+     */
+    private void storeMediaFor(Orm db, Uri uri, MediaGroup mediaGroup)
     {
-        if ( uri != null
-          && ( uri.getScheme().equals( ContentResolver.SCHEME_CONTENT )
-            || uri.getScheme().equals( ContentResolver.SCHEME_FILE ) ) )
-        {
-            try {
-                final Orm db = Orm.get();
-                final File mediaFile = new File( uri.getLastPathSegment() );
-                final InputStream in = this.getContentResolver().openInputStream( uri );
-                final MediaGroup mediaGroup = (MediaGroup) group;
-                final boolean isVideoGroup = mediaGroup.getFormat() == MediaGroup.Format.Video;
-                final Experiment experiment = group.getExperimentOwner();
+        try {
+            String mediaFileName = uri.getLastPathSegment();
 
-                if ( !db.existsMedia( experiment, mediaFile.getName() ) ) {
-                    if ( MimeTools.isVideo( mediaFile ) == isVideoGroup ) {
-                        final File f = db.storeMedia( experiment, mediaFile.getName(), in );
+            if ( mediaFileName == null
+              || mediaFileName.trim().isEmpty() )
+            {
+                throw new IllegalArgumentException( "empty file name" );
+            } else {
+                final InputStream in = this.getContentResolver().openInputStream( uri );
+
+                if ( in != null ) {
+                    final Experiment experiment = mediaGroup.getExperimentOwner();
+
+                    mediaFileName =
+                            Orm.buildMediaFileNameForDbFromMediaFileName( mediaFileName );
+
+                    if ( !db.existsMedia( experiment, mediaFileName ) ) {
+                        final File f = db.storeMedia( experiment, mediaFileName, in );
                         mediaGroup.add( new MediaGroup.MediaActivity( Id.create(), f ) );
                     } else {
-                        this.showStatus( LogTag, this.getString( R.string.msgIncompatibleMedia ) );
+                        this.showStatus( LogTag, this.getString( R.string.msgMediaAlreadyAdded ) );
                     }
                 } else {
-                    this.showStatus( LogTag, this.getString( R.string.msgMediaAlreadyAdded ) );
+                    this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
                 }
-            } catch(IOException exc) {
-                this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
-            } catch(IllegalArgumentException exc) {
-                this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
             }
+        } catch(IOException exc) {
+            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+        } catch(IllegalArgumentException exc) {
+            this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
+        }
+
+        return;
+    }
+
+    /** Stores the media resource in the app's filesystem. */
+    private void storeMedia(Uri uri)
+    {
+        final Orm db = Orm.get();
+        final MediaGroup mediaGroup = (MediaGroup) group;
+
+        if ( uri == null
+          || uri.getScheme() == null )
+        {
+            this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
+        }
+        else
+        if ( uri.getScheme().equals( ContentResolver.SCHEME_CONTENT )
+          || uri.getScheme().equals( ContentResolver.SCHEME_FILE ) )
+        {
+            this.storeMediaFor( db, uri, mediaGroup );
         } else {
             this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
         }

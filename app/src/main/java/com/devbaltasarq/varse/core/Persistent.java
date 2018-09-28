@@ -101,8 +101,8 @@ public abstract class Persistent implements Identifiable {
         return;
     }
 
-    /** Enumerates all associated files to this persistent. */
-    public File[] enumerateAssociatedFiles()
+    /** Enumerates all associated media files to this persistent. */
+    public File[] enumerateMediaFiles()
     {
         return new File[ 0 ];
     }

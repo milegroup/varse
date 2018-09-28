@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.util.JsonReader;
 import android.util.Log;
 
-import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.core.experiment.Tag;
 
 import org.json.JSONException;
@@ -429,31 +428,28 @@ public final class Orm {
       */
     public void remove(Persistent p)
     {
-        // Remove all associated objects
-        for(File mediaFile: p.enumerateAssociatedFiles()) {
-            final File f = new File( this.buildMediaDirectoryFor( p ),
-                                mediaFile.getName() );
-
-            if ( !f.delete() ) {
-                Log.e( LogTag, "Error deleting: " + f );
-            }
-
-            Log.d( LogTag, "Associated file deleted: " + mediaFile );
-        }
-
-        // Remove the whole directory for media, if it is an experiment.
         if ( p instanceof Experiment ) {
-            final File mediaDir = this.buildMediaDirectoryFor( p );
+            // Remove the whole directory for media
+            removeTreeAt( this.buildMediaDirectoryFor( p ) );
 
-            if ( !mediaDir.delete() ) {
-                Log.e( LogTag, "Error deleting media dir: " + mediaDir );
+            // Remove all related results
+            ArrayList<File> resultFiles = this.resultsPerExperiment.get( p.getId() );
+
+            for(final File resultFile: resultFiles) {
+                if ( !resultFile.delete() ) {
+                    Log.e( LogTag, "unable to remove file: " + resultFile );
+                }
+
+                this.filesResult.remove( resultFile );
             }
+
+            // Completely remove cache for this experiment
+            this.resultsPerExperiment.remove( p.getId() );
         }
 
         // Remove main object
         final File REMOVE_FILE = new File( this.dirDb, this.getFileNameFor( p ) );
 
-        // Is it a results object?
         this.removeFromAllCaches( p, REMOVE_FILE );
 
         if ( !REMOVE_FILE.delete() ) {
@@ -494,12 +490,14 @@ public final class Orm {
       */
     public File storeMedia(@NonNull Experiment expr, @NonNull String fileName, @NonNull InputStream inMedia) throws IOException
     {
-        // Time to make the id persistent, if needed
-        // Otherwise, the experiment will have a true id, and the media file,
-        // a different, fake id.
+        // Time to make the id persistent, if needed.
+        // Otherwise, the experiment will have a fake id, and the media file, a different, true id.
         if ( expr.getId().isFake() ) {
             expr.updateIds();
         }
+
+        // Do not allow spaces in file names.
+        fileName = buildMediaFileNameForDbFromMediaFileName( fileName );
 
         final File experimentDirectory = this.buildMediaDirectoryFor( expr );
         final File mediaFile = new File( experimentDirectory, fileName );
@@ -553,7 +551,7 @@ public final class Orm {
     private File[] collectMediaFilesFor(Experiment expr)
     {
         final File mediaDir = this.buildMediaDirectoryFor( expr );
-        final File[] assocFiles = expr.enumerateAssociatedFiles();
+        final File[] assocFiles = expr.enumerateMediaFiles();
         final File[] toret = new File[ assocFiles.length ];
 
         // Build the complete path of the associated files
@@ -570,18 +568,26 @@ public final class Orm {
       */
     public void purgeOrphanMediaFor(Experiment expr)
     {
-        final File mediaDir = this.buildMediaDirectoryFor( expr );
-        final File[] allFiles = mediaDir.listFiles();
-        final ArrayList<File> registeredMediaFiles = new ArrayList<>(
-                                        Arrays.asList( this.collectMediaFilesFor( expr ) ) );
+        try {
+            final File mediaDir = this.buildMediaDirectoryFor( expr );
+            final File[] allFiles = mediaDir.listFiles();
 
-        // Look for each registered file in the actual file list
-        for(File f: allFiles) {
-            if ( !registeredMediaFiles.contains( f ) ) {
-                if ( !f.delete() ) {
-                    Log.e( LogTag, "Error deleting file: " + f );
+            // Look for each registered file in the actual file list
+            if ( allFiles != null ) {
+                final ArrayList<File> registeredMediaFiles = new ArrayList<>(
+                        Arrays.asList( this.collectMediaFilesFor( expr ) ) );
+
+                for(File f: allFiles) {
+                    if ( !registeredMediaFiles.contains( f ) ) {
+                        if ( !f.delete() ) {
+                            Log.e( LogTag, "Error deleting file: " + f );
+                        }
+                    }
                 }
             }
+        } catch(Exception exc) {
+            Log.e( LogTag, "Error purging orphan media for '" + expr.getName()
+                            + "': " + exc.getMessage() );
         }
 
         return;
@@ -590,16 +596,20 @@ public final class Orm {
     /** Removes all media that does not pertain to an existing Experiment. */
     public void purgeOrphanMedia()
     {
-        final File[] mediaDirs = this.dirRes.listFiles();
+        try {
+            final File[] mediaDirs = this.dirRes.listFiles();
 
-        for(File mediaDir: mediaDirs) {
-            final Id id = new Id( parseIdFromFile( mediaDir ) );
-            File exprFile = new File( this.dirDb,
-                                      this.getFileNameFor( id, Persistent.TypeId.Experiment ) );
+            for(File mediaDir: mediaDirs) {
+                final Id id = new Id( parseIdFromFile( mediaDir ) );
+                File exprFile = new File( this.dirDb,
+                                          this.getFileNameFor( id, Persistent.TypeId.Experiment ) );
 
-            if ( !this.existsInCache( exprFile ) ) {
-                removeTreeAt( mediaDir );
+                if ( !this.existsInCache( exprFile ) ) {
+                    removeTreeAt( mediaDir );
+                }
             }
+        } catch(Exception exc) {
+            Log.e( LogTag, "Error purging orphan media: " + exc.getMessage() );
         }
 
         return;
@@ -665,17 +675,13 @@ public final class Orm {
 
     /** Imports an experiment result from a JSON file, previously exported.
      * @param zipFileIn An input stream to the zip file.
-     * @return The retrieved result.
      * @throws IOException if something goes wrong, like not enough space.
      */
-    public Result importResult(InputStream zipFileIn) throws IOException
+    public void importResult(InputStream zipFileIn) throws IOException
     {
-        Result toret = null;
-
         try {
             final Reader fileReader = openReaderFor( zipFileIn );
-
-            toret = Result.fromJSON( fileReader );
+            final Result toret = Result.fromJSON( fileReader );
             close( fileReader );
 
             // Store the result data set
@@ -685,7 +691,7 @@ public final class Orm {
             Log.e( LogTag, "unable to import result file: " + exc.getMessage() );
         }
 
-        return toret;
+        return;
     }
 
     /** Imports an experiment from a zip file, previously exported.
@@ -1321,6 +1327,17 @@ public final class Orm {
         }
 
         return toret;
+    }
+
+    /** Returns a media file name suitable for storing in the database.
+      * Media files are stored in the db with the same name they have outside,
+      * but with an important caveat: it cannot have spaces inside.
+      * @param fileName The name of the file.
+      * @return A suitable file name.
+      */
+    public static String buildMediaFileNameForDbFromMediaFileName(String fileName)
+    {
+        return Tag.encode( fileName );
     }
 
     /** Gets the already open database.

@@ -56,8 +56,12 @@ public class VideoGroup extends MediaGroup {
     @Override
     public void add(MediaActivity act)
     {
-        if ( !MimeTools.isVideo( act.getFile() ) ) {
-            throw new Error( act.getFile() + " not a video." );
+        final File f = act.getFile();
+
+        if ( !Orm.extractFileExt( f ).isEmpty() ) {
+            if ( !MimeTools.isVideo( act.getFile() ) ) {
+                throw new Error( act.getFile() + " not a video." );
+            }
         }
 
         super.add(act);

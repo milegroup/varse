@@ -3,10 +3,12 @@ package com.devbaltasarq.varse.ui.editexperiment.editgroup;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v7.content.res.AppCompatResources;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
+import com.devbaltasarq.varse.core.Experiment;
+import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.core.experiment.MimeTools;
@@ -25,6 +30,8 @@ import java.io.File;
 
 /** Represents an adapter of the special items for the ListView of media files. */
 public class ListViewActivityEntryArrayAdapter extends ArrayAdapter<ListViewActivityEntry> {
+    public static final String LogTag = ListViewActivityEntryArrayAdapter.class.getSimpleName();
+
     public ListViewActivityEntryArrayAdapter(Context cntxt, ListViewActivityEntry[] entries)
     {
         super( cntxt, 0, entries );
@@ -33,10 +40,23 @@ public class ListViewActivityEntryArrayAdapter extends ArrayAdapter<ListViewActi
     @Override
     public View getView(int position, View convertView, ViewGroup parent)
     {
-        final EditGroupActivity cntxt = (EditGroupActivity) this.getContext();
+        final Context context = this.getContext();
         final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
         final ListViewActivityEntry entry = this.getItem( position );
+        final Group.Activity entryActivity = entry.getActivity();
         Bitmap thumbnail = null;
+        EditGroupActivity editGroupActivity = null;
+
+        if ( context instanceof EditGroupActivity ) {
+            editGroupActivity = (EditGroupActivity) context;
+        }
+
+        if ( entryActivity == null ) {
+            final String ERROR_MSG = "the activity target of this entry is null!!!";
+
+            Log.e( LogTag, ERROR_MSG );
+            throw new InternalError( ERROR_MSG );
+        }
 
         if ( convertView == null ) {
             convertView = layoutInflater.inflate( R.layout.listview_media_entry, null );
@@ -53,14 +73,25 @@ public class ListViewActivityEntryArrayAdapter extends ArrayAdapter<ListViewActi
         // Set image and file name
         int groupDescImgId = R.drawable.ic_picture_button;
 
-        if ( entry.getActivity() instanceof MediaGroup.MediaActivity ) {
-            final MediaGroup.MediaActivity mediaActivity = (MediaGroup.MediaActivity) entry.getActivity();
+        if ( entryActivity instanceof MediaGroup.MediaActivity ) {
+            final Orm db = Orm.get();
+            final Experiment expr = entryActivity.getExperimentOwner();
+            final MediaGroup mediaGroup = (MediaGroup) entryActivity.getGroup();
 
-            if ( MimeTools.isPicture( mediaActivity.getFile() ) ) {
-                thumbnail = getImageThumbnail( cntxt, new File( entry.getFileName() ) );
+            if ( mediaGroup.getFormat() == MediaGroup.Format.Picture ) {
+                thumbnail = getImageThumbnail( db, expr, new File( entry.getFileName() ) );
             } else {
                 groupDescImgId = R.drawable.ic_video_button;
-                thumbnail = getVideoThumbnail( cntxt, new File( entry.getFileName() ) );
+                thumbnail = getVideoThumbnail( db, expr, new File( entry.getFileName() ) );
+            }
+
+            if ( thumbnail != null ) {
+                ivThumbnail.setImageBitmap( thumbnail );
+                convertView.findViewById( R.id.lyMediaDesc ).setVisibility( View.GONE );
+                convertView.findViewById( R.id.lyThumbnail ).setVisibility( View.VISIBLE );
+            } else {
+                convertView.findViewById( R.id.lyMediaDesc ).setVisibility( View.VISIBLE );
+                convertView.findViewById( R.id.lyThumbnail ).setVisibility( View.GONE );
             }
 
             btEditMedia.setVisibility( View.GONE );
@@ -69,66 +100,54 @@ public class ListViewActivityEntryArrayAdapter extends ArrayAdapter<ListViewActi
         if ( entry.getActivity() instanceof ManualGroup.ManualActivity ) {
             btEditMedia.setVisibility( View.VISIBLE );
             groupDescImgId = R.drawable.ic_manual_button;
+            convertView.findViewById( R.id.lyThumbnail ).setVisibility( View.VISIBLE );
         }
 
-        ivMediaDesc.setImageDrawable( AppCompatResources.getDrawable( cntxt, groupDescImgId ) );
         lblMediaDesc.setText( entry.getFileName() );
+        ivMediaDesc.setImageDrawable( AppCompatResources.getDrawable( context, groupDescImgId ) );
 
-        btSortFileUp.setOnClickListener( (v) -> cntxt.sortActivityUp( entry.getActivity() ) );
-        btSortFileDown.setOnClickListener( (v) -> cntxt.sortActivityDown( entry.getActivity() ) );
-        btDeleteMedia.setOnClickListener( (v) -> cntxt.deleteActivity( entry.getActivity() ) );
-        btEditMedia.setOnClickListener( (v) -> cntxt.editActivity( entry.getActivity() ) );
+        if ( editGroupActivity != null ) {
+            final EditGroupActivity editAct = editGroupActivity;
 
-        // Thumbnail
-        if ( thumbnail == null ) {
-            ivThumbnail.setVisibility( View.GONE );
+            btSortFileUp.setOnClickListener( (v) -> editAct.sortActivityUp( entryActivity ) );
+            btSortFileDown.setOnClickListener( (v) -> editAct.sortActivityDown( entryActivity ) );
+            btDeleteMedia.setOnClickListener( (v) -> editAct.deleteActivity( entryActivity ) );
+            btEditMedia.setOnClickListener( (v) -> editAct.editActivity( entryActivity ) );
         } else {
-            ivThumbnail.setImageBitmap( thumbnail );
+            btSortFileDown.setVisibility( View.GONE );
+            btSortFileUp.setVisibility( View.GONE );
+            btDeleteMedia.setVisibility( View.GONE );
+            btEditMedia.setVisibility( View.GONE );
         }
 
         return convertView;
     }
 
     /** Gets the thumbnail associated to an image file.
-      * @param c The context.
       * @param f The path to the file.
       * @return A Bitmap object.
       * @see Bitmap
       */
-    public static Bitmap getImageThumbnail(Context c, File f)
+    public static Bitmap getImageThumbnail(Orm db, Experiment expr, File f)
     {
-        final String[] projection = { MediaStore.Images.Media.DATA };
-        final Cursor cursor = MediaStore.Images.Thumbnails.query( c.getContentResolver(),
-                                                            Uri.fromFile( f ),
-                                                            projection );
-        Bitmap toret = null;
+        final File mediaFile = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
 
-        if ( cursor != null ) {
-            int column_index = cursor.getColumnIndex( MediaStore.Images.Media._ID );
-
-            if ( column_index >= 0 ) {
-                cursor.moveToFirst();
-                long imageId = cursor.getLong( column_index );
-
-                toret = MediaStore.Images.Thumbnails.getThumbnail(
-                        c.getContentResolver(), imageId,
-                        MediaStore.Images.Thumbnails.MICRO_KIND,
-                        null );
-            }
-        }
-
-        return toret;
+        return ThumbnailUtils.extractThumbnail(
+                                        BitmapFactory.decodeFile( mediaFile.getAbsolutePath() ),
+                                        128,
+                                        128 );
     }
 
     /** Gets the thumbnail associated to an image file.
-     * @param c The context.
      * @param f The path to the file.
      * @return A Bitmap object.
      * @see Bitmap
      */
-    public static Bitmap getVideoThumbnail(Context c, File f)
+    public static Bitmap getVideoThumbnail(Orm db, Experiment expr, File f)
     {
-        return ThumbnailUtils.createVideoThumbnail( f.getAbsolutePath(),
+        final File mediaFile = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
+
+        return ThumbnailUtils.createVideoThumbnail( mediaFile.getAbsolutePath(),
                                              MediaStore.Images.Thumbnails.MICRO_KIND );
     }
 }

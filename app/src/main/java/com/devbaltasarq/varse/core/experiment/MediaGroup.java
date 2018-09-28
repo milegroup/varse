@@ -28,7 +28,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         public MediaActivity(Id id, File f)
         {
             super( id, new Tag( f.getName() ) );
-            this.file = f;
+            this.file = new File( Orm.buildMediaFileNameForDbFromMediaFileName( f.getName() ) );
         }
 
         @Override
@@ -86,7 +86,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         }
 
         @Override
-        public File[] enumerateAssociatedFiles()
+        public File[] enumerateMediaFiles()
         {
             return new File[]{ this.getFile() };
         }
@@ -272,14 +272,14 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     }
 
     @Override
-    public File[] enumerateAssociatedFiles()
+    public File[] enumerateMediaFiles()
     {
         final MediaActivity[] activities = this.get();
         final int size = activities.length;
         final ArrayList<File> toret = new ArrayList<>( size );
 
         for(int i = 0; i < size; ++i) {
-            toret.addAll( Arrays.asList( activities[ i ].enumerateAssociatedFiles() ) );
+            toret.addAll( Arrays.asList( activities[ i ].enumerateMediaFiles() ) );
         }
 
         return toret.toArray( new File[ 0 ] );

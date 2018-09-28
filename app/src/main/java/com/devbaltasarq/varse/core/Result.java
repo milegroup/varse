@@ -13,6 +13,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /** Represents the results of a given experiment. */
 public class Result extends Persistent {
@@ -246,13 +247,32 @@ public class Result extends Persistent {
         private String tag;
     }
 
-    public Result(Id id, long dateTime, User usr, Experiment expr)
+    /** Creates a new Result, in which the events of the experiment will be stored.
+     * @param id   the id of the result.
+     * @param dateTime the moment (in millis) this experiment was collected.
+     * @param usr the usr this experiment was performed for.
+     * @param expr the experiment that was performed.
+     */
+    private Result(Id id, long dateTime, long durationInMillis, User usr, Experiment expr)
     {
         super( id );
+
+        this.durationInMillis = durationInMillis;
         this.dateTime = dateTime;
         this.user = usr;
         this.experiment = expr;
         this.events = new ArrayList<>();
+    }
+
+    /** Creates a new Result, in which the events of the experiment will be stored.
+      * @param id   the id of the result.
+      * @param dateTime the moment (in millis) this experiment was collected.
+      * @param usr the usr this experiment was performed for.
+      * @param expr the experiment that was performed.
+      */
+    public Result(Id id, long dateTime, User usr, Experiment expr)
+    {
+        this( id, dateTime, -1, usr, expr );
     }
 
     @Override
@@ -312,7 +332,7 @@ public class Result extends Persistent {
     }
 
     @Override
-    public File[] enumerateAssociatedFiles()
+    public File[] enumerateMediaFiles()
     {
         return new File[ 0 ];
     }
@@ -323,13 +343,31 @@ public class Result extends Persistent {
       */
     public void add(Event evt)
     {
-        this.events.add( evt );
+        if ( !this.isPerformanceFinished() ) {
+            this.events.add( evt );
+        } else {
+            throw new IllegalAccessError( this.getId() + ": already finished" );
+        }
+
+        return;
+    }
+
+    /** Adds a new list of events. Used directly only while loading. */
+    private void load(Collection<Event> v)
+    {
+        this.events.addAll( v );
     }
 
     /** Adds a new list of events. */
     public void addAll(Collection<Event> v)
     {
-        this.events.addAll( v );
+        if ( !this.isPerformanceFinished() ) {
+            this.load( v );
+        } else {
+            throw new IllegalAccessError( this.getId() + ": already finished" );
+        }
+
+        return;
     }
 
     /** Removes all stored events. */
@@ -341,12 +379,15 @@ public class Result extends Persistent {
     /** @return all events in this result. Warning: the list can be huge. */
     public Event[] buildEventsList()
     {
+        this.chkIsFinished();
         return this.events.toArray( new Event[ 0 ] );
     }
 
     /** @return a list with all activity changes. */
     public ActivityChangeEvent[] buildActivityChangesList()
     {
+        this.chkIsFinished();
+
         ActivityChangeEvent[] toret = new ActivityChangeEvent[ this.experiment.getNumActivities() ];
         int i = 0;
 
@@ -363,6 +404,8 @@ public class Result extends Persistent {
     /** @return the heart beats time distance, as a long[]. */
     public long[] buildHeartBeatsList()
     {
+        this.chkIsFinished();
+
         final ArrayList<Long> beatDistanceTimes = new ArrayList<>( this.size() );
 
         // Create
@@ -376,11 +419,29 @@ public class Result extends Persistent {
         long[] toret = new long[ beatDistanceTimes.size() ];
         int pos = 0;
         for(long l: beatDistanceTimes) {
-            toret[ pos ] = beatDistanceTimes.get( pos );
+            toret[ pos ] = l;
             ++pos;
         }
 
         beatDistanceTimes.clear();
+        return toret;
+    }
+
+    /** @return the next event of type activity change counting from position i + 1. */
+    private ActivityChangeEvent locateNextActivityChangeEvent(int i)
+    {
+        ActivityChangeEvent toret = null;
+        final int NUM_EVENTS = this.events.size();
+
+        for( ++i; i < NUM_EVENTS; ++i ) {
+            final Event evt = this.events.get( i );
+
+            if ( evt instanceof ActivityChangeEvent ) {
+                toret = (ActivityChangeEvent) evt;
+                break;
+            }
+        }
+
         return toret;
     }
 
@@ -390,19 +451,33 @@ public class Result extends Persistent {
     public void exportToStdTextFormat(Writer tagsStream, Writer beatsStream)
                                                         throws IOException
     {
-        long timeLastActivity = 0;
+        this.chkIsFinished();
 
-        tagsStream.write( "Init_time\tTag\tDurat" );
+        final int NUM_EVENTS = this.events.size();
+
+        tagsStream.write( "Init_time\tTag\tDurat\n" );
 
         // Run all over the events and scatter them on files
-        for(Event evt: this.events) {
+        for(int i = 0; i < NUM_EVENTS; ++i) {
+            final Event evt = this.events.get( i );
+
             if ( evt instanceof BeatEvent ) {
                 beatsStream.write( Long.toString( ( (BeatEvent) evt ).getTimeOfNewHeartBeat() ) );
                 beatsStream.write( '\n' );
             } else {
                 final ActivityChangeEvent actEvt = ( (ActivityChangeEvent) evt );
                 final long time = evt.getMillis();
-                final long timeSinceLastAct = time - timeLastActivity;
+                long timeActWillLast;
+
+                // Determine duration
+                final ActivityChangeEvent nextActivityChangeEvt =
+                        this.locateNextActivityChangeEvent( i );
+
+                if ( nextActivityChangeEvt != null ) {
+                    timeActWillLast = nextActivityChangeEvt.getMillis() - time;
+                } else {
+                    timeActWillLast = this.getDurationInMillis() - time;
+                }
 
                 // Experiment's elapsed time
                 final double totalSecs = ( (double) time ) / 1000;
@@ -411,9 +486,8 @@ public class Result extends Persistent {
                 int mins = (int) ( remaining / 60 );
                 double secs = remaining % 60;
                 final String timeStamp = String.format( "%02d:%02d:%05.2f", hours, mins, secs );
-                final String timeDuration = String.format( "%05.2f", ( (double) timeSinceLastAct ) / 1000 );
+                final String timeDuration = String.format( "%.2f", ( (double) timeActWillLast ) / 1000 );
 
-                tagsStream.write( '\t' );
                 tagsStream.write( timeStamp );
 
                 // Activity tag
@@ -424,8 +498,7 @@ public class Result extends Persistent {
                 tagsStream.write( '\t' );
                 tagsStream.write( timeDuration );
 
-                // Update time since last activity and finish
-                timeLastActivity = time;
+                // Finish this entry
                 tagsStream.write( '\n' );
             }
         }
@@ -454,11 +527,14 @@ public class Result extends Persistent {
     @Override
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
+        this.chkIsFinished();
+
         final String RESULT_NAME = this.getResultName();
 
         this.writeIdToJSON( jsonWriter );
         jsonWriter.name( Orm.FIELD_NAME ).value( RESULT_NAME );
         jsonWriter.name( Orm.FIELD_DATE ).value( this.getTime() );
+        jsonWriter.name( Orm.FIELD_TIME ).value( this.getDurationInMillis() );
         jsonWriter.name( Orm.FIELD_EXPERIMENT_ID )
                     .value( this.getExperiment().getId().get() );
         jsonWriter.name( Orm.FIELD_USER_ID )
@@ -477,6 +553,36 @@ public class Result extends Persistent {
         return buildResultName( this );
     }
 
+    /** @return the duration in millis. Will throw if the experiment is not finished yet. */
+    public long getDurationInMillis()
+    {
+        this.chkIsFinished();
+        return this.durationInMillis;
+    }
+
+
+    /** @return the duration of this performance, in milliseconds. */
+    public void markPerformanceIsFinished(long elapsedTimeInMillis)
+    {
+        this.durationInMillis = elapsedTimeInMillis;
+    }
+
+    /** Checks it is finished, otherwise throws IllegalAccessError. */
+    public void chkIsFinished()
+    {
+        if ( !this.isPerformanceFinished() ) {
+            throw new IllegalAccessError( this.getId() + ": not finished yet." );
+        }
+
+        return;
+    }
+
+    /** @return whether the experiment has finished performing or not. */
+    public boolean isPerformanceFinished()
+    {
+        return ( this.durationInMillis >= 0 );
+    }
+
     @Override
     public String toString()
     {
@@ -492,6 +598,7 @@ public class Result extends Persistent {
         final JsonReader jsonReader = new JsonReader( reader );
         final ArrayList<Event> events = new ArrayList<>();
         Result toret;
+        long durationInMillis = -1L;
         TypeId typeId = null;
         Id id = null;
         Id userId = null;
@@ -506,6 +613,10 @@ public class Result extends Persistent {
 
                 if ( nextName.equals( Orm.FIELD_DATE ) ) {
                     dateTime = jsonReader.nextLong();
+                }
+                else
+                if ( nextName.equals( Orm.FIELD_TIME ) ) {
+                    durationInMillis = jsonReader.nextLong();
                 }
                 else
                 if ( nextName.equals( Orm.FIELD_NAME ) ) {
@@ -550,6 +661,7 @@ public class Result extends Persistent {
           || userId == null
           || experimentId == null
           || dateTime < 0
+          || durationInMillis < 0
           || typeId != TypeId.Result )
         {
             final String msg = "Creating result from JSON: invalid or missing data.";
@@ -563,8 +675,8 @@ public class Result extends Persistent {
                 final Experiment expr = (Experiment) orm.retrieve( experimentId, TypeId.Experiment );
                 final User usr = orm.createOrRetrieveUserById( userId );
 
-                toret = new Result( id, dateTime, usr, expr );
-                toret.addAll( events );
+                toret = new Result( id, dateTime, durationInMillis, usr, expr );
+                toret.load( events );
             } catch(IOException exc) {
                 final String ERROR_MSG = "Retrieving results' experiment or user data set: " + exc.getMessage();
 
@@ -670,6 +782,7 @@ public class Result extends Persistent {
         return toret;
     }
 
+    private long durationInMillis;
     private User user;
     private Experiment experiment;
     private long dateTime;
