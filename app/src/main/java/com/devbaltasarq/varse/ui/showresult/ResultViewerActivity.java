@@ -1,7 +1,7 @@
 package com.devbaltasarq.varse.ui.showresult;
 
-import android.os.Bundle;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -31,7 +31,6 @@ import java.util.Locale;
   * @author Leandro
   */
 public class ResultViewerActivity extends AppActivity {
-    private static final String NONE_TAG = "__none*tag__";
     private static final String LogTag = ResultViewerActivity.class.getSimpleName();
 
     @Override
@@ -59,8 +58,8 @@ public class ResultViewerActivity extends AppActivity {
             return;
         }
 
-        chart = findViewById(R.id.chart);
-        boxdata = findViewById(R.id.textdata);
+        //chart = findViewById(R.id.chart);
+        boxdata = findViewById(R.id.lblTextData);
         boxdata.setMovementMethod(new ScrollingMovementMethod());
 
         // Loads data into dataRRnf (unfiltered RR in milliseconds)
@@ -195,9 +194,9 @@ public class ResultViewerActivity extends AppActivity {
 
     }
 
+    /** @return the tag corresponding to the given time value. */
     private String findTag(float timeValue) {
-        // Given a time value, it returns the tag
-        String tag=NONE_TAG;
+        String tag="";                              // NONE_TAG
 
         for (int i=0; i<episodesType.size();i++) {
             if ((episodesInits.get(i)<=timeValue) && (episodesEnds.get(i)>=timeValue)) {
@@ -305,7 +304,6 @@ public class ResultViewerActivity extends AppActivity {
         }
         return segment;
     }
-
 
     private double[] padSegmentHRInterp(List<Float> hrSegment, int newLength) {
         double[] segmentPadded = new double[newLength];
@@ -450,7 +448,7 @@ public class ResultViewerActivity extends AppActivity {
         }
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            boxdata.setText(Html.fromHtml(text.toString(),Html.FROM_HTML_MODE_COMPACT));
+            boxdata.setText(Html.fromHtml(text.toString(), Html.FROM_HTML_MODE_COMPACT));
         } else {
             boxdata.setText(Html.fromHtml(text.toString()));
         }
@@ -738,75 +736,149 @@ public class ResultViewerActivity extends AppActivity {
       * If the tag is none, then the color must be black.
       * If the color index is greater than the MAX_TAGS or the array of colors,
       * then it will be also black.
-      * @param lineDataSet The data for the graph.
       * @param tag The tag, to compare to NONE_TAG.
       * @param colorIndex The current color index.
       */
-    private void setDataColorByTag(LineDataSet lineDataSet, String tag, int colorIndex)
+    private int getCurrentColor(String tag, int colorIndex)
     {
-        int color = Color.BLACK;
+        int toret = Color.BLACK;
 
-        if ( tag.equals( NONE_TAG )
+        if ( !tag.isEmpty()
           && colorIndex < MAX_TAGS
           && colorIndex < ColorTemplate.COLORFUL_COLORS.length )
         {
-            color = ColorTemplate.COLORFUL_COLORS[ colorIndex ];
+            toret = ColorTemplate.COLORFUL_COLORS[ colorIndex ];
         }
 
-        lineDataSet.setColor( color );
+        return toret;
     }
 
-    private void makePlot() {
-       List<Entry> entries;
-        LineDataSet dataSet;
-        LineData lineData = new LineData();
-        Legend myLegend = chart.getLegend();
-        List<LegendEntry> myLegendEntries = new ArrayList<>();
+    private void makePlot()
+    {
+        if ( dataHRInterpX.size() > 0 ) {
+            final LineChart chart = findViewById( R.id.lcLineChart );
+            final List<LegendEntry> myLegendEntries = new ArrayList<>();
+            final Legend myLegend = chart.getLegend();
 
-        entries = new ArrayList<>();
-        int index = 0;
-        int colorIndex = 0;
-        String oldTag = NONE_TAG;
-        String newTag;
+            LineData lineData = new LineData();
+            List<Entry> entries = new ArrayList<>();
+            int index = 0;
+            int colorIndex = 0;
+            String oldTag = this.findTag( dataHRInterpX.get( index ) );
 
-        while (index < dataHRInterpX.size()) {
-            newTag = findTag(dataHRInterpX.get(index));
-            if (!oldTag.equals(newTag)) {
-                Log.i(LogTag + ".Tag","Tag change instant: "+ dataHRInterpX.get(index) + "  -  New tag: "+newTag);
-                dataSet = new LineDataSet(entries, oldTag);
-                this.setDataColorByTag( dataSet, oldTag, colorIndex );
+            int color;
+            LineDataSet dataSet;
+            String newTag;
 
-                if  (oldTag.equals(NONE_TAG)) {
-                    dataSet.setLabel("");
-                } else {
+            while (index < dataHRInterpX.size()) {
+                newTag = findTag(dataHRInterpX.get(index));
+
+                if (!oldTag.equals(newTag)) {
+                    Log.i(LogTag + ".Tag","Tag change instant: "+ dataHRInterpX.get(index) + "  -  New tag: "+newTag);
+                    dataSet = new LineDataSet(entries, oldTag);
+                    color = this.getCurrentColor( oldTag, colorIndex );
+                    dataSet.setColor( color );
+                    dataSet.setLabel( oldTag );
+
                     LegendEntry newEntry = new LegendEntry(
                             oldTag, Legend.LegendForm.SQUARE, java.lang.Float.NaN, java.lang.Float.NaN,
-                            null, ColorTemplate.COLORFUL_COLORS[colorIndex]);
+                            null, color);
+                    myLegendEntries.add(newEntry);
+                    ++colorIndex;
+
+                    dataSet.setDrawCircles(false);
+                    lineData.addDataSet(dataSet);
+                    entries = new ArrayList<>();
+                    oldTag = newTag;
+                }
+
+                entries.add(new Entry(dataHRInterpX.get(index), dataHRInterp.get(index)));
+                ++index;
+            }
+
+            dataSet = new LineDataSet(entries, oldTag);
+            color = this.getCurrentColor( oldTag, colorIndex );
+            dataSet.setColor( color );
+
+            dataSet.setLabel( oldTag );
+            LegendEntry newEntry = new LegendEntry(
+                    oldTag, Legend.LegendForm.SQUARE, java.lang.Float.NaN, java.lang.Float.NaN,
+                    null, color);
+            myLegendEntries.add(newEntry);
+            dataSet.setDrawCircles(false);
+            lineData.addDataSet(dataSet);
+
+            chart.setData(lineData);
+            chart.setPinchZoom(true);
+            chart.setHighlightPerTapEnabled(false);
+            chart.setHighlightPerDragEnabled(false);
+
+            chart.getDescription().setText("Heart-rate (bps) vs time (sec.)");
+            myLegend.setCustom(myLegendEntries);
+
+            chart.invalidate();                                 // refresh
+        }
+
+        return;
+    }
+
+/*  // This version is for the graph to be drawn by a Drawable.
+    private void makePlot()
+    {
+        final ImageView ivChartViewer = findViewById(R.id.ivChartViewer);
+        final LineGraph.Builder graphBuilder = new LineGraph.Builder();
+
+        LineGraph.Builder.LineDataSet lineDataSet;
+        int color = Color.BLACK;
+        int colorIndex = 0;
+        int index = 0;
+        String oldTag = NONE_TAG;
+        String newTag;
+        ArrayList<LineGraph.Builder.Entry> entries = new ArrayList<>();
+//        Legend myLegend = chart.getLegend();
+//        List<LegendEntry> myLegendEntries = new ArrayList<>();
+
+        while ( index < dataHRInterpX.size() ) {
+            newTag = this.findTag( dataHRInterpX.get( index ) );
+
+            if ( !oldTag.equals( newTag ) ) {
+                Log.i(LogTag + ".Tag","Tag change instant: "+ dataHRInterpX.get( index ) + "  -  New tag: " + newTag);
+                color = this.getCurrentColor( oldTag, colorIndex );
+                lineDataSet = new LineGraph.Builder.LineDataSet( entries, oldTag, color );
+
+
+                if ( !oldTag.equals( NONE_TAG ) ) {
+                    LegendEntry newEntry = new LegendEntry(
+                            oldTag, Legend.LegendForm.SQUARE, java.lang.Float.NaN, java.lang.Float.NaN,
+                            null, ColorTemplate.COLORS[colorIndex]);
                     myLegendEntries.add(newEntry);
                     colorIndex++;
                 }
-                dataSet.setDrawCircles(false);
-                lineData.addDataSet(dataSet);
-                entries = new ArrayList<>();
+
+                graphBuilder.add( lineDataSet );
+                entries.clear();
                 oldTag = newTag;
             }
-            entries.add(new Entry(dataHRInterpX.get(index), dataHRInterp.get(index)));
+            entries.add(
+                    new LineGraph.Builder.Entry(
+                                                    dataHRInterpX.get( index ),
+                                                    dataHRInterp.get( index ) ) );
             index++;
         }
 
-        dataSet = new LineDataSet(entries, oldTag);
-        this.setDataColorByTag( dataSet, oldTag, colorIndex );
+        lineDataSet = new LineGraph.Builder.LineDataSet(entries, oldTag);
+        color = this.getCurrentColor( lineDataSet, oldTag, colorIndex );
 
         if  (oldTag.equals(NONE_TAG)) {
-            dataSet.setLabel("");
+            lineDataSet.setLabel("");
         } else {
             LegendEntry newEntry = new LegendEntry(
                     oldTag, Legend.LegendForm.SQUARE, java.lang.Float.NaN, java.lang.Float.NaN,
                     null, ColorTemplate.COLORFUL_COLORS[colorIndex]);
             myLegendEntries.add(newEntry);
         }
-        dataSet.setDrawCircles(false);
-        lineData.addDataSet(dataSet);
+        lineDataSet.setDrawCircles(false);
+        lineData.addDataSet(lineDataSet);
 
         chart.setData(lineData);
         chart.setPinchZoom(true);
@@ -816,29 +888,36 @@ public class ResultViewerActivity extends AppActivity {
         chart.getDescription().setText("Heart-rate (bps) vs time (sec.)");
         myLegend.setCustom(myLegendEntries);
 
-        chart.invalidate(); // refresh
+        ivChartViewer.setBackground( graphBuilder.build() );
     }
+*/
 
-    LineChart chart;
     TextView boxdata;
-    List<Float> dataRRnf, dataHRnf, dataBeatTimesnf, dataBeatTimes, dataRR, dataHR, dataHRInterpX, dataHRInterp;
+    List<Float> dataRRnf;
+    List<Float> dataHRnf;
+    List<Float> dataBeatTimesnf;
+    List<Float> dataBeatTimes;
+    List<Float> dataRR;
+    List<Float> dataHR;
+    List<Float> dataHRInterpX;
+    List<Float> dataHRInterp;
     List<Float> episodesInits;
     List<Float> episodesEnds;
     List<String> episodesType;
-    static float freq = 4.0f;  // Interpolation frequency in hz.
+    static float freq = 4.0f;                   // Interpolation frequency in hz.
     int numOfTags = 0;
     static int MAX_TAGS = 5;
 
     static float hammingFactor = 1.586f;
 
     static float totalPowerBeg = 0.0f;
-    static float totalPowerEnd = 4.0f/2.0f;    // Beginning and end of total power band
+    static float totalPowerEnd = 4.0f/2.0f;     // Beginning and end of total power band
 
     static float LFPowerBeg = 0.05f;
-    static float LFPowerEnd = 0.15f;           // Beginning and end of LF band
+    static float LFPowerEnd = 0.15f;            // Beginning and end of LF band
 
     static float HFPowerBeg = 0.15f;
-    static float HFPowerEnd = 0.4f;            // Beginning and end of HF band
+    static float HFPowerEnd = 0.4f;             // Beginning and end of HF band
 
     public static File beatsFile;
     public static File tagsFile;

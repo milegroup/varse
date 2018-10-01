@@ -246,8 +246,9 @@ public class ResultsActivity extends AppActivity {
                 resultEntries[ i ] =
                         new ListViewResultEntry(
                                 new Result( po.getId(),
-                                        Result.parseTimeFromName( po.getName() ),
-                                        user, null  ) );
+                                            Result.parseTimeFromName( po.getName() ),
+                                            0,
+                                            user, null, new Result.Event[ 0 ] ) );
             }
 
             // Prepare the list view

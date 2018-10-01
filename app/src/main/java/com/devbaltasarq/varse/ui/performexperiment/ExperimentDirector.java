@@ -287,7 +287,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
             if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
                 Group.Activity act = this.activitiesToPlay[ this.currentActivityIndex ];
-                this.result.add( new Result.ActivityChangeEvent( elapsedTime, act.getTag().toString() ) );
+                this.resultBuilder.add( new Result.ActivityChangeEvent( elapsedTime, act.getTag().toString() ) );
                 this.showActivity();
             } else {
                 this.stopExperiment();
@@ -323,10 +323,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             if ( !this.readyToLaunch ) {
                 this.setAbleToLaunch( true );
             } else {
-                if ( this.result != null
-                  && !this.result.isPerformanceFinished() )
-                {
-                    this.result.add( new Result.BeatEvent(
+                if ( this.resultBuilder != null ) {
+                    this.resultBuilder.add( new Result.BeatEvent(
                                 this.getElapsedExperimentTime(),
                                 rr ));
                 }
@@ -394,9 +392,9 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private void stopExperiment()
     {
         final Chronometer crCrono = this.findViewById( R.id.crCrono );
+        final long totalElapsedTime = this.getElapsedExperimentTime();
 
         crCrono.stop();
-        this.result.markPerformanceIsFinished( this.getElapsedExperimentTime() );
 
         try {
             final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
@@ -409,7 +407,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 this.finish();
             } );
 
-            this.orm.store( this.result );
+            this.orm.store( this.resultBuilder.build( totalElapsedTime ) );
             Log.i( LogTag, this.getString( R.string.msgFinishedExperiment ) );
             dlg.create().show();
         } catch(IOException exc) {
@@ -436,11 +434,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.showActivity();
 
         // Create the result object
-        this.result = new Result( Id.create(),
-                                  System.currentTimeMillis(),
-                                  this.user,
-                                  this.experiment );
-        this.result.add(
+        this.resultBuilder = new Result.Builder( this.user, this.experiment, System.currentTimeMillis() );
+        this.resultBuilder.add(
                 new Result.ActivityChangeEvent(
                         0,
                         this.activitiesToPlay[ 0 ].getTag().toString() ) );
@@ -643,7 +638,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private Group.Activity[] activitiesToPlay;
     private boolean askBeforeExit;
     private boolean readyToLaunch;
-    private Result result;
+
+    private Result.Builder resultBuilder;
     private Orm orm;
 
     private ServiceConnection serviceConnection;

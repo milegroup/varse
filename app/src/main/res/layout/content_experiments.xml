@@ -1,33 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<android.support.v7.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:padding="20dp"
+    android:layout_gravity="center_vertical"
+    android:gravity="center_horizontal|center_vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center_vertical|center_horizontal"
-    android:gravity="center_vertical|center_horizontal"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    android:layout_margin="10dp"
+    app:cardUseCompatPadding="true"
+    android:padding="10dp"
+    app:cardCornerRadius="10dp"
     tools:context="com.devbaltasarq.varse.ui.ExperimentsActivity"
     tools:showIn="@layout/activity_experiments">
 
     <LinearLayout
         android:orientation="vertical"
+        android:gravity="center_vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <TextView   android:id="@+id/lblNoEntries"
-            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
             android:textSize="18sp"
             android:padding="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:text="@string/lblNoEntries"/>
 
         <ListView   android:id="@+id/lvExperiments"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
     </LinearLayout>
 
-</android.support.constraint.ConstraintLayout>
+</android.support.v7.widget.CardView>

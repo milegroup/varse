@@ -4,7 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.devbaltasarq.varse.ui.performexperiment.BluetoothLeScannerPerformExperimentActivity">
+    tools:context="com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -65,7 +70,7 @@
     </android.support.design.widget.AppBarLayout>
 
     <include layout="@layout/content_perform_experiment" />
-
+    </LinearLayout>
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fbPerformExperiment"
         android:layout_margin="16dp"

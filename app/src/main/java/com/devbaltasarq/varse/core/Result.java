@@ -11,13 +11,72 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /** Represents the results of a given experiment. */
 public class Result extends Persistent {
     public static final String LogTag = Result.class.getSimpleName();
+
+    public static class Builder {
+        public Builder(User usr, Experiment expr, long dateTime)
+        {
+            this.user = usr;
+            this.experiment = expr;
+            this.dateTime = dateTime;
+            this.events = new ArrayList<>();
+        }
+
+        /** Adds a new Event to the list.
+          * @param event the new Event.
+          * @see Event
+          */
+        public void add(Event event)
+        {
+            this.events.add( event );
+        }
+
+        /** Adds all the given events.
+          * @param events a collection of events.
+          * @see Event
+          */
+        public void addAll(Collection<Event> events)
+        {
+            this.events.addAll( events );
+        }
+
+        /** Clears all the stored events. */
+        public void clear()
+        {
+            this.events.clear();
+        }
+
+        /** @return all stored events up to this moment. */
+        public Event[] getEvents()
+        {
+            return this.events.toArray( new Event[ 0 ] );
+        }
+
+        /** @return the appropriate Result object, given the current data.
+          * @see Result
+          */
+        public Result build(long durationInMillis)
+        {
+            return new Result(
+                            Id.create(),
+                            this.dateTime,
+                            durationInMillis,
+                            this.user,
+                            this.experiment,
+                            this.events.toArray( new Event[ 0 ] ) );
+        }
+
+        private User user;
+        private Experiment experiment;
+        private long dateTime;
+        private ArrayList<Event> events;
+    }
 
     /** Base class for events. */
     public static abstract class Event {
@@ -45,7 +104,7 @@ public class Result extends Persistent {
             if ( obj2 instanceof Event ) {
                 final Event evt = (Event) obj2;
 
-                toret = this.getMillis() == evt.getMillis();
+                toret = ( this.getMillis() == evt.getMillis() );
             }
 
             return toret;
@@ -253,7 +312,7 @@ public class Result extends Persistent {
      * @param usr the usr this experiment was performed for.
      * @param expr the experiment that was performed.
      */
-    private Result(Id id, long dateTime, long durationInMillis, User usr, Experiment expr)
+    public Result(Id id, long dateTime, long durationInMillis, User usr, Experiment expr, Event[] events)
     {
         super( id );
 
@@ -261,18 +320,7 @@ public class Result extends Persistent {
         this.dateTime = dateTime;
         this.user = usr;
         this.experiment = expr;
-        this.events = new ArrayList<>();
-    }
-
-    /** Creates a new Result, in which the events of the experiment will be stored.
-      * @param id   the id of the result.
-      * @param dateTime the moment (in millis) this experiment was collected.
-      * @param usr the usr this experiment was performed for.
-      * @param expr the experiment that was performed.
-      */
-    public Result(Id id, long dateTime, User usr, Experiment expr)
-    {
-        this( id, dateTime, -1, usr, expr );
+        this.events = events;
     }
 
     @Override
@@ -337,57 +385,15 @@ public class Result extends Persistent {
         return new File[ 0 ];
     }
 
-    /** Add a new event.
-      * @param evt the new event.
-      * @see Event
-      */
-    public void add(Event evt)
-    {
-        if ( !this.isPerformanceFinished() ) {
-            this.events.add( evt );
-        } else {
-            throw new IllegalAccessError( this.getId() + ": already finished" );
-        }
-
-        return;
-    }
-
-    /** Adds a new list of events. Used directly only while loading. */
-    private void load(Collection<Event> v)
-    {
-        this.events.addAll( v );
-    }
-
-    /** Adds a new list of events. */
-    public void addAll(Collection<Event> v)
-    {
-        if ( !this.isPerformanceFinished() ) {
-            this.load( v );
-        } else {
-            throw new IllegalAccessError( this.getId() + ": already finished" );
-        }
-
-        return;
-    }
-
-    /** Removes all stored events. */
-    public void clearEvents()
-    {
-        this.events.clear();
-    }
-
     /** @return all events in this result. Warning: the list can be huge. */
     public Event[] buildEventsList()
     {
-        this.chkIsFinished();
-        return this.events.toArray( new Event[ 0 ] );
+        return Arrays.copyOf( this.events, this.events.length );
     }
 
     /** @return a list with all activity changes. */
     public ActivityChangeEvent[] buildActivityChangesList()
     {
-        this.chkIsFinished();
-
         ActivityChangeEvent[] toret = new ActivityChangeEvent[ this.experiment.getNumActivities() ];
         int i = 0;
 
@@ -404,8 +410,6 @@ public class Result extends Persistent {
     /** @return the heart beats time distance, as a long[]. */
     public long[] buildHeartBeatsList()
     {
-        this.chkIsFinished();
-
         final ArrayList<Long> beatDistanceTimes = new ArrayList<>( this.size() );
 
         // Create
@@ -431,10 +435,10 @@ public class Result extends Persistent {
     private ActivityChangeEvent locateNextActivityChangeEvent(int i)
     {
         ActivityChangeEvent toret = null;
-        final int NUM_EVENTS = this.events.size();
+        final int NUM_EVENTS = this.events.length;
 
         for( ++i; i < NUM_EVENTS; ++i ) {
-            final Event evt = this.events.get( i );
+            final Event evt = this.events[ i ];
 
             if ( evt instanceof ActivityChangeEvent ) {
                 toret = (ActivityChangeEvent) evt;
@@ -451,15 +455,13 @@ public class Result extends Persistent {
     public void exportToStdTextFormat(Writer tagsStream, Writer beatsStream)
                                                         throws IOException
     {
-        this.chkIsFinished();
-
-        final int NUM_EVENTS = this.events.size();
+        final int NUM_EVENTS = this.events.length;
 
         tagsStream.write( "Init_time\tTag\tDurat\n" );
 
         // Run all over the events and scatter them on files
         for(int i = 0; i < NUM_EVENTS; ++i) {
-            final Event evt = this.events.get( i );
+            final Event evt = this.events[ i ];
 
             if ( evt instanceof BeatEvent ) {
                 beatsStream.write( Long.toString( ( (BeatEvent) evt ).getTimeOfNewHeartBeat() ) );
@@ -509,26 +511,12 @@ public class Result extends Persistent {
     /** @return the number of events stored. */
     public int size()
     {
-        return this.events.size();
-    }
-
-    /** @return the time spent in this experiment. */
-    public long getEventsTimeLength()
-    {
-        long toret = 0;
-
-        if ( this.size() > 0 ) {
-            toret = this.events.get( this.events.size() - 1 ).getMillis();
-        }
-
-        return toret;
+        return this.events.length;
     }
 
     @Override
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
-        this.chkIsFinished();
-
         final String RESULT_NAME = this.getResultName();
 
         this.writeIdToJSON( jsonWriter );
@@ -556,31 +544,7 @@ public class Result extends Persistent {
     /** @return the duration in millis. Will throw if the experiment is not finished yet. */
     public long getDurationInMillis()
     {
-        this.chkIsFinished();
         return this.durationInMillis;
-    }
-
-
-    /** @return the duration of this performance, in milliseconds. */
-    public void markPerformanceIsFinished(long elapsedTimeInMillis)
-    {
-        this.durationInMillis = elapsedTimeInMillis;
-    }
-
-    /** Checks it is finished, otherwise throws IllegalAccessError. */
-    public void chkIsFinished()
-    {
-        if ( !this.isPerformanceFinished() ) {
-            throw new IllegalAccessError( this.getId() + ": not finished yet." );
-        }
-
-        return;
-    }
-
-    /** @return whether the experiment has finished performing or not. */
-    public boolean isPerformanceFinished()
-    {
-        return ( this.durationInMillis >= 0 );
     }
 
     @Override
@@ -675,8 +639,12 @@ public class Result extends Persistent {
                 final Experiment expr = (Experiment) orm.retrieve( experimentId, TypeId.Experiment );
                 final User usr = orm.createOrRetrieveUserById( userId );
 
-                toret = new Result( id, dateTime, durationInMillis, usr, expr );
-                toret.load( events );
+                toret = new Result( id,
+                                    dateTime,
+                                    durationInMillis,
+                                    usr,
+                                    expr,
+                                    events.toArray( new Event[ 0 ] ) );
             } catch(IOException exc) {
                 final String ERROR_MSG = "Retrieving results' experiment or user data set: " + exc.getMessage();
 
@@ -786,5 +754,5 @@ public class Result extends Persistent {
     private User user;
     private Experiment experiment;
     private long dateTime;
-    private ArrayList<Event> events;
+    private Event[] events;
 }
