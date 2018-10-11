@@ -117,6 +117,9 @@ public class LineChart extends Drawable {
 
         // Preparation for data normalization
         this.calculateDataMinMax();
+
+        this.showLabels = true;
+        this.labelThreshold = 1.0;
     }
 
     /** Calculates the minimum and maximum values in the data sets.
@@ -182,6 +185,18 @@ public class LineChart extends Drawable {
     public boolean shouldDrawGrid()
     {
         return this.drawGrid;
+    }
+
+    /** Sets the label threshold. */
+    public void setLabelThreshold(double threshold)
+    {
+        this.labelThreshold = threshold;
+    }
+
+    /** Shows the labels on the chart or not. */
+    public void shouldShowLabels(boolean showLabels)
+    {
+        this.showLabels = showLabels;
     }
 
     /** Changes whether the grid should be drawn or not.
@@ -388,7 +403,7 @@ public class LineChart extends Drawable {
                 this.line( previousPoint.x, previousPoint.y, X, Y, point.getColor() );
 
                 // Show label only if it's different than the previous one
-                if ( Math.abs( DATA_Y - lastY ) > 1.1 ) {
+                if ( Math.abs( DATA_Y - lastY ) > this.labelThreshold ) {
                     this.write( X + 10, Y - 10, DATA_Y );
                 }
             }
@@ -450,4 +465,6 @@ public class LineChart extends Drawable {
     private double maxY;
     private Point[] points;
     private SeriesInfo[] colorTags;
+    private boolean showLabels;
+    private double labelThreshold;
 }
