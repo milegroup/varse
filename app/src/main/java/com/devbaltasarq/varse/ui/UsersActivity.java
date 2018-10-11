@@ -14,8 +14,7 @@ import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.PartialObject;
 import com.devbaltasarq.varse.core.User;
-import com.devbaltasarq.varse.ui.edituser.ListViewUserEntry;
-import com.devbaltasarq.varse.ui.edituser.ListViewUserEntryArrayAdapter;
+import com.devbaltasarq.varse.ui.adapters.ListViewUserArrayAdapter;
 
 import java.io.IOException;
 
@@ -50,14 +49,16 @@ public class UsersActivity extends AppActivity {
         try {
             final PartialObject[] userList = Orm.get().enumerateUsers();
             final ListView lvUsers = this.findViewById( R.id.lvUsers);
-            final ListViewUserEntry[] entries = new ListViewUserEntry[ userList.length ];
+            final User[] entries = new User[ userList.length ];
 
+            // Create a fake list of users
             for(int i = 0; i < entries.length; ++i) {
                 final PartialObject po = userList[ i ];
-                entries[ i ] = new ListViewUserEntry( new User( po.getId(), po.getName() ) );
+
+                entries[ i ] = new User( po.getId(), po.getName() );
             }
 
-            ListViewUserEntryArrayAdapter adapter = new ListViewUserEntryArrayAdapter( this,
+            ListViewUserArrayAdapter adapter = new ListViewUserArrayAdapter( this,
                                             entries );
             lvUsers.setAdapter( adapter );
         } catch(IOException exc)

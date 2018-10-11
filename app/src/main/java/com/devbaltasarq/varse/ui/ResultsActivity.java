@@ -2,7 +2,6 @@ package com.devbaltasarq.varse.ui;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -19,7 +18,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
-import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.PartialObject;
@@ -27,13 +25,11 @@ import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.ui.showresult.ResultViewerActivity;
-import com.devbaltasarq.varse.ui.showresult.ListViewResultEntry;
-import com.devbaltasarq.varse.ui.showresult.ListViewResultEntryArrayAdapter;
+import com.devbaltasarq.varse.ui.adapters.ListViewResultArrayAdapter;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Calendar;
 
 public class ResultsActivity extends AppActivity {
     private final static String LogTag = ResultsActivity.class.getSimpleName();
@@ -236,7 +232,7 @@ public class ResultsActivity extends AppActivity {
             final PartialObject[] poEntries = dataStore.enumerateResultsForExperiment( experiment.getId() );
 
             // Prepare the list of experiments
-            final ListViewResultEntry[] resultEntries = new ListViewResultEntry[ poEntries.length ];
+            final Result[] resultEntries = new Result[ poEntries.length ];
 
             for(int i = 0; i < poEntries.length; ++i) {
                 final PartialObject po = poEntries[ i ];
@@ -244,15 +240,14 @@ public class ResultsActivity extends AppActivity {
                 final User user = this.dataStore.createOrRetrieveUserById( userId );
 
                 resultEntries[ i ] =
-                        new ListViewResultEntry(
-                                new Result( po.getId(),
-                                            Result.parseTimeFromName( po.getName() ),
-                                            0,
-                                            user, null, new Result.Event[ 0 ] ) );
+                            new Result( po.getId(),
+                                        Result.parseTimeFromName( po.getName() ),
+                                        0,
+                                        user, null, new Result.Event[ 0 ] );
             }
 
             // Prepare the list view
-            lvResults.setAdapter( new ListViewResultEntryArrayAdapter(this, resultEntries ) );
+            lvResults.setAdapter( new ListViewResultArrayAdapter(this, resultEntries ) );
 
             // Show the experiments list (or maybe not).
             if ( poEntries.length > 0 ) {

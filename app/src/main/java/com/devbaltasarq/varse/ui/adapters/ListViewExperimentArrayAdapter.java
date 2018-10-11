@@ -1,4 +1,4 @@
-package com.devbaltasarq.varse.ui.editexperiment;
+package com.devbaltasarq.varse.ui.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -15,8 +15,8 @@ import com.devbaltasarq.varse.ui.ExperimentsActivity;
 import java.util.ArrayList;
 
 /** Represents an adapter of the special items for the ListView of media files. */
-public class ListViewExperimentEntryArrayAdapter extends ArrayAdapter<ListViewExperimentEntry> {
-    public ListViewExperimentEntryArrayAdapter(Context cntxt, ArrayList<ListViewExperimentEntry> entries)
+public class ListViewExperimentArrayAdapter extends ArrayAdapter<Experiment> {
+    public ListViewExperimentArrayAdapter(Context cntxt, ArrayList<Experiment> entries)
     {
         super( cntxt, 0, entries );
     }
@@ -25,8 +25,7 @@ public class ListViewExperimentEntryArrayAdapter extends ArrayAdapter<ListViewEx
     public View getView(int position, View convertView, ViewGroup parent)
     {
         final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
-        final ListViewExperimentEntry entry = this.getItem( position );
-        final Experiment expr = entry.getExperiment();
+        final Experiment expr = this.getItem( position );
 
         if ( convertView == null ) {
             convertView = layoutInflater.inflate( R.layout.listview_experiment_entry, null );
@@ -38,9 +37,9 @@ public class ListViewExperimentEntryArrayAdapter extends ArrayAdapter<ListViewEx
         final ImageButton btExport = convertView.findViewById( R.id.btExportExperiment );
         final ImageButton btShowResults = convertView.findViewById( R.id.btShowResultsExperiment );
         final TextView lblExperimentDesc = convertView.findViewById( R.id.lblExperimentDesc );
-        final ExperimentsActivity cntxt = (ExperimentsActivity) ListViewExperimentEntryArrayAdapter.this.getContext();
+        final ExperimentsActivity cntxt = (ExperimentsActivity) ListViewExperimentArrayAdapter.this.getContext();
 
-        lblExperimentDesc.setText( entry.getExperimentDesc() );
+        lblExperimentDesc.setText( expr.toString() );
 
         btLaunch.setOnClickListener( (v) -> cntxt.launchExperiment( expr ) );
         btModify.setOnClickListener( (v) -> cntxt.editExperiment( expr ) );

@@ -19,9 +19,10 @@ import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.PictureGroup;
 import com.devbaltasarq.varse.core.experiment.VideoGroup;
 import com.devbaltasarq.varse.ui.AppActivity;
+import com.devbaltasarq.varse.ui.adapters.ListViewGroupArrayAdapter;
 import com.devbaltasarq.varse.ui.editexperiment.editgroup.EditManualGroupActivity;
 import com.devbaltasarq.varse.ui.editexperiment.editgroup.EditMediaGroupActivity;
-import com.devbaltasarq.varse.ui.util.IconListAlertDialog;
+import com.devbaltasarq.varse.ui.IconListAlertDialog;
 
 public class EditExperimentActivity extends AppActivity {
     private final int RQC_ADD_GROUP = 112;
@@ -114,16 +115,9 @@ public class EditExperimentActivity extends AppActivity {
         final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
 
         if ( NUM_ENTRIES > 0 ) {
-            final ListViewGroupEntry[] mediaEntryList = new ListViewGroupEntry[ NUM_ENTRIES ];
-
-            // Create appropriate list
-            for(int i = 0; i < NUM_ENTRIES; ++i) {
-               mediaEntryList[ i ] = new ListViewGroupEntry( experiment, groups[ i ] );
-            }
-
             // Create adapter
             lvExperimentMedia.setAdapter(
-                    new ListViewGroupEntryArrayAdapter( this, mediaEntryList ) );
+                    new ListViewGroupArrayAdapter( this, groups ) );
 
             lblNoEntries.setVisibility( View.GONE );
             lvExperimentMedia.setVisibility( View.VISIBLE );
@@ -135,7 +129,7 @@ public class EditExperimentActivity extends AppActivity {
         return;
     }
 
-    protected void deleteGroup(Group m)
+    public void deleteGroup(Group m)
     {
         selectedGroup = null;
         experiment.removeGroup( m );
@@ -189,7 +183,7 @@ public class EditExperimentActivity extends AppActivity {
         newGroupDlg.show();
     }
 
-    protected void editGroup(Group group)
+    public void editGroup(Group group)
     {
         Intent launchData;
 
@@ -204,13 +198,13 @@ public class EditExperimentActivity extends AppActivity {
         this.startActivityForResult( launchData, RQC_EDIT_GROUP );
     }
 
-    protected void sortGroupUp(Group g)
+    public void sortGroupUp(Group g)
     {
         experiment.sortGroupUp( g );
         this.showGroups();
     }
 
-    protected void sortGroupDown(Group g)
+    public void sortGroupDown(Group g)
     {
         experiment.sortGroupDown( g );
         this.showGroups();

@@ -68,6 +68,7 @@
     <string name="lblRR">rr</string>
     <string name="lblYes">Yes</string>
     <string name="lblNo">No</string>
+    <string name="lblDefaultTag">default</string>
 
     <string name="msgAreYouSure">Are you sure?</string>
     <string name="msgLoseData">You will lose all unsaved data</string>

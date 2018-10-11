@@ -5,13 +5,10 @@ import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 
@@ -19,74 +16,21 @@ import java.util.Locale;
 /** A graph created from lines. */
 public class LineChart extends Drawable {
     private static double SCALED_DENSITY;
-
-    /** Builds a new graph, allowing to enter data. */
-    public static class Builder {
-        public static int[] COLORS = new int[] {
-                0xff0000ff,                                 // blue
-                0xffff0000,                                 // red
-                0xff8b008b,                                 // magenta
-                0xff00ff00,                                 // green
-                0xff00ced1,                                 // dark turquoise
-                0xffffff00,                                 // yellow
-                0xff808080,                                 // gray
-                0xffffa500,                                 // orange
-                0xff9acd32,                                 // yellow-green
-                0xff87ceeb,                                 // sky blue
-        };
-
-        /** Creates a new builder, ready to get data. */
-        public Builder()
-        {
-            this.lineDataSets = new ArrayList<>();
-            this.tagColors = new ArrayList<>();
-            this.legendX = this.legendY = "";
-        }
-
-        /** Adds a new line data set to the graph. */
-        public void add(LineDataSet lineDataSet)
-        {
-            this.lineDataSets.add( lineDataSet );
-        }
-
-        /** Adds a new explanation between association color vs line. */
-        public void add(ExplanationColorTag tagColor)
-        {
-            this.tagColors.add( tagColor );
-        }
-
-        /** Sets the legend for the x axis. */
-        public void setLegendX(String legendX)
-        {
-            this.legendX = legendX;
-        }
-
-        /** Sets the legend for the y axis. */
-        public void setLegendY(String legendY)
-        {
-            this.legendY = legendY;
-        }
-
-        /** @return a new graph, with the up to date data entered. */
-        public LineChart build(double scaledDensity)
-        {
-            final LineChart toret = new LineChart( scaledDensity, this.lineDataSets, this.tagColors );
-
-            // Legends
-            toret.setLegendX( this.legendX );
-            toret.setLegendY( this.legendY );
-
-            return toret;
-        }
-
-        private String legendX;
-        private String legendY;
-        private ArrayList<LineDataSet> lineDataSets;
-        private ArrayList<ExplanationColorTag> tagColors;
-    }
+    public static int[] COLORS = new int[] {
+            0xff0000ff,                                 // blue
+            0xffff0000,                                 // red
+            0xff8b008b,                                 // magenta
+            0xff00ced1,                                 // dark turquoise
+            0xffffff00,                                 // yellow
+            0xffffa500,                                 // orange
+            0xff9acd32,                                 // yellow-green
+            0xff87ceeb,                                 // sky blue
+            0xff00ff00,                                 // green
+            0xff808080,                                 // gray
+    };
 
     /** Represents the correspondence between color and tag. */
-    public static class ExplanationColorTag {
+    public static class SeriesInfo {
         /** Builds an association between color and tag,
           * for explanatory purposes in the chart.
           * @param tag the tag associated with a color
@@ -94,7 +38,7 @@ public class LineChart extends Drawable {
           *              format 0xaarrggbb, a: alpha, r: red, g: green, b: blue,
           *              from 00 to ff.
           */
-        public ExplanationColorTag(String tag, int color)
+        public SeriesInfo(String tag, int color)
         {
             this.tag = tag;
             this.color = color;
@@ -117,11 +61,12 @@ public class LineChart extends Drawable {
     }
 
     /** Represents a single point in the graph. */
-    public static class Entry {
-        public Entry(double x, double y)
+    public static class Point {
+        public Point(double x, double y, int color)
         {
             this.x = x;
             this.y = y;
+            this.color = color;
         }
 
         /** @return the x coordinate. */
@@ -136,6 +81,12 @@ public class LineChart extends Drawable {
             return this.y;
         }
 
+        /** @return the color, as an int. */
+        public int getColor()
+        {
+            return this.color;
+        }
+
         @Override
         public String toString()
         {
@@ -146,84 +97,13 @@ public class LineChart extends Drawable {
 
         private double x;
         private double y;
-    }
-
-    /** Represents the data of a given line in the graph. */
-    public static class LineDataSet {
-        public LineDataSet(Collection<Entry> entries, String tag, int color)
-        {
-            this.tag = tag;
-            this.color = color;
-            this.entries = entries.toArray( new Entry[ 0 ] );
-        }
-
-        /** @return the length of the data set (number of entries). */
-        public int size()
-        {
-            return this.entries.length;
-        }
-
-        /** @return the entry at the given position.
-         * @param i the position of the entry to retrieve.
-         * @see Entry
-         */
-        public Entry getEntry(int i)
-        {
-            return this.entries[ i ];
-        }
-
-        /** @return the entries in this data set. */
-        public Entry[] getEntries()
-        {
-            return Arrays.copyOf( this.entries, this.entries.length );
-        }
-
-        /** @return the tag for this line. */
-        public String getTag()
-        {
-            return this.tag;
-        }
-
-        /** @return the color for this line */
-        public int getColor()
-        {
-            return this.color;
-        }
-
-        /** @return all the entries, as a single string. */
-        public String entriesAsString()
-        {
-            final StringBuilder toret = new StringBuilder();
-            String delimiter = "";
-
-            for(Entry entry: this.entries) {
-                toret.append( delimiter );
-                toret.append( entry.toString() );
-                delimiter = ", ";
-            }
-
-            return toret.toString();
-        }
-
-        @Override
-        public String toString()
-        {
-            return String.format( Locale.getDefault(),
-                    "{Tag: '%s', Color: %d, Entries: [%s]}",
-                    this.getTag(),
-                    this.getColor(),
-                    this.entriesAsString() );
-        }
-
-        private int color;
-        private String tag;
-        private Entry[] entries;
+        int color;
     }
 
     /** Constructs a new graph. */
     public LineChart(double scaledDensity,
-                     Collection<LineDataSet> lineDataSets,
-                     Collection<ExplanationColorTag> colorTags)
+                     Collection<Point> points,
+                     Collection<SeriesInfo> seriesInfo)
     {
         // Set up graphics
         SCALED_DENSITY = scaledDensity;
@@ -232,8 +112,8 @@ public class LineChart extends Drawable {
         this.paint.setStrokeWidth( 2 );
 
         // Obtain data
-        this.lineDataSets = lineDataSets.toArray( new LineDataSet[ 0 ] );
-        this.colorTags = colorTags.toArray( new ExplanationColorTag[ 0 ] );
+        this.points = points.toArray( new Point[ 0 ] );
+        this.colorTags = seriesInfo.toArray( new SeriesInfo[ 0 ] );
 
         // Preparation for data normalization
         this.calculateDataMinMax();
@@ -241,23 +121,21 @@ public class LineChart extends Drawable {
 
     /** Calculates the minimum and maximum values in the data sets.
      * This is stored in the minX, minY, maxX and maxY
-     * @see LineDataSet
+     * @see Point
      */
     private void calculateDataMinMax()
     {
         this.minX = this.minY = Double.MAX_VALUE;
         this.maxX = this.maxY = Double.MIN_VALUE;
 
-        for(LineDataSet lineDataSet: this.lineDataSets) {
-            for(Entry entry: lineDataSet.getEntries()) {
-                final double X = entry.getX();
-                final double Y = entry.getY();
+        for(Point point : this.points) {
+                final double X = point.getX();
+                final double Y = point.getY();
 
                 this.minX = Math.min( this.minX, X );
                 this.maxX = Math.max( this.maxX, X );
                 this.minY = Math.min( this.minY, Y );
                 this.maxY = Math.max( this.maxY, Y );
-            }
         }
 
         return;
@@ -498,22 +376,26 @@ public class LineChart extends Drawable {
     /** Draws the data in the chart. */
     private void drawData()
     {
-        final Point previousPoint = new Point( -1, -1 );
+        double lastY = Double.MIN_VALUE;
+        final android.graphics.Point previousPoint = new android.graphics.Point( -1, -1 );
 
-        for(LineDataSet lineDataSet: this.lineDataSets) {
-            for(Entry entry: lineDataSet.getEntries()) {
-                final int X = this.translateX( entry.getX() );
-                final int Y = this.translateY( entry.getY() );
+        for(Point point : this.points) {
+            final double DATA_Y = point.getY();
+            final int X = this.translateX( point.getX() );
+            final int Y = this.translateY( DATA_Y );
 
-                if ( previousPoint.x >= 0 ) {
-                    this.line(  previousPoint.x, previousPoint.y, X, Y, lineDataSet.getColor() );
+            if ( previousPoint.x >= 0 ) {
+                this.line( previousPoint.x, previousPoint.y, X, Y, point.getColor() );
 
-                    this.write( X + 10, Y - 10, entry.getY() );
+                // Show label only if it's different than the previous one
+                if ( Math.abs( DATA_Y - lastY ) > 1.1 ) {
+                    this.write( X + 10, Y - 10, DATA_Y );
                 }
-
-                previousPoint.x = X;
-                previousPoint.y = Y;
             }
+
+            previousPoint.x = X;
+            previousPoint.y = Y;
+            lastY = DATA_Y;
         }
 
         return;
@@ -527,7 +409,7 @@ public class LineChart extends Drawable {
 
         int y = this.legendBounds.top;
 
-        for(ExplanationColorTag colorTag: this.colorTags) {
+        for(SeriesInfo colorTag: this.colorTags) {
             String tag = colorTag.getTag();
             final double TEXT_WIDTH = this.paint.measureText( tag );
 
@@ -566,6 +448,6 @@ public class LineChart extends Drawable {
     private double maxX;
     private double minY;
     private double maxY;
-    private LineDataSet[] lineDataSets;
-    private ExplanationColorTag[] colorTags;
+    private Point[] points;
+    private SeriesInfo[] colorTags;
 }

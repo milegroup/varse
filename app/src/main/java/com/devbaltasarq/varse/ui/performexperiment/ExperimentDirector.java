@@ -39,8 +39,7 @@ import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.ui.AppActivity;
-import com.devbaltasarq.varse.ui.editexperiment.editgroup.ListViewActivityEntry;
-import com.devbaltasarq.varse.ui.editexperiment.editgroup.ListViewActivityEntryArrayAdapter;
+import com.devbaltasarq.varse.ui.adapters.ListViewActivityArrayAdapter;
 
 import java.io.File;
 import java.io.IOException;
@@ -235,16 +234,10 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         Log.i( LogTag, "entries: " + NUM_ENTRIES );
 
         if ( NUM_ENTRIES > 0 ) {
-            final ListViewActivityEntryArrayAdapter actsAdapter;
-            final ListViewActivityEntry[] fileEntryList = new ListViewActivityEntry[ NUM_ENTRIES ];
-
-            // Create appropriate list
-            for(int i = 0; i < NUM_ENTRIES; ++i) {
-                fileEntryList[ i ] = new ListViewActivityEntry( this.activitiesToPlay[ i ] );
-            }
+            final ListViewActivityArrayAdapter actsAdapter;
 
             // Create adapter
-            actsAdapter = new ListViewActivityEntryArrayAdapter( this, fileEntryList );
+            actsAdapter = new ListViewActivityArrayAdapter( this, this.activitiesToPlay );
 
             lvActs.setAdapter( actsAdapter );
             lblNoEntries.setVisibility( View.GONE );

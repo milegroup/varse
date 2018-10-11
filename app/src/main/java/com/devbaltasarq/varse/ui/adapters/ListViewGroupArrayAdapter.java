@@ -1,4 +1,4 @@
-package com.devbaltasarq.varse.ui.editexperiment;
+package com.devbaltasarq.varse.ui.adapters;
 
 import android.content.Context;
 import android.support.v7.content.res.AppCompatResources;
@@ -11,12 +11,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
+import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.VideoGroup;
+import com.devbaltasarq.varse.ui.editexperiment.EditExperimentActivity;
 
 /** Represents an adapter of the special items for the ListView of media files. */
-public class ListViewGroupEntryArrayAdapter extends ArrayAdapter<ListViewGroupEntry> {
-    public ListViewGroupEntryArrayAdapter(Context cntxt, ListViewGroupEntry[] entries)
+public class ListViewGroupArrayAdapter extends ArrayAdapter<Group> {
+    public ListViewGroupArrayAdapter(Context cntxt, Group[] entries)
     {
         super( cntxt, 0, entries );
     }
@@ -26,7 +28,7 @@ public class ListViewGroupEntryArrayAdapter extends ArrayAdapter<ListViewGroupEn
     {
         final EditExperimentActivity cntxt = (EditExperimentActivity) this.getContext();
         final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
-        final ListViewGroupEntry entry = this.getItem( position );
+        final Group group = this.getItem( position );
 
         if ( convertView == null ) {
             convertView = layoutInflater.inflate( R.layout.listview_media_group_entry, null );
@@ -42,44 +44,21 @@ public class ListViewGroupEntryArrayAdapter extends ArrayAdapter<ListViewGroupEn
         // Set image and file name
         int groupDescImgId = R.drawable.ic_picture_group_button;
 
-        if ( entry.getGroup() instanceof VideoGroup ) {
+        if ( group instanceof VideoGroup ) {
             groupDescImgId = R.drawable.ic_video_group_button;
         }
         else
-        if ( entry.getGroup() instanceof ManualGroup) {
+        if ( group instanceof ManualGroup) {
             groupDescImgId = R.drawable.ic_manual_button;
         }
 
         ivMediaGroupDesc.setImageDrawable( AppCompatResources.getDrawable( cntxt, groupDescImgId ) );
-        lblMediaGroupDesc.setText( entry.getGroupDesc() );
+        lblMediaGroupDesc.setText( group.toString() );
 
-        btSortUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                cntxt.sortGroupUp( entry.getGroup() );
-            }
-        });
-
-        btSortDown.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                cntxt.sortGroupDown( entry.getGroup() );
-            }
-        });
-
-        btEditMediaGroup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                cntxt.editGroup( entry.getGroup() );
-            }
-        });
-
-        btDeleteMediaGroup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                cntxt.deleteGroup( entry.getGroup() );
-            }
-        });
+        btSortUp.setOnClickListener( (v) -> cntxt.sortGroupUp( group ) );
+        btSortDown.setOnClickListener( (v) -> cntxt.sortGroupDown( group ) );
+        btEditMediaGroup.setOnClickListener( (v) -> cntxt.editGroup( group ) );
+        btDeleteMediaGroup.setOnClickListener( (v) -> cntxt.deleteGroup( group ) );
 
         return convertView;
     }

@@ -101,7 +101,7 @@ public class ResultViewerActivity extends AppActivity {
             Log.i(LogTag,"Last value: "+ dataHRInterpX.get(dataHRInterpX.size()-1));
 
             // Plots interpolated HR signal
-            makePlot();
+            plotChart();
 
 
             Analyze();
@@ -191,14 +191,9 @@ public class ResultViewerActivity extends AppActivity {
     /** @return the tag corresponding to the given time value. */
     private String findTag(float timeValue)
     {
-        return this.findTag( timeValue, 0 );
-    }
+        String tag = this.getString( R.string.lblDefaultTag );
 
-    private String findTag(float timeValue, int lastTagIndex)
-    {
-        String tag = "";                              // NONE_TAG
-
-        for (int i = lastTagIndex; i < episodesType.size(); i++) {
+        for (int i = 0; i < episodesType.size(); i++) {
             if ( ( episodesInits.get( i ) <= timeValue )
               && ( episodesEnds.get( i ) >= timeValue ) )
             {
@@ -741,9 +736,9 @@ public class ResultViewerActivity extends AppActivity {
       * @param tag The tag, to compare to NONE_TAG.
       * @param colorIndex The current color index.
       */
-    private int getCurrentColor(String tag, int colorIndex)
+    private int calculateColor(String tag, int colorIndex)
     {
-        final int[] COLORS = LineChart.Builder.COLORS;
+        final int[] COLORS = LineChart.COLORS;
         int toret = Color.BLACK;
 
         if ( !tag.isEmpty()
@@ -757,58 +752,49 @@ public class ResultViewerActivity extends AppActivity {
     }
 
     /** Plots the chart in a drawable and shows it. */
-    private void makePlot()
+    private void plotChart()
     {
+        final double DENSITY = this.getResources().getDisplayMetrics().scaledDensity;
+        final ArrayList<LineChart.SeriesInfo> SERIES = new ArrayList<>();
+        final ArrayList<LineChart.Point> POINTS = new ArrayList<>();
+        final ImageView CHART_VIEWER = findViewById( R.id.ivChartViewer );
+
         if ( dataHRInterpX.size() > 0 ) {
-            final ImageView ivChartViewer = findViewById( R.id.ivChartViewer );
-            final LineChart.Builder chartBuilder = new LineChart.Builder();
-            int lastTagIndex = 0;
-            List<LineChart.Entry> entries = new ArrayList<>();
+            String tag = this.findTag( dataHRInterpX.get( 0 ) );
+            int color = this.calculateColor( tag, 0 );
             int index = 0;
             int colorIndex = 0;
-            String oldTag = this.findTag( dataHRInterpX.get( index ), lastTagIndex );
 
-            int color;
-            LineChart.LineDataSet lineDataSet;
-            String newTag;
+            SERIES.add( new LineChart.SeriesInfo( tag, color ) );
 
-            while ( index < dataHRInterpX.size() ) {
-                newTag = this.findTag( dataHRInterpX.get( index ) );
+            for(float time: this.dataHRInterpX ) {
+                final double BPM = this.dataHRInterp.get( index );
+                final String NEW_TAG = this.findTag( time );
 
-                if ( !oldTag.equals( newTag ) ) {
-                    Log.i(LogTag + ".Tag","Tag change instant: "+ dataHRInterpX.get(index) + "  -  New tag: "+newTag);
-                    color = this.getCurrentColor( oldTag, colorIndex );
-                    lineDataSet = new LineChart.LineDataSet( entries, oldTag, color );
-
-                    chartBuilder.add( new LineChart.ExplanationColorTag( oldTag, color ) );
+                if ( !tag.equals( NEW_TAG ) ) {
                     ++colorIndex;
-
-                    chartBuilder.add( lineDataSet );
-                    entries.clear();
-                    oldTag = newTag;
+                    tag = NEW_TAG;
+                    color = this.calculateColor( NEW_TAG, colorIndex );
+                    SERIES.add( new LineChart.SeriesInfo( NEW_TAG, color ) );
                 }
 
-                entries.add(
-                        new LineChart.Entry(    dataHRInterpX.get( index ),
-                                                dataHRInterp.get( index ) ) );
+                POINTS.add( new LineChart.Point( time, BPM, color ) );
                 ++index;
             }
-
-            if ( oldTag.isEmpty() ) {
-                color = this.getCurrentColor( oldTag, colorIndex );
-                lineDataSet = new LineChart.LineDataSet( entries, oldTag, color );
-                chartBuilder.add( new LineChart.ExplanationColorTag( oldTag, color ) );
-                chartBuilder.add( lineDataSet );
-            }
-
-            chartBuilder.setLegendY( "Heart-rate (bpm)" );
-            chartBuilder.setLegendX( "Time (sec.)" );
-            ivChartViewer.setBackground(
-                    chartBuilder.build(
-                            this.getResources().getDisplayMetrics().scaledDensity ) );
         }
 
-        return;
+        // If there are no series, then there is solely the black/default series.
+        if ( SERIES.size() == 0 ) {
+            SERIES.add( new LineChart.SeriesInfo(
+                                this.getString( R.string.lblDefaultTag ),
+                                Color.BLACK ) );
+        }
+
+        // Now create and draw it.
+        final LineChart chart = new LineChart( DENSITY, POINTS, SERIES );
+        chart.setLegendY( "Heart-rate (bpm)" );
+        chart.setLegendX( "Time (sec.)" );
+        CHART_VIEWER.setBackground( chart );
     }
 
     TextView boxdata;

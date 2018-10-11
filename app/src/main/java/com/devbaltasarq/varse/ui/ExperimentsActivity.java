@@ -22,8 +22,7 @@ import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.ui.editexperiment.EditExperimentActivity;
-import com.devbaltasarq.varse.ui.editexperiment.ListViewExperimentEntry;
-import com.devbaltasarq.varse.ui.editexperiment.ListViewExperimentEntryArrayAdapter;
+import com.devbaltasarq.varse.ui.adapters.ListViewExperimentArrayAdapter;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
 import java.io.IOException;
@@ -71,7 +70,7 @@ public class ExperimentsActivity extends AppActivity {
                 if ( requestCode == RQC_ADD_EXPERIMENT ) {
                     // Add new experiment
                     Orm.get().store( selectedExperiment );
-                    this.experimentEntries.add( new ListViewExperimentEntry( selectedExperiment ) );
+                    this.experimentEntries.add( selectedExperiment );
                 }
                 else
                 if ( requestCode == RQC_EDIT_EXPERIMENT ) {
@@ -105,14 +104,12 @@ public class ExperimentsActivity extends AppActivity {
             this.experimentEntries = new ArrayList<>( poEntries.length );
 
             for(PartialObject po: poEntries) {
-                experimentEntries.add(
-                        new ListViewExperimentEntry(
-                                new Experiment( po.getId(), po.getName() ) ) );
+                experimentEntries.add( new Experiment( po.getId(), po.getName() ) );
             }
 
             // Prepare the list view
             this.experimentsListAdapter =
-                    new ListViewExperimentEntryArrayAdapter(this, experimentEntries );
+                    new ListViewExperimentArrayAdapter(this, experimentEntries );
             lvExperiments.setAdapter( this.experimentsListAdapter );
 
             // Show the experiments list (or maybe not).
@@ -169,12 +166,11 @@ public class ExperimentsActivity extends AppActivity {
     public void substituteExperiment(Experiment expr)
     {
         // Solve the entries issue
-        for(int i = 0; i < this.experimentEntries.size(); ++i)
-        {
-            final ListViewExperimentEntry foundExprListEntry = this.experimentEntries.get( i );
+        for(int i = 0; i < this.experimentEntries.size(); ++i) {
+            final Experiment exprItem = this.experimentEntries.get( i );
 
-            if ( foundExprListEntry.getExperiment().getId().equals( expr.getId() ) ) {
-                foundExprListEntry.setExperiment( expr );
+            if ( exprItem.getId().equals( expr.getId() ) ) {
+                this.experimentEntries.set( i, expr );
             }
         }
 
@@ -325,6 +321,6 @@ public class ExperimentsActivity extends AppActivity {
     }
 
     public static Experiment selectedExperiment;
-    private ArrayList<ListViewExperimentEntry> experimentEntries;
-    private ListViewExperimentEntryArrayAdapter experimentsListAdapter;
+    private ArrayList<Experiment> experimentEntries;
+    private ListViewExperimentArrayAdapter experimentsListAdapter;
 }
