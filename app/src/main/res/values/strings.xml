@@ -93,6 +93,7 @@
     <string name="ErrPermissionDenied">Permission denied</string>
     <string name="ErrUnsupportedFileType">Unsupported file type</string>
     <string name="ErrUnableToShowActivity">Unable to show activity</string>
+    <string name="ErrNotEnoughActivities">Not enough activities</string>
 
     <!-- Choices for time units -->
     <string name="lblMinutes">Minutes</string>

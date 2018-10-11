@@ -14,6 +14,7 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /** Represents the results of a given experiment. */
 public class Result extends Persistent {
@@ -61,12 +62,12 @@ public class Result extends Persistent {
         /** @return the appropriate Result object, given the current data.
           * @see Result
           */
-        public Result build(long durationInMillis)
+        public Result build(long elapsedMillis)
         {
             return new Result(
                             Id.create(),
                             this.dateTime,
-                            durationInMillis,
+                            elapsedMillis,
                             this.user,
                             this.experiment,
                             this.events.toArray( new Event[ 0 ] ) );
@@ -468,7 +469,7 @@ public class Result extends Persistent {
                 beatsStream.write( '\n' );
             } else {
                 final ActivityChangeEvent actEvt = ( (ActivityChangeEvent) evt );
-                final long time = evt.getMillis();
+                final long millis = evt.getMillis();
                 long timeActWillLast;
 
                 // Determine duration
@@ -476,19 +477,21 @@ public class Result extends Persistent {
                         this.locateNextActivityChangeEvent( i );
 
                 if ( nextActivityChangeEvt != null ) {
-                    timeActWillLast = nextActivityChangeEvt.getMillis() - time;
+                    timeActWillLast = nextActivityChangeEvt.getMillis() - millis;
                 } else {
-                    timeActWillLast = this.getDurationInMillis() - time;
+                    timeActWillLast = this.getDurationInMillis() - millis;
                 }
 
                 // Experiment's elapsed time
-                final double totalSecs = ( (double) time ) / 1000;
+                final double totalSecs = ( (double) millis ) / 1000;
                 int hours = (int) ( totalSecs / 3600 );
                 double remaining = totalSecs % 3600;
                 int mins = (int) ( remaining / 60 );
                 double secs = remaining % 60;
-                final String timeStamp = String.format( "%02d:%02d:%05.2f", hours, mins, secs );
-                final String timeDuration = String.format( "%.2f", ( (double) timeActWillLast ) / 1000 );
+                final String timeStamp = String.format( Locale.getDefault(),
+                                                        "%02d:%02d:%05.2f", hours, mins, secs );
+                final String timeDuration = String.format( Locale.getDefault(),
+                                                        "%.2f", ( (double) timeActWillLast ) / 1000 );
 
                 tagsStream.write( timeStamp );
 

@@ -41,15 +41,7 @@ public class BluetoothHRFiltering {
             Log.d( LogTag, "Start filtering for " + NUM_DEVICES + " devices." );
 
             if ( this.btDevices.length > 0 ) {
-                this.handler.postDelayed( () -> {
-                    if ( this.filtering ) {
-                        Log.d( LogTag, "Filtering forced finish." );
-
-                        this.filtering = false;
-                        this.closeAllGattConnections();
-                        this.ui.filteringFinished();
-                    }
-                }, MAX_FILTERING_PERIOD );
+                this.handler.postDelayed( this::finishedFiltering, MAX_FILTERING_PERIOD );
 
                 for(BluetoothDevice btDevice: this.btDevices) {
                     if ( !filtering ) {
@@ -58,8 +50,24 @@ public class BluetoothHRFiltering {
 
                     this.filterByHRService( btDevice );
                 }
+            } else {
+                this.finishedFiltering();
             }
         }
+
+        return;
+    }
+
+    // Finished filtering
+    private void finishedFiltering()
+    {
+        if ( this.filtering ) {
+            Log.d( LogTag, "Filtering forced finish." );
+        }
+
+        this.filtering = false;
+        this.closeAllGattConnections();
+        this.ui.filteringFinished();
 
         return;
     }
@@ -182,8 +190,8 @@ public class BluetoothHRFiltering {
 
         if ( this.openConnections.size() == 0 ) {
             Log.d( LogTag, "Finished filtering, signaling UI..." );
-            filtering = false;
-            this.ui.filteringFinished();
+            this.filtering = false;
+            this.finishedFiltering();
         }
 
         return;

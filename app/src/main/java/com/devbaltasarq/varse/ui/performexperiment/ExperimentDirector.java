@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
@@ -15,7 +16,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Chronometer;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -28,7 +28,6 @@ import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
-import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.User;
@@ -48,12 +47,73 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class ExperimentDirector extends AppActivity implements HRListenerActivity {
     public static final String LogTag = ExperimentDirector.class.getSimpleName();
 
+    /** Represents a chronometer. */
+    public static class Chronometer {
+        /** Creates a new chronometer with an event handler. */
+        public Chronometer(Consumer<Chronometer> eventHandler)
+        {
+            this.eventHandler = eventHandler;
+            this.startTime = 0;
+        }
+
+        /** @return the starting time. */
+        public long getBase()
+        {
+            return this.startTime;
+        }
+
+        /** @return the elapsed duration, in milliseconds. */
+        public long getDuration()
+        {
+            return SystemClock.elapsedRealtime() - this.startTime;
+        }
+
+        /** Resets the current elapsed time with the current real time. */
+        public void reset()
+        {
+            this.reset( SystemClock.elapsedRealtime() );
+        }
+
+        /** Resets the current elapsed time with the given time. */
+        public void reset(long time)
+        {
+            this.startTime = time;
+        }
+
+        /** Starts the chronometer */
+        @SuppressWarnings("all")
+        public void start()
+        {
+            this.handler = new Handler();
+
+            this.sendHR = () -> {
+                this.eventHandler.accept( this );
+                this.handler.postDelayed( this.sendHR,1000);
+            };
+
+            this.handler.post( this.sendHR );
+        }
+
+        /** Eliminates the daemon so the crono is stopped. */
+        public void stop()
+        {
+            this.handler.removeCallbacksAndMessages( null );
+        }
+
+        private long startTime;
+        private Handler handler;
+        private Runnable sendHR;
+        private Consumer<Chronometer> eventHandler;
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_experiment_director );
 
@@ -62,7 +122,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final FloatingActionButton fbLaunchNow = this.findViewById( R.id.fbLaunchNow );
         final FloatingActionButton fbSkip = this.findViewById( R.id.fbSkip );
         final Toolbar toolbar = this.findViewById( R.id.toolbar );
-        final Chronometer crCrono = this.findViewById( R.id.crCrono );
         final TextView lblRecord = this.findViewById( R.id.lblRecord );
         final TextView lblDeviceName = this.findViewById( R.id.lblDeviceName );
 
@@ -71,8 +130,9 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         // Assign values
         this.orm = Orm.get();
         this.currentActivityIndex = 0;
-        this.accumulatedTime = 0;
+        this.accumulatedTimeInSeconds = 0;
         this.askBeforeExit = true;
+        this.onExperiment = false;
         this.btDevice = PerformExperimentActivity.chosenBtDevice;
         this.experiment = PerformExperimentActivity.chosenExperiment;
         this.user = PerformExperimentActivity.chosenUser;
@@ -89,7 +149,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         // Views
         btClose.setOnClickListener( (v) -> this.finish() );
-        crCrono.setOnChronometerTickListener( (crono) -> onCronoUpdate( crono ) );
+        this.chrono = new Chronometer( this::onCronoUpdate );
         fbLaunchNow.setOnClickListener( (v) -> this.launchExperiment() );
         fbSkip.setOnClickListener( (v) -> this.skipCurrentActivity() );
         lblRecord.setText( this.user.getName() );
@@ -101,6 +161,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     {
         final FloatingActionButton fbLaunchNow = this.findViewById( R.id.fbLaunchNow );
         final TextView lblConnectionStatus = this.findViewById( R.id.lblConnectionStatus );
+        int visibility;
 
         if ( isAble ) {
             // "Connected" in "approval" color (e.g green).
@@ -112,8 +173,20 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             lblConnectionStatus.setTextColor( Color.parseColor( "#8B0000" ) );
         }
 
+        // Check whether there something to play
+        if ( this.activitiesToPlay.length == 0 ) {
+            isAble = false;
+        }
+
+        // Set the visibility of the launch button
+        if ( isAble ) {
+            visibility = View.VISIBLE;
+        } else {
+            visibility = View.GONE;
+        }
+
         this.readyToLaunch = isAble;
-        fbLaunchNow.setEnabled( isAble );
+        fbLaunchNow.setVisibility( visibility );
     }
 
     @Override
@@ -134,10 +207,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         super.onPause();
 
         this.setAbleToLaunch( false );
+        this.chrono.stop();
 
-        final Chronometer crCrono = this.findViewById( R.id.crCrono );
-
-        crCrono.stop();
         BluetoothUtils.closeBluetoothConnections( this );
         Log.d( LogTag, "Director finished, stopped chrono, closed connections." );
     }
@@ -175,9 +246,9 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             // Create adapter
             actsAdapter = new ListViewActivityEntryArrayAdapter( this, fileEntryList );
 
+            lvActs.setAdapter( actsAdapter );
             lblNoEntries.setVisibility( View.GONE );
             lvActs.setVisibility( View.VISIBLE );
-            lvActs.setAdapter( actsAdapter );
         } else {
             lblNoEntries.setVisibility( View.VISIBLE );
             lvActs.setVisibility( View.GONE );
@@ -239,19 +310,21 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     /** Triggers when the crono changes. */
     private void onCronoUpdate(Chronometer crono)
     {
+        final TextView lblCrono = this.findViewById( R.id.lblCrono );
+        final int elapsedTimeSeconds = this.getElapsedExperimentSeconds();
         Log.d( LogTag, "Current activity index: " + this.currentActivityIndex );
-        Log.d( LogTag, "Accumulated time: " + this.accumulatedTime );
+        Log.d( LogTag, "Accumulated time: " + this.accumulatedTimeInSeconds);
+
+        lblCrono.setText( new Duration( elapsedTimeSeconds ).toChronoString() );
 
         if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
             final Group.Activity activity = this.activitiesToPlay[ this.currentActivityIndex ];
-            final int timeToSpendInActivity = activity.getTime().getTimeInSeconds();
-            final int seconds = (int)
-                            ( ( SystemClock.elapsedRealtime() - crono.getBase() ) / 1000 )
-                            - this.accumulatedTime;
+            final int maxTimeToSpendInActivity = activity.getTime().getTimeInSeconds();
+            final int seconds = elapsedTimeSeconds - this.accumulatedTimeInSeconds;
 
             Log.d( LogTag, "Elapsed time: " + seconds + '"' );
 
-            if ( seconds >= timeToSpendInActivity ) {
+            if ( seconds >= maxTimeToSpendInActivity ) {
                 this.skipCurrentActivity();
             }
         } else {
@@ -262,32 +335,37 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     }
 
     /** @return the elapsed time, in millis, from the start of the experiment. */
-    private long getElapsedExperimentTime()
+    private long getElapsedExperimentMillis()
     {
-        final Chronometer crono = this.findViewById( R.id.crCrono );
-
-        return SystemClock.elapsedRealtime() - crono.getBase();
+        return this.chrono.getDuration();
     }
 
-    /** @return the elapsed time, in seconds, from the start of the experiment. */
+    /** @return the elapsed time, in millis, from the start of the experiment. */
+    private int getElapsedExperimentSeconds()
+    {
+        return (int) ( this.getElapsedExperimentMillis() / 1000 );
+    }
+
+    /** @return the elapsed time, in seconds, from the start of the current activity. */
     private int getElapsedActivityTime()
     {
-        return (int) ( this.getElapsedExperimentTime() / 1000 ) - this.accumulatedTime;
+        return this.getElapsedExperimentSeconds() - this.accumulatedTimeInSeconds;
     }
 
     /** Skips current activity. */
     private void skipCurrentActivity()
     {
         if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
-            final long elapsedTime = this.getElapsedExperimentTime();
+            final long elapsedTime = this.getElapsedExperimentMillis();
             final int secondsInAct = this.getElapsedActivityTime();
 
             ++this.currentActivityIndex;
-            this.accumulatedTime += secondsInAct;
+            this.accumulatedTimeInSeconds += secondsInAct;
 
             if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
                 Group.Activity act = this.activitiesToPlay[ this.currentActivityIndex ];
-                this.resultBuilder.add( new Result.ActivityChangeEvent( elapsedTime, act.getTag().toString() ) );
+                this.resultBuilder.add( new Result.ActivityChangeEvent( elapsedTime,
+                                                                        act.getTag().toString() ) );
                 this.showActivity();
             } else {
                 this.stopExperiment();
@@ -304,6 +382,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
      *                BleService.HEART_RATE_TAG for heart rate information (as int),
      *                and it can also have BleService.RR_TAG for the rr info (as int).
      */
+    @Override
     public void receiveBpm(Intent intent)
     {
         final int hr = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
@@ -323,10 +402,10 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             if ( !this.readyToLaunch ) {
                 this.setAbleToLaunch( true );
             } else {
-                if ( this.resultBuilder != null ) {
-                    this.resultBuilder.add( new Result.BeatEvent(
-                                this.getElapsedExperimentTime(),
-                                rr ));
+                if ( this.resultBuilder != null
+                  && this.onExperiment )
+                {
+                    this.resultBuilder.add( new Result.BeatEvent( this.getElapsedExperimentMillis(), rr ) );
                 }
             }
         }
@@ -389,59 +468,68 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     }
 
     /** Stops the experiment. */
-    private void stopExperiment()
+    private synchronized void stopExperiment()
     {
-        final Chronometer crCrono = this.findViewById( R.id.crCrono );
-        final long totalElapsedTime = this.getElapsedExperimentTime();
+        if ( this.onExperiment ) {
+            this.onExperiment = false;
 
-        crCrono.stop();
+            final long elapsedMillis = this.getElapsedExperimentMillis();
 
-        try {
-            final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
+            this.chrono.stop();
 
-            dlg.setTitle( this.experiment.getName() );
-            dlg.setMessage( R.string.msgFinishedExperiment );
-            dlg.setCancelable( false );
-            dlg.setPositiveButton( R.string.lblBack, (dlgintf, i) -> {
-                this.askBeforeExit = false;
-                this.finish();
-            } );
+            try {
+                final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
 
-            this.orm.store( this.resultBuilder.build( totalElapsedTime ) );
-            Log.i( LogTag, this.getString( R.string.msgFinishedExperiment ) );
-            dlg.create().show();
-        } catch(IOException exc) {
-            this.showStatus( LogTag, "unable to save experiment result" );
+                dlg.setTitle( this.experiment.getName() );
+                dlg.setMessage( R.string.msgFinishedExperiment );
+                dlg.setCancelable( false );
+                dlg.setPositiveButton( R.string.lblBack, (d, i) -> {
+                    this.askBeforeExit = false;
+                    this.finish();
+                } );
+
+                this.orm.store( this.resultBuilder.build( elapsedMillis ) );
+                Log.i( LogTag, this.getString( R.string.msgFinishedExperiment ) );
+                dlg.create().show();
+            } catch(IOException exc) {
+                this.showStatus( LogTag, "unable to save experiment result" );
+            }
         }
+
+        return;
     }
 
     /** Launches the experiment. */
     private void launchExperiment()
     {
-        final Chronometer crCrono = this.findViewById( R.id.crCrono );
-        final TextView lblMaxTime = this.findViewById( R.id.lblMaxTime );
-        final Duration timeNeeded = this.experiment.calculateTimeNeeded();
+        if ( this.activitiesToPlay.length > 0 ) {
+            final TextView lblMaxTime = this.findViewById( R.id.lblMaxTime );
+            final Duration timeNeeded = this.experiment.calculateTimeNeeded();
 
-        // Prepare the UI
-        this.prepareUIForExperiment();
-        lblMaxTime.setText( timeNeeded.toChronoString() );
+            // Prepare the UI
+            this.prepareUIForExperiment();
+            lblMaxTime.setText( timeNeeded.toChronoString() );
 
-        // Prepare crono
-        final long currentTime = SystemClock.elapsedRealtime();
-        crCrono.setBase( currentTime );
-        this.currentActivityIndex = 0;
-        this.accumulatedTime = 0;
-        this.showActivity();
+            // Create the result object
+            this.resultBuilder = new Result.Builder( this.user, this.experiment, System.currentTimeMillis() );
+            this.resultBuilder.add(
+                    new Result.ActivityChangeEvent(
+                            0,
+                            this.activitiesToPlay[ 0 ].getTag().toString() ) );
 
-        // Create the result object
-        this.resultBuilder = new Result.Builder( this.user, this.experiment, System.currentTimeMillis() );
-        this.resultBuilder.add(
-                new Result.ActivityChangeEvent(
-                        0,
-                        this.activitiesToPlay[ 0 ].getTag().toString() ) );
+            // Prepare crono
+            this.onExperiment = true;
+            this.currentActivityIndex = 0;
+            this.accumulatedTimeInSeconds = 0;
+            this.showActivity();
 
-        // Start counting time
-        crCrono.start();
+            // Start counting time
+            this.chrono.reset();
+            this.chrono.start();
+            Log.i( LogTag, "Starting..." );
+        } else {
+            this.showStatus( LogTag, this.getString( R.string.ErrNotEnoughActivities ) );
+        }
     }
 
     /** @return the list of activities to play, honoring the random attribute. */
@@ -547,9 +635,14 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             this.loadManualActivity( (ManualGroup.ManualActivity) activity );
         }
 
-        final int exprTimeSecs = (int) Math.round( (double) this.getElapsedExperimentTime() / 1000 );
+        final int exprTimeSecs = (int) Math.round( (double) this.getElapsedExperimentMillis() / 1000 );
         final Duration durationDelta = new Duration( activity.getTime().getTimeInSeconds() );
         lblMaxActTime.setText( durationDelta.add( exprTimeSecs ).toChronoString() );
+
+        Log.i( LogTag, "Starting activity: '" + activity.getTag() + "'"
+                        + "\n\tCurrent time: " + exprTimeSecs + "s"
+                        + "\n\tActivity time: " + activity.getTime().getTimeInSeconds() + "s"
+                        + "\n\tActivity ends at max: " + durationDelta + "s" );
     }
 
     private static int[] createSequence(int max, boolean shuffle)
@@ -632,13 +725,15 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private VideoView vVideoBox;
 
     private int currentActivityIndex;
-    private int accumulatedTime;
+    private int accumulatedTimeInSeconds;
     private User user;
     private Experiment experiment;
     private Group.Activity[] activitiesToPlay;
     private boolean askBeforeExit;
     private boolean readyToLaunch;
+    private boolean onExperiment;
 
+    private Chronometer chrono;
     private Result.Builder resultBuilder;
     private Orm orm;
 

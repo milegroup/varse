@@ -1336,6 +1336,7 @@ public final class Orm {
       * @param fileName The name of the file.
       * @return A suitable file name.
       */
+    @SuppressWarnings("all")
     public static String buildMediaFileNameForDbFromMediaFileName(String fileName)
     {
         // Android Studio complains here about API level

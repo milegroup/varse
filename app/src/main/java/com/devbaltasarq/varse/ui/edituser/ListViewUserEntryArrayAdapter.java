@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.ui.UsersActivity;
-import com.devbaltasarq.varse.ui.performexperiment.BluetoothLeScannerPerformExperimentActivity;
+import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
 /** Represents an adapter of the special items for the ListView of media files. */
 public class ListViewUserEntryArrayAdapter extends ArrayAdapter<ListViewUserEntry> {
@@ -35,15 +35,12 @@ public class ListViewUserEntryArrayAdapter extends ArrayAdapter<ListViewUserEntr
 
         lblUserDesc.setText( entry.getUserDesc() );
 
-        btLaunch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        btLaunch.setOnClickListener( (v) -> {
                 ListViewUserEntryArrayAdapter self = ListViewUserEntryArrayAdapter.this;
                 UsersActivity cntxt = (UsersActivity) self.getContext();
 
                 UsersActivity.selectedUser = entry.getUser();
-                cntxt.startActivity( new Intent( cntxt, BluetoothLeScannerPerformExperimentActivity.class ) );
-            }
+                cntxt.startActivity( new Intent( cntxt, PerformExperimentActivity.class ) );
         });
 
         return convertView;

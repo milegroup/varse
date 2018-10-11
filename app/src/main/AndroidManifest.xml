@@ -55,10 +55,6 @@
             android:label="@string/lblEditGroup"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".ui.performexperiment.BluetoothLeScannerPerformExperimentActivity"
-            android:label="@string/lblPerformExperiment"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity
             android:name=".ui.editexperiment.editgroup.EditManualGroupActivity"
             android:label="@string/lblEditGroup"
             android:theme="@style/AppTheme.NoActionBar" />

@@ -3,7 +3,6 @@ package com.devbaltasarq.varse.core.bluetooth;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
@@ -13,9 +12,9 @@ import java.util.Random;
 import java.util.UUID;
 
 public final class DemoBluetoothDevice {
-    private static String LogTag = DemoBluetoothDevice.class.getSimpleName();
-    private static String DemoDeviceName = "demo BT device";
-    private static String DemoDeviceAddr = "00:00:00:00:00:00";
+    private static final String LogTag = DemoBluetoothDevice.class.getSimpleName();
+    private static final String DemoDeviceName = "demo BT device";
+    private static final String DemoDeviceAddr = "00:00:00:00:00:00";
 
     /** Creates the bluetooth demo device. */
     private DemoBluetoothDevice()

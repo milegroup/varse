@@ -160,6 +160,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 }
         });
 
+        // Initialize
         this.handler = new Handler();
         this.configBtLaunched = false;
         this.btDefinitelyNotAvailable = false;
@@ -175,7 +176,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
         this.obtainData();
 
-        if ( !btDefinitelyNotAvailable ) {
+        if ( !this.btDefinitelyNotAvailable ) {
             this.initBluetooth();
 
             // Ensures Bluetooth is enabled on the device.
@@ -532,7 +533,11 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             PerformExperimentActivity.this.runOnUiThread( () ->
                     this.showStatus( this.getString( R.string.lblFilteringByService ) + "..." ) );
 
-            this.bluetoothFiltering.filter( this.discoveredDevices.toArray( new BluetoothDevice[ 0 ] ) );
+            if ( this.discoveredDevices.size() >  0 ) {
+                this.bluetoothFiltering.filter( this.discoveredDevices.toArray( new BluetoothDevice[ 0 ] ) );
+            } else {
+                this.filteringFinished();
+            }
         }
 
         return;
@@ -644,6 +649,22 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                     experimentNames );
             adapterExperiments.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
             cbExperiments.setAdapter( adapterExperiments );
+
+            // Select chosen experiment
+            if ( chosenExperiment != null ) {
+                int i = 0;
+                for(String exprName: experimentNames) {
+                    if ( chosenExperiment.getName().equals( exprName ) ) {
+                        break;
+                    }
+
+                    ++i;
+                }
+
+                if ( i < experimentNames.length ) {
+                    cbExperiments.setSelection( i );
+                }
+            }
         } catch(IOException exc) {
             this.disableFurtherScan();
             this.showStatus( this.getString( R.string.ErrIO ) );

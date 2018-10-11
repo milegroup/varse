@@ -24,7 +24,7 @@ import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.ui.editexperiment.EditExperimentActivity;
 import com.devbaltasarq.varse.ui.editexperiment.ListViewExperimentEntry;
 import com.devbaltasarq.varse.ui.editexperiment.ListViewExperimentEntryArrayAdapter;
-import com.devbaltasarq.varse.ui.performexperiment.BluetoothLeScannerPerformExperimentActivity;
+import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -225,9 +225,10 @@ public class ExperimentsActivity extends AppActivity {
     {
         this.loadExperiment( e.getId() );
 
+        PerformExperimentActivity.chosenExperiment = selectedExperiment;
         if ( selectedExperiment != null ) {
             this.startActivity(
-                new Intent( this, BluetoothLeScannerPerformExperimentActivity.class ) );
+                new Intent( this, PerformExperimentActivity.class ) );
         }
 
         return;
