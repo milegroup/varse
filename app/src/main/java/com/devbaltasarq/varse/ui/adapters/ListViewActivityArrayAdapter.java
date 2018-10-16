@@ -36,12 +36,12 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
     }
 
     @Override
-    public View getView(int position, View rowView, @NonNull ViewGroup parent)
+    public @NonNull View getView(int position, View rowView, @NonNull ViewGroup parent)
     {
         final Context context = this.getContext();
         final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
         final Group.Activity entryActivity = this.getItem( position );
-        Bitmap thumbnail = null;
+        Bitmap thumbnail;
         EditGroupActivity editGroupActivity = null;
 
         if ( context instanceof EditGroupActivity ) {
@@ -101,7 +101,10 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
             btEditMedia.setVisibility( View.VISIBLE );
             groupDescImgId = R.drawable.ic_manual_button;
             rowView.findViewById( R.id.lyThumbnail ).setVisibility( View.GONE );
+        } else {
+            throw new Error( "Activity adapter: unsupported activity type" );
         }
+
 
         ivMediaDesc.setImageDrawable( AppCompatResources.getDrawable( context, groupDescImgId ) );
 

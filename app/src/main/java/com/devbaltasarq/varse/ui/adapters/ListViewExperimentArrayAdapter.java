@@ -1,6 +1,7 @@
 package com.devbaltasarq.varse.ui.adapters;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,10 +23,14 @@ public class ListViewExperimentArrayAdapter extends ArrayAdapter<Experiment> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent)
+    public @NonNull View getView(int position, View convertView, @NonNull ViewGroup parent)
     {
         final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
         final Experiment expr = this.getItem( position );
+
+        if ( expr == null ) {
+            throw new Error( "Experiment adapter, experiment is null" );
+        }
 
         if ( convertView == null ) {
             convertView = layoutInflater.inflate( R.layout.listview_experiment_entry, null );

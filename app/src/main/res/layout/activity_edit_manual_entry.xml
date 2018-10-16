@@ -59,6 +59,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:tint="#ffffff"
-        android:src="@drawable/ic_save" />
+        app:srcCompat="@drawable/ic_save" />
 
 </android.support.design.widget.CoordinatorLayout>

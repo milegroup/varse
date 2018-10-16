@@ -60,7 +60,7 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:tint="#ffffff"
-        android:src="@drawable/ic_launch_button"
+        app:srcCompat="@drawable/ic_launch_button"
         android:layout_gravity="bottom|right|end" />
 
     <android.support.design.widget.FloatingActionButton
@@ -71,7 +71,7 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:tint="#ffffff"
-        android:src="@drawable/ic_skip_track_button"
+        app:srcCompat="@drawable/ic_skip_track_button"
         android:layout_gravity="bottom|right|end" />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -1,6 +1,11 @@
 package com.devbaltasarq.varse.core.experiment;
 
-/** Represents a Tag. */
+import com.devbaltasarq.varse.core.FileNameAdapter;
+
+/** Represents a Tag.
+  * Depends on FileNameAdapter, in order to adapt tags.
+  * @see FileNameAdapter
+  */
 public class Tag {
     public static final String FIELD = "tag";
     public static Tag NO_TAG = new Tag( "Neutral" );
@@ -8,6 +13,10 @@ public class Tag {
     /** Creates a new tag. */
     public Tag(String tag)
     {
+        if ( fileNameAdapter == null ) {
+            fileNameAdapter = FileNameAdapter.get();
+        }
+
         this.tag = encode( tag );
     }
 
@@ -38,14 +47,11 @@ public class Tag {
         this.tag = encode( newTag );
     }
 
-    /** @return a string formatted as a tag needs to accomplish with standards. */
-    public static String encode(String tag)
+    /** @return a string formatted as a tag needs to accomplish with standards.
+      * @see FileNameAdapter, which converts the tag appropriately. */
+    public String encode(String tag)
     {
-        if ( tag.trim().isEmpty() ) {
-            throw new Error( "empty tag" );
-        }
-
-        return tag.trim().toLowerCase().replace( ' ', '_' );
+        return fileNameAdapter.encode( tag );
     }
 
     /** @return a copy of the tag text, in a different object. */
@@ -62,4 +68,5 @@ public class Tag {
     }
 
     private String tag;
+    private static FileNameAdapter fileNameAdapter;
 }

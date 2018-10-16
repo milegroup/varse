@@ -1,6 +1,8 @@
 package com.devbaltasarq.varse.core;
 
 
+import java.util.Locale;
+
 /** Represents duration in minutes and seconds. */
 public class Duration {
     public static final String FIELD = "time";
@@ -131,7 +133,7 @@ public class Duration {
     /** @return the duration in the format 00:00, minutes and secs. */
     public String toChronoString()
     {
-        return String.format(
+        return String.format (Locale.getDefault(),
                 "%02d:%02d", this.getMinutes(), this.getSeconds() );
     }
 
@@ -139,10 +141,10 @@ public class Duration {
     public String toString()
     {
         int minutes = this.getMinutes();
-        String toret = String.format( "%2d\"", this.getTimeInSeconds() );
+        String toret = String.format( Locale.getDefault(), "%2d\"", this.getTimeInSeconds() );
 
         if ( minutes > 0 ) {
-            toret = String.format( "%2d'%02d\"", this.getMinutes(), this.getSeconds() );
+            toret = String.format( Locale.getDefault(), "%2d'%02d\"", this.getMinutes(), this.getSeconds() );
         }
 
         return toret;

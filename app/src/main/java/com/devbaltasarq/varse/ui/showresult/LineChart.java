@@ -6,6 +6,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
@@ -187,6 +188,12 @@ public class LineChart extends Drawable {
         return this.drawGrid;
     }
 
+    /** @return true if the labels for each point should be shown, false otherwise. */
+    public boolean shouldShowLabels()
+    {
+        return this.showLabels;
+    }
+
     /** Sets the label threshold. */
     public void setLabelThreshold(double threshold)
     {
@@ -194,7 +201,7 @@ public class LineChart extends Drawable {
     }
 
     /** Shows the labels on the chart or not. */
-    public void shouldShowLabels(boolean showLabels)
+    public void setShowLabels(boolean showLabels)
     {
         this.showLabels = showLabels;
     }
@@ -220,7 +227,9 @@ public class LineChart extends Drawable {
         this.canvas = canvas;
         this.chartBounds = new Rect( 0,  0, this.canvas.getWidth(), this.canvas.getHeight() );
         this.legendBounds = new Rect( 0, 0, this.canvas.getWidth(), this.canvas.getHeight() );
+        this.paint.setTypeface( Typeface.create( "serif", Typeface.NORMAL ) );
         this.paint.setTextSize( TEXT_SIZE );
+        this.paint.setAntiAlias( true );
 
         // Adjust chart bounds
         this.chartBounds.top += CHART_PADDING;
@@ -273,7 +282,7 @@ public class LineChart extends Drawable {
         String strNum;
 
         if ( ( value == Math.floor( value ) )
-             && !Double.isInfinite( value ) )
+          && !Double.isInfinite( value ) )
         {
             // It is actually an integer number
             strNum = String.format( Locale.getDefault(), "%02d", (int) value );
@@ -292,8 +301,15 @@ public class LineChart extends Drawable {
       */
     private void write(double x, double y, String msg)
     {
+        final float BEFORE_STROKE_WIDTH = this.paint.getStrokeWidth();
+        final int BEFORE_COLOR = this.paint.getColor();
+
+        this.paint.setStrokeWidth( 1 );
         this.paint.setColor( Color.BLACK );
         this.canvas.drawText( msg, (float) x, (float) y, this.paint );
+
+        this.paint.setColor( BEFORE_COLOR );
+        this.paint.setStrokeWidth( BEFORE_STROKE_WIDTH );
     }
 
     /** Draws the grid.
@@ -403,7 +419,11 @@ public class LineChart extends Drawable {
                 this.line( previousPoint.x, previousPoint.y, X, Y, point.getColor() );
 
                 // Show label only if it's different than the previous one
-                if ( Math.abs( DATA_Y - lastY ) > this.labelThreshold ) {
+                if ( ( this.shouldShowLabels()
+                    && ( Math.abs( DATA_Y - lastY ) > this.labelThreshold ) )
+                  || DATA_Y == this.minY
+                  || DATA_Y == this.maxY )
+                {
                     this.write( X + 10, Y - 10, DATA_Y );
                 }
             }
@@ -419,6 +439,7 @@ public class LineChart extends Drawable {
     /** Draws the box with all legends. */
     private void drawLegendBox()
     {
+        final float BEFORE_STROKE_WIDTH = this.paint.getStrokeWidth();
         final double LETTER_WIDTH = this.paint.measureText( "W" );
         final int MAX_LENGTH = (int) ( this.legendBounds.width() / LETTER_WIDTH );
 
@@ -434,12 +455,12 @@ public class LineChart extends Drawable {
             }
 
             this.paint.setColor( colorTag.getColor() );
-            this.paint.setStyle( Paint.Style.FILL_AND_STROKE);
+            this.paint.setStyle( Paint.Style.FILL );
             this.canvas.drawRect(
                                 this.legendBounds.left,
-                                y,
-                                this.legendBounds.left + 20,
                                 y - 20,
+                                this.legendBounds.left + 20,
+                                y,
                                 this.paint );
 
             this.paint.setStyle( Paint.Style.STROKE );
@@ -449,7 +470,7 @@ public class LineChart extends Drawable {
             y += 50;
         }
 
-        return;
+        this.paint.setStrokeWidth( BEFORE_STROKE_WIDTH );
     }
 
     private String legendX;

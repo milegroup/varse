@@ -1,6 +1,7 @@
 package com.devbaltasarq.varse.ui.adapters;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v7.content.res.AppCompatResources;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,11 +25,15 @@ public class ListViewGroupArrayAdapter extends ArrayAdapter<Group> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent)
+    public @NonNull View getView(int position, View convertView, @NonNull ViewGroup parent)
     {
         final EditExperimentActivity cntxt = (EditExperimentActivity) this.getContext();
         final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
         final Group group = this.getItem( position );
+
+        if ( group == null ) {
+            throw new Error( "Group adapter: group is null" );
+        }
 
         if ( convertView == null ) {
             convertView = layoutInflater.inflate( R.layout.listview_media_group_entry, null );

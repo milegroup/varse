@@ -23,10 +23,14 @@ public class ListViewUserArrayAdapter extends ArrayAdapter<User> {
     }
 
     @Override
-    public View getView(int position, View rowView, @NonNull ViewGroup parent)
+    public @NonNull View getView(int position, View rowView, @NonNull ViewGroup parent)
     {
         final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
         final User user = this.getItem( position );
+
+        if ( user == null ) {
+            throw new Error( "User adapter: user is null" );
+        }
 
         if ( rowView == null ) {
             rowView = layoutInflater.inflate( R.layout.listview_user_entry, null );

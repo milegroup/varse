@@ -310,6 +310,7 @@ public class ResultViewerActivity extends AppActivity {
         return segmentPadded;
     }
 
+    @SuppressWarnings("deprecation")
     private void Analyze() {
         final StringBuilder text = new StringBuilder( "<h3>Signal data</h3>" );
         final float FILTERED_RATE = 100.0f * (dataRRnf.size() - dataRR.size()) / dataRRnf.size();
@@ -794,6 +795,7 @@ public class ResultViewerActivity extends AppActivity {
         final LineChart chart = new LineChart( DENSITY, POINTS, SERIES );
         chart.setLegendY( "Heart-rate (bpm)" );
         chart.setLegendX( "Time (sec.)" );
+        chart.setShowLabels( false );
         CHART_VIEWER.setBackground( chart );
     }
 

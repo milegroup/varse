@@ -85,7 +85,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         }
 
         /** Starts the chronometer */
-        @SuppressWarnings("all")
         public void start()
         {
             this.handler = new Handler();

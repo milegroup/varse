@@ -40,6 +40,7 @@ public class EditManualGroupActivity extends EditGroupActivity {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         super.onActivityResult( requestCode, resultCode, data );

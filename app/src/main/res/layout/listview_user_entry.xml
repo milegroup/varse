@@ -15,14 +15,14 @@
             android:contentDescription="@string/lblLaunch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#00000000"
+            app:backgroundTint="#00000000"
             app:srcCompat="@drawable/ic_launch_button"/>
 
         <ImageButton android:id="@+id/btEditUser"
             android:contentDescription="@string/lblEditUser"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#00000000"
+            app:backgroundTint="#00000000"
             app:srcCompat="@drawable/ic_modify_button"/>
     </LinearLayout>
 

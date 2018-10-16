@@ -78,7 +78,7 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:tint="#ffffff"
-        android:src="@drawable/ic_launch_button"
+        app:srcCompat="@drawable/ic_launch_button"
         android:layout_gravity="bottom|right|end" />
 
 </android.support.design.widget.CoordinatorLayout>

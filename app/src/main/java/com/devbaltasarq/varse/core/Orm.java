@@ -436,12 +436,14 @@ public final class Orm {
             // Remove all related results
             ArrayList<File> resultFiles = this.resultsPerExperiment.get( p.getId() );
 
-            for(final File resultFile: resultFiles) {
-                if ( !resultFile.delete() ) {
-                    Log.e( LogTag, "unable to remove file: " + resultFile );
-                }
+            if ( resultFiles != null ) {
+                for(final File resultFile: resultFiles) {
+                    if ( !resultFile.delete() ) {
+                        Log.e( LogTag, "unable to remove file: " + resultFile );
+                    }
 
-                this.filesResult.remove( resultFile );
+                    this.filesResult.remove( resultFile );
+                }
             }
 
             // Completely remove cache for this experiment
@@ -675,13 +677,13 @@ public final class Orm {
     }
 
     /** Imports an experiment result from a JSON file, previously exported.
-     * @param zipFileIn An input stream to the zip file.
+     * @param jsonFileIn An input stream to the zip file.
      * @throws IOException if something goes wrong, like not enough space.
      */
-    public void importResult(InputStream zipFileIn) throws IOException
+    public void importResult(InputStream jsonFileIn) throws IOException
     {
         try {
-            final Reader fileReader = openReaderFor( zipFileIn );
+            final Reader fileReader = openReaderFor( jsonFileIn );
             final Result toret = Result.fromJSON( fileReader );
             close( fileReader );
 
@@ -689,7 +691,10 @@ public final class Orm {
             toret.updateIds();
             this.store( toret );
         } catch(JSONException exc) {
-            Log.e( LogTag, "unable to import result file: " + exc.getMessage() );
+            final String ERROR_MSG = "unable to import result file: " + exc.getMessage();
+
+            Log.e( LogTag, ERROR_MSG );
+            throw new IOException( ERROR_MSG );
         }
 
         return;
@@ -735,16 +740,14 @@ public final class Orm {
                 toret = (Experiment) Persistent.fromJSON(
                                 Persistent.TypeId.Experiment,
                                 openReaderFor( experimentFile ) );
+                this.chkIds( toret );
             } catch(JSONException exc)
             {
                 throw new IOException( "error reading JSON: " + exc.getMessage() );
             }
 
             // Store the experiment
-            toret.updateIds();
             this.store( toret );
-
-            // Prepare the media files
             for(File f: mediaFiles) {
                 this.storeMedia( toret,
                                     f.getName(),
@@ -756,6 +759,29 @@ public final class Orm {
         }
 
         return toret;
+    }
+
+    /** Check that the id's inside the experiment are not repeated in the store.
+      * @param expr the experiment to check.
+      * @throws JSONException when the id's are repeated.
+      */
+    private void chkIds(Experiment expr) throws JSONException
+    {
+        final Id id = expr.getId();
+
+        try {
+            if ( this.lookForObjById( id, Persistent.TypeId.Experiment ) != null ) {
+                throw new JSONException( "already existing as experiment id:" + id );
+            }
+
+            if ( this.lookForObjById( id, Persistent.TypeId.Result ) != null ) {
+                throw new JSONException( "already existing as a result id:" + id );
+            }
+        } catch(IOException exc) {
+            throw new JSONException( exc.getMessage() );
+        }
+
+        return;
     }
 
     /** Exports a given result set.
@@ -978,6 +1004,34 @@ public final class Orm {
         }
 
         return toret.toArray( new PartialObject[ toret.size() ] );
+    }
+
+    /** @return A persistent object, provided its id and the type of object. */
+    private PartialObject lookForObjById(Id id, Persistent.TypeId typeId) throws IOException
+    {
+        HashSet<File> fileList = this.filesExperiment;
+
+        // Decide cache file list
+        if ( typeId == Persistent.TypeId.Result ) {
+            fileList = this.filesResult;
+        }
+        else
+        if ( typeId == Persistent.TypeId.User ) {
+            fileList = this.filesUser;
+        }
+
+        PartialObject toret = null;
+
+        for(File f: fileList) {
+            final PartialObject obj = retrievePartialObject( f );
+
+            if ( obj.getId().equals( id ) ) {
+                toret = obj;
+                break;
+            }
+        }
+
+        return toret;
     }
 
     /** @return A persistent object, provided its name and the type of object. */
@@ -1261,24 +1315,26 @@ public final class Orm {
     private static void removeTreeAt(File dir)
     {
         if ( dir != null
-          || !dir.isDirectory() )
+          && dir.isDirectory() )
         {
             final String[] allFiles = dir.list();
 
-            for(String fileName: allFiles) {
-                File f = new File( dir, fileName );
+            if ( allFiles != null ) {
+                for(String fileName: allFiles) {
+                    File f = new File( dir, fileName );
 
-                if ( f.isDirectory() ) {
-                    removeTreeAt( f );
+                    if ( f.isDirectory() ) {
+                        removeTreeAt( f );
+                    }
+
+                    if ( !f.delete() ) {
+                        Log.e( LogTag, "Error deleting directory: " + f );
+                    }
                 }
 
-                if ( !f.delete() ) {
-                    Log.e( LogTag, "Error deleting directory: " + f );
+                if ( !dir.delete() ) {
+                    Log.e( LogTag, "Error deleting directory: " + dir );
                 }
-            }
-
-            if ( !dir.delete() ) {
-                Log.e( LogTag, "Error deleting directory: " + dir );
             }
         } else {
             Log.d( LogTag, "removeTreeAt: directory null or not a directory?" );
@@ -1300,13 +1356,19 @@ public final class Orm {
       */
     public static String extractFileExt(String fileName)
     {
-        final int posDot = fileName.trim().lastIndexOf(".");
         String toret = "";
 
-        if ( posDot >= 0
-          && posDot < ( fileName.length() - 1 ) )
+        if ( fileName != null
+          && !fileName.trim().isEmpty() )
         {
-            toret = fileName.substring( posDot + 1 );
+            final int posDot = fileName.trim().lastIndexOf( "." );
+
+
+            if ( posDot >= 0
+              && posDot < ( fileName.length() - 1 ) )
+            {
+                toret = fileName.substring( posDot + 1 );
+            }
         }
 
         return toret;
@@ -1336,12 +1398,11 @@ public final class Orm {
       * @param fileName The name of the file.
       * @return A suitable file name.
       */
-    @SuppressWarnings("all")
     public static String buildMediaFileNameForDbFromMediaFileName(String fileName)
     {
         // Android Studio complains here about API level
         // This is an extra indirection to avoid calling directly Tag.encode( fileName ).
-        return fileNameConverter.apply( fileName );
+        return fileNameAdapter.encode( fileName );
     }
 
     /** Gets the already open database.
@@ -1366,13 +1427,13 @@ public final class Orm {
      *                        lowercase and no spaces ('_' instead).
      * @see Function
      */
-    public static void init(Context context, Function<String, String> fileNameAdapter)
+    public static void init(Context context, FileNameAdapter fileNameAdapter)
     {
         if ( instance == null ) {
             instance = new Orm( context );
         }
 
-        fileNameConverter = fileNameAdapter;
+        Orm.fileNameAdapter = fileNameAdapter;
         return;
     }
 
@@ -1384,7 +1445,7 @@ public final class Orm {
     private File dirRes;
     private File dirTmp;
 
-    private static Function<String, String> fileNameConverter;
+    private static FileNameAdapter fileNameAdapter;
     private static Orm instance;
     private static File DIR_DOWNLOADS = Environment.getExternalStoragePublicDirectory(
                                                                 Environment.DIRECTORY_DOWNLOADS );

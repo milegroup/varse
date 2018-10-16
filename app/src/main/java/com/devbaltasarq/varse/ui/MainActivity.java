@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;
+import com.devbaltasarq.varse.core.FileNameAdapter;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.experiment.Tag;
@@ -88,7 +89,7 @@ public class MainActivity extends AppActivity
         super.onStart();
 
         // Initialize the database
-        Orm.init( this.getApplicationContext(), Tag::encode );
+        Orm.init( this.getApplicationContext(), FileNameAdapter.get() );
     }
 
     @Override
@@ -246,7 +247,7 @@ public class MainActivity extends AppActivity
 
         this.startActivityForResult(
                 Intent.createChooser( intent, this.getString( R.string.lblMediaSelection ) ),
-                RQC_PICK_FILE);
+                RQC_PICK_FILE );
     }
 
     /** Import the experiment file. */
@@ -256,11 +257,13 @@ public class MainActivity extends AppActivity
             final Orm db = Orm.get();
 
             if ( uri != null
+              && uri.getScheme() != null
               && ( uri.getScheme().equals( ContentResolver.SCHEME_CONTENT )
                ||  uri.getScheme().equals( ContentResolver.SCHEME_FILE ) ) )
             {
+                final String URI_PATH_SEGMENT = uri.getLastPathSegment();
                 final InputStream fileIn = this.getContentResolver().openInputStream( uri );
-                final String FILE_EXT = Orm.extractFileExt( uri.getLastPathSegment() );
+                final String FILE_EXT = Orm.extractFileExt( URI_PATH_SEGMENT );
 
                 if ( FILE_EXT.equalsIgnoreCase( Orm.getFileExtFor( Persistent.TypeId.Result ) ) )
                 {

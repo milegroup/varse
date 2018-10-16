@@ -488,9 +488,9 @@ public class Result extends Persistent {
                 double remaining = totalSecs % 3600;
                 int mins = (int) ( remaining / 60 );
                 double secs = remaining % 60;
-                final String timeStamp = String.format( Locale.getDefault(),
+                final String timeStamp = String.format( Locale.US,
                                                         "%02d:%02d:%05.2f", hours, mins, secs );
-                final String timeDuration = String.format( Locale.getDefault(),
+                final String timeDuration = String.format( Locale.US,
                                                         "%.2f", ( (double) timeActWillLast ) / 1000 );
 
                 tagsStream.write( timeStamp );

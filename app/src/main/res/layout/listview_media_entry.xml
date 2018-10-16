@@ -67,28 +67,28 @@
                 android:contentDescription="@string/lblSortUp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#00000000"
+                app:backgroundTint="#00000000"
                 app:srcCompat="@drawable/ic_sort_up_button"/>
 
             <ImageButton android:id="@+id/btSortMediaDown"
                 android:contentDescription="@string/lblSortDown"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#00000000"
+                app:backgroundTint="#00000000"
                 app:srcCompat="@drawable/ic_sort_down_button"/>
 
             <ImageButton android:id="@+id/btEditMedia"
                 android:contentDescription="@string/lblEditActivity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#00000000"
+                app:backgroundTint="#00000000"
                 app:srcCompat="@drawable/ic_modify_button"/>
 
             <ImageButton android:id="@+id/btDeleteMedia"
                 android:contentDescription="@string/lblMediaFiles"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#00000000"
+                app:backgroundTint="#00000000"
                 app:srcCompat="@drawable/ic_delete_button"/>
         </LinearLayout>
     </LinearLayout>

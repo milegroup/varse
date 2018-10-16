@@ -14,6 +14,7 @@ import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.ui.ResultsActivity;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 /** Represents an adapter of the special items for the ListView of media files. */
 public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
@@ -28,6 +29,10 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
         final ResultsActivity cntxt = (ResultsActivity) this.getContext();
         final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
         final Result res = this.getItem( position );
+
+        if ( res == null ) {
+            throw new Error( "Result adapter: result is null" );
+        }
 
         if ( rowView == null ) {
             rowView = layoutInflater.inflate( R.layout.listview_result_entry, null );
@@ -53,15 +58,16 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
         final Calendar localDate = Calendar.getInstance();
 
         localDate.setTimeInMillis( result.getTime() );
-        return String.format(   "%04d-%02d-%02d %02d:%02d:%02d "
+        return String.format( Locale.getDefault(),
+                        "%04d-%02d-%02d %02d:%02d:%02d "
                         + " " + context.getString( R.string.lblRecord )
                         + ": " + result.getUser().getName(),
-                localDate.get( Calendar.YEAR ),
-                localDate.get( Calendar.MONTH ) + 1,
-                localDate.get( Calendar.DAY_OF_MONTH ),
-                localDate.get( Calendar.HOUR_OF_DAY ),
-                localDate.get( Calendar.MINUTE ),
-                localDate.get( Calendar.SECOND )
+                        localDate.get( Calendar.YEAR ),
+                        localDate.get( Calendar.MONTH ) + 1,
+                        localDate.get( Calendar.DAY_OF_MONTH ),
+                        localDate.get( Calendar.HOUR_OF_DAY ),
+                        localDate.get( Calendar.MINUTE ),
+                        localDate.get( Calendar.SECOND )
         );
     }
 }
