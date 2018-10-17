@@ -46,15 +46,20 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.Consumer;
+
 
 public class ExperimentDirector extends AppActivity implements HRListenerActivity {
     public static final String LogTag = ExperimentDirector.class.getSimpleName();
 
+    /** Interface for listeners. */
+    private interface Listener<T> {
+        void handle(T sender);
+    }
+
     /** Represents a chronometer. */
-    public static class Chronometer {
+    private static class Chronometer {
         /** Creates a new chronometer with an event handler. */
-        public Chronometer(Consumer<Chronometer> eventHandler)
+        public Chronometer(Listener<Chronometer> eventHandler)
         {
             this.eventHandler = eventHandler;
             this.startTime = 0;
@@ -90,7 +95,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             this.handler = new Handler();
 
             this.sendHR = () -> {
-                this.eventHandler.accept( this );
+                this.eventHandler.handle( this );
                 this.handler.postDelayed( this.sendHR,1000);
             };
 
@@ -106,7 +111,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         private long startTime;
         private Handler handler;
         private Runnable sendHR;
-        private Consumer<Chronometer> eventHandler;
+        private Listener<Chronometer> eventHandler;
     }
 
     @Override

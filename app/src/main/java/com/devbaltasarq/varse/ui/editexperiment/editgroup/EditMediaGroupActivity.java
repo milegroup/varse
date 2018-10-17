@@ -38,7 +38,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_edit_media_group );
 
         final EditText edTag = this.findViewById( R.id.edTag );
@@ -231,11 +231,12 @@ public class EditMediaGroupActivity extends EditGroupActivity {
             } else {
                 final InputStream in = this.getContentResolver().openInputStream( uri );
 
+                mediaFileName = new File( mediaFileName.trim() ).getName();
+
                 if ( in != null ) {
                     final Experiment experiment = mediaGroup.getExperimentOwner();
 
-                    mediaFileName =
-                            Orm.buildMediaFileNameForDbFromMediaFileName( mediaFileName );
+                    mediaFileName = Orm.buildMediaFileNameForDbFromMediaFileName( mediaFileName );
 
                     if ( !db.existsMedia( experiment, mediaFileName ) ) {
                         final File f = db.storeMedia( experiment, mediaFileName, in );
@@ -273,7 +274,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         {
             this.storeMediaFor( db, uri, mediaGroup );
         } else {
-            this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
+            this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
         }
 
         return;

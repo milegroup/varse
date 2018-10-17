@@ -1,10 +1,15 @@
 package com.devbaltasarq.varse.ui.showresult;
 
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,18 +29,31 @@ import java.util.Locale;
   * public static File beatsFile y tagsFile deben ser cargadas primero.
   * @author Leandro (removed chart dependency by baltasarq)
   */
-public class ResultViewerActivity extends AppActivity {
+public class ResultViewerActivity extends AppActivity implements View.OnTouchListener {
     private static final String LogTag = ResultViewerActivity.class.getSimpleName();
 
-    @Override
+    // Zoom constants: can be one of these 3 states
+    public static final int NONE = 0;
+    public static final int DRAG = 1;
+    public static final int ZOOM = 2;
+
+
+    @Override @SuppressWarnings("ClickableViewAccessibility")
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_result_viewer );
 
+        this.scaleDetector = new ScaleGestureDetector( this, new ScaleListener() );
+
         // Back button
-        ImageButton btBack = this.findViewById( R.id.btCloseResultViewer );
-        btBack.setOnClickListener( (v) -> this.finish() );
+        final ImageButton BT_BACK = this.findViewById( R.id.btCloseResultViewer );
+        BT_BACK.setOnClickListener( (v) -> this.finish() );
+
+        // Chart image viewer
+        this.chartView = findViewById( R.id.ivChartViewer );
+        this.chartView.setOnTouchListener( this );
+        this.scaleFactor = 1.0f;
 
         // Check files exist
         if ( tagsFile == null
@@ -52,7 +70,6 @@ public class ResultViewerActivity extends AppActivity {
             return;
         }
 
-        //chart = findViewById(R.id.chart);
         boxdata = findViewById(R.id.lblTextData);
         boxdata.setMovementMethod(new ScrollingMovementMethod());
 
@@ -706,7 +723,6 @@ public class ResultViewerActivity extends AppActivity {
         }
     }
 
-
     private double[] makeHammingWindow(int windowLength) {
         // Make a Hamming window:
         // w(n) = a0 - (1-a0)*cos( 2*PI*n/(N-1) )
@@ -752,13 +768,114 @@ public class ResultViewerActivity extends AppActivity {
         return toret;
     }
 
+    /** Handles the zooming of the chart.
+     * @param event the MotionEvent as parameter of this event.
+     * @return true, since the event will be handled.
+     */
+    @Override @SuppressWarnings("ClickableViewAccessibility")
+    public boolean onTouch(View v, MotionEvent event)
+    {
+        return this.onTouchEvent( event );
+    }
+
+    /** Handles the zooming of the chart.
+      * @param event the MotionEvent as parameter of this event.
+      * @return true, since the event will be handled.
+      */
+    @Override
+    public boolean onTouchEvent(MotionEvent event)
+    {
+        final ImageView VIEW = this.chartView;
+
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                this.savedMatrix.set( matrix );
+                this.start.set( event.getX(), event.getY() );
+                Log.d( LogTag, "Zooming: mode=DRAG" );
+                mode = DRAG;
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                this.oldDist = distanceBetweenPoints(event);
+                Log.d( LogTag, "Zooming: oldDist=" + oldDist );
+
+                if ( this.oldDist > 10f ) {
+                    this.savedMatrix.set( matrix );
+                    this.midPoint( mid, event );
+                    mode = ZOOM;
+                    Log.d(LogTag, "Zooming: mode=ZOOM" );
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if ( mode == DRAG ) {
+                    this.matrix.set( savedMatrix );
+                    this.matrix.postTranslate(event.getX() - start.x, event.getY() - start.y);
+                }
+                else
+                if ( mode == ZOOM ) {
+                    float newDist = this.distanceBetweenPoints( event );
+                    Log.d( LogTag, "Zooming: newDist=" + newDist );
+
+                    if ( newDist > 10f ) {
+                        this.matrix.set( this.savedMatrix );
+
+                        final float scale = newDist / this.oldDist;
+                        this.matrix.postScale( scale, scale, mid.x, mid.y );
+                        Log.d( LogTag, "Zooming: matrix rescaled." );
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP:
+                VIEW.performClick();
+                mode = NONE;
+                Log.d( LogTag, "Zooming: mode=NONE" );
+                break;
+        }
+
+        VIEW.setImageMatrix( matrix );          // Perform the transformation
+        VIEW.invalidate();
+        return true;                            // indicate event was handled
+    }
+
+    /** @return the ecuclidean distance between two points in the given event. */
+    private float distanceBetweenPoints(MotionEvent event)
+    {
+        float toret = 0;
+
+        if ( event.getPointerCount() > 1 ) {
+            final float x = event.getX( 0 ) - event.getX( 1 );
+            final float y = event.getY( 0 ) - event.getY( 1 );
+
+            toret = (float) Math.sqrt( ( x * x ) + ( y * y ) );
+        }
+
+        return toret;
+    }
+
+    /** Calculates the point in the middle between two points in the given event.
+      * and sets the given point with the obtained values.
+      * @param point the point in which to store the obtained values.
+      * @param event the event from which to extract both points.
+      */
+    private void midPoint(PointF point, MotionEvent event)
+    {
+        point.set( 0, 0 );
+
+        if ( event.getPointerCount() > 1 ) {
+            float x = event.getX( 0 ) + event.getX( 1 );
+            float y = event.getY( 0 ) + event.getY( 1 );
+            point.set( x / 2, y / 2 );
+        }
+
+        return;
+    }
+
     /** Plots the chart in a drawable and shows it. */
     private void plotChart()
     {
         final double DENSITY = this.getResources().getDisplayMetrics().scaledDensity;
         final ArrayList<LineChart.SeriesInfo> SERIES = new ArrayList<>();
         final ArrayList<LineChart.Point> POINTS = new ArrayList<>();
-        final ImageView CHART_VIEWER = findViewById( R.id.ivChartViewer );
 
         if ( dataHRInterpX.size() > 0 ) {
             String tag = this.findTag( dataHRInterpX.get( 0 ) );
@@ -792,13 +909,15 @@ public class ResultViewerActivity extends AppActivity {
         }
 
         // Now create and draw it.
-        final LineChart chart = new LineChart( DENSITY, POINTS, SERIES );
-        chart.setLegendY( "Heart-rate (bpm)" );
-        chart.setLegendX( "Time (sec.)" );
-        chart.setShowLabels( false );
-        CHART_VIEWER.setBackground( chart );
+        final LineChart CHART = new LineChart( DENSITY, POINTS, SERIES );
+        CHART.setLegendY( "Heart-rate (bpm)" );
+        CHART.setLegendX( "Time (sec.)" );
+        CHART.setShowLabels( false );
+        this.chartView.setScaleType( ImageView.ScaleType.MATRIX );
+        this.chartView.setImageDrawable( CHART );
     }
 
+    ImageView chartView;
     TextView boxdata;
     List<Float> dataRRnf;
     List<Float> dataHRnf;
@@ -828,4 +947,28 @@ public class ResultViewerActivity extends AppActivity {
 
     public static File beatsFile;
     public static File tagsFile;
+
+    private float scaleFactor;
+    private ScaleGestureDetector scaleDetector;
+    // Matrixes for zoom calculations
+    private Matrix matrix = new Matrix();
+    private Matrix savedMatrix = new Matrix();
+    private PointF start = new  PointF();
+    private float oldDist;
+
+    private static PointF mid = new PointF();
+    private static int mode = NONE;
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            scaleFactor *= detector.getScaleFactor();
+
+            // Don't let the object get too small or too large.
+            scaleFactor = Math.max( 0.1f, Math.min( scaleFactor, 10.0f ) );
+
+            chartView.invalidate();
+            return true;
+        }
+    }
 }
