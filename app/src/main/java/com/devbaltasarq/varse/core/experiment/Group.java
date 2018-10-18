@@ -137,6 +137,12 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
 
         public abstract Activity copy(Id id);
 
+        protected void copyBasicAttributesTo(Activity dest)
+        {
+            dest.setTag( this.getTag() );
+            dest.group = this.getGroup();
+        }
+
         private Tag tag;
         Group group;
     }

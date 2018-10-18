@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
@@ -533,19 +534,35 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private Group.Activity[] buildActivitiesToPlay()
     {
         final Group.Activity[] toret = new Group.Activity[ this.experiment.getNumActivities() ];
-        final Group[] groupsInExperiment = this.experiment.getGroups();
-        final int[] sequenceOfGroups = createSequence( groupsInExperiment.length, this.experiment.isRandom() );
+        final Group[] GROUPS_IN_EXPERIMENT = this.experiment.getGroups();
+        final int[] SEQUENCE_OG_GROUPS = createSequence( GROUPS_IN_EXPERIMENT.length, this.experiment.isRandom() );
         int pos = 0;
 
         // Run over all groups honoring randomness of experiment, and gather their activities
-        for(int i: sequenceOfGroups) {
+        for(int i: SEQUENCE_OG_GROUPS) {
             // Retrieve the activities from groups, also honoring their own randomness
-            final Group g = groupsInExperiment[ i ];
-            final Group.Activity[] activitiesInGroup = g.getActivities();
-            final int[] sequenceOfActivities = createSequence( g.size(), g.isRandom() );
+            final Group GROUP = GROUPS_IN_EXPERIMENT[ i ];
+            final Group.Activity[] GROUP_ACTIVITIES = GROUP.getActivities();
+            final int[] SEQUENCE_OF_ACTIVITIES = createSequence( GROUP.size(), GROUP.isRandom() );
+            final MediaGroup MEDIA_GROUP;
 
-            for(int j: sequenceOfActivities) {
-                toret[ pos ] = activitiesInGroup[ j ];
+            // Determine whether this group has a tag
+            if ( GROUP instanceof MediaGroup ) {
+                MEDIA_GROUP = (MediaGroup) GROUP;
+            } else {
+                MEDIA_GROUP = null;
+            }
+
+            // Append all activities in this group, randomly or not
+            for(int j: SEQUENCE_OF_ACTIVITIES) {
+                Group.Activity activity = GROUP_ACTIVITIES[ j ];
+
+                if ( MEDIA_GROUP != null ) {
+                    activity = activity.copy();
+                    activity.setTag( MEDIA_GROUP.getTag() );
+                }
+
+                toret[ pos ] = activity;
                 ++pos;
             }
         }

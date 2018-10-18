@@ -139,7 +139,10 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         @Override
         public MediaActivity copy(Id id)
         {
-            return new MediaActivity( id, this.getFile() );
+            MediaActivity toret = new MediaActivity( id, this.getFile() );
+
+            this.copyBasicAttributesTo( toret );
+            return toret;
         }
 
         /** @return the time in seconds for the duration of this video.

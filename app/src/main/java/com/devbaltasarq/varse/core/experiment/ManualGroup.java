@@ -124,7 +124,10 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
         @Override
         public ManualActivity copy(Id id)
         {
-            return new ManualActivity( id, this.getTag().copy(), this.getTime().copy() );
+            ManualActivity toret = new ManualActivity( id, this.getTag().copy(), this.getTime().copy() );
+
+            this.copyBasicAttributesTo( toret );
+            return toret;
         }
 
         @Override
