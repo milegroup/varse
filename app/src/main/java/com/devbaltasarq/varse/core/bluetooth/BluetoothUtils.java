@@ -199,7 +199,7 @@ public class BluetoothUtils {
                     // ACTION_DATA_AVAILABLE: received data from the device.
                     //                        This can be a result of read or notification operations.
                     if ( BleService.ACTION_DATA_AVAILABLE.equals( action ) ) {
-                        hrListenerAct.receiveBpm( intent );
+                        hrListenerAct.onReceiveBpm( intent );
                     }
                 }
             }

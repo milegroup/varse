@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.widget.ImageButton;
-import android.widget.Spinner;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.experiment.Group;

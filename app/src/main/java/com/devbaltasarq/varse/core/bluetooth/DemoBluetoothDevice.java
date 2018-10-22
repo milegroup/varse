@@ -16,6 +16,9 @@ public final class DemoBluetoothDevice {
     private static final String DemoDeviceName = "demo BT device";
     private static final String DemoDeviceAddr = "00:00:00:00:00:00";
 
+    private static final int MIN_HR = 60;
+    private static final int MAX_HR = 90;
+
     /** Creates the bluetooth demo device. */
     private DemoBluetoothDevice()
     {
@@ -34,7 +37,7 @@ public final class DemoBluetoothDevice {
         return DemoDeviceAddr;
     }
 
-    private BluetoothGattCharacteristic createHrGattCharacteristic()
+    private BluetoothGattCharacteristic createHrGattCharacteristic(int newHR, int newRR)
     {
         // Flags: 16bit heart rate && rr presence
         final byte PROPERTIES_FLAGS = (byte) ( 1 << 4 | 1 );
@@ -43,8 +46,7 @@ public final class DemoBluetoothDevice {
                 new BluetoothGattCharacteristic( UUID_HR_MEASUREMENT_CHR,
                         PROPERTIES_FLAGS,
                         BluetoothGattCharacteristic.PERMISSION_READ );
-        final int newHR = 60 + ( rnd.nextInt( 30 ) );
-        final int newRR = (int) ( ( (double) 60 / newHR ) * 1000 );
+
         final int adaptedRR = (int) ( ( (double) newRR / 1000 ) * 1024 );
         final byte[] bValue = new byte[ 5 ];
         bValue[ 0 ] = PROPERTIES_FLAGS;
@@ -76,11 +78,17 @@ public final class DemoBluetoothDevice {
     public void connect(final BluetoothGattCallback callBack)
     {
         this.handler = new Handler();
+        this.lastRR = 800;
 
         this.sendHR = () -> {
-            BluetoothGattCharacteristic GATT_HR_CHR = this.createHrGattCharacteristic();
+            final int HR = (int) ( 60 / ( (double) this.lastRR / 1000 ) );
+
+            BluetoothGattCharacteristic GATT_HR_CHR = this.createHrGattCharacteristic( HR, this.lastRR );
             callBack.onCharacteristicRead( null, GATT_HR_CHR, BluetoothGatt.GATT_SUCCESS );
-            this.handler.postDelayed( this.sendHR,1000);
+
+            final int NEW_HR = MIN_HR + ( rnd.nextInt( MAX_HR - MIN_HR ) );
+            this.lastRR =  (int) ( ( (double) 60 / NEW_HR ) * 1000 );
+            this.handler.postDelayed( this.sendHR, this.lastRR );
         };
 
         this.handler.post( this.sendHR );
@@ -108,6 +116,7 @@ public final class DemoBluetoothDevice {
 
     private Handler handler;
     private Runnable sendHR;
+    private int lastRR;
 
     private static DemoBluetoothDevice device;
     private static Random rnd;

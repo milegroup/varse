@@ -85,7 +85,7 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
      *                BleService.HEART_RATE_TAG for heart rate information (as int),
      *                and it can also have BleService.RR_TAG for the rr info (as int).
      */
-    public void receiveBpm(Intent intent)
+    public void onReceiveBpm(Intent intent)
     {
         final int hr = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
         final int rr = intent.getIntExtra( BleService.RR_TAG, -1 );

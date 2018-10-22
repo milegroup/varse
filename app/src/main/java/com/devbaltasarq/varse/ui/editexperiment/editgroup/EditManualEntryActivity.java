@@ -5,7 +5,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -15,12 +14,9 @@ import android.widget.Spinner;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
-import com.devbaltasarq.varse.core.experiment.Tag;
 import com.devbaltasarq.varse.ui.AppActivity;
 
 public class EditManualEntryActivity extends AppActivity {
-    private static final String LogTag = EditManualEntryActivity.class.getSimpleName();
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {

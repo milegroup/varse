@@ -35,7 +35,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         {
             super( id );
             this.group = null;
-            this.tag = tag;
+            this.tag = tag.copy();
         }
 
         /** @return The group this activity pertains to. */
@@ -194,7 +194,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
       */
     public void setTimeForEachActivity(Duration time)
     {
-        this.timeForEachActivity = time;
+        this.timeForEachActivity = time.copy();
     }
 
     /** Removes the given activity.
@@ -250,6 +250,12 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     public int size()
     {
         return this.activities.size();
+    }
+
+    /** Remove all stored ativities. */
+    public void clear()
+    {
+        this.activities.clear();
     }
 
     /** @return the activities inside this group. */

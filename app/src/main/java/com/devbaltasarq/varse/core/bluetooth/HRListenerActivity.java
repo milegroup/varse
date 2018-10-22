@@ -18,5 +18,5 @@ public interface HRListenerActivity {
 
     void showStatus(String msg);
 
-    void receiveBpm(Intent intent);
+    void onReceiveBpm(Intent intent);
 }

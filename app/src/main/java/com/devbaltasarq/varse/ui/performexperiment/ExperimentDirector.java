@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
@@ -44,6 +45,7 @@ import com.devbaltasarq.varse.ui.adapters.ListViewActivityArrayAdapter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -62,6 +64,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         /** Creates a new chronometer with an event handler. */
         public Chronometer(Listener<Chronometer> eventHandler)
         {
+            this.handler = new Handler();
             this.eventHandler = eventHandler;
             this.startTime = 0;
         }
@@ -73,7 +76,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         }
 
         /** @return the elapsed duration, in milliseconds. */
-        public long getDuration()
+        public long getMillis()
         {
             return SystemClock.elapsedRealtime() - this.startTime;
         }
@@ -93,8 +96,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         /** Starts the chronometer */
         public void start()
         {
-            this.handler = new Handler();
-
             this.sendHR = () -> {
                 this.eventHandler.handle( this );
                 this.handler.postDelayed( this.sendHR,1000);
@@ -128,19 +129,22 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final Toolbar toolbar = this.findViewById( R.id.toolbar );
         final TextView lblRecord = this.findViewById( R.id.lblRecord );
         final TextView lblDeviceName = this.findViewById( R.id.lblDeviceName );
+        final FrameLayout flContainer = this.findViewById( R.id.flContainer );
+        final CardView cdCrono = this.findViewById( R.id.cdCrono );
 
         this.setSupportActionBar( toolbar );
 
         // Assign values
         this.orm = Orm.get();
-        this.currentActivityIndex = 0;
+        this.activityIndex = 0;
         this.accumulatedTimeInSeconds = 0;
         this.askBeforeExit = true;
         this.onExperiment = false;
         this.btDevice = PerformExperimentActivity.chosenBtDevice;
         this.experiment = PerformExperimentActivity.chosenExperiment;
         this.user = PerformExperimentActivity.chosenUser;
-        this.activitiesToPlay = this.buildActivitiesToPlay();
+
+        this.buildActivitiesToPlay();
 
         // Create interface objects
         this.ivPictureBox = this.buildPictureBox();
@@ -151,7 +155,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.prepareUIForInitialDescription();
         this.showActivities();
 
-        // Views
+        // Events
         btClose.setOnClickListener( (v) -> this.finish() );
         this.chrono = new Chronometer( this::onCronoUpdate );
         fbLaunchNow.setOnClickListener( (v) -> this.launchExperiment() );
@@ -159,6 +163,10 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         lblRecord.setText( this.user.getName() );
         lblDeviceName.setText( this.btDevice.getName() );
         lblExperiment.setText( this.experiment.getName() );
+        flContainer.setOnLongClickListener( (v) -> {
+            cdCrono.setVisibility( View.VISIBLE );
+            return true;
+        });
     }
 
     private void setAbleToLaunch(boolean isAble)
@@ -178,7 +186,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         }
 
         // Check whether there something to play
-        if ( this.activitiesToPlay.length == 0 ) {
+        if ( this.groupsToPlay.length == 0 ) {
             isAble = false;
         }
 
@@ -233,7 +241,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     {
         final ListView lvActs = this.findViewById( R.id.lvExperimentActivities );
         final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
-        final int NUM_ENTRIES = this.activitiesToPlay.length;
+        final int NUM_ENTRIES = this.groupsToPlay.length;
 
         Log.i( LogTag, "starting showActivities()..." );
         Log.i( LogTag, "entries: " + NUM_ENTRIES );
@@ -306,18 +314,20 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     }
 
     /** Triggers when the crono changes. */
+    @SuppressWarnings("unused")
     private void onCronoUpdate(Chronometer crono)
     {
         final TextView lblCrono = this.findViewById( R.id.lblCrono );
         final int elapsedTimeSeconds = this.getElapsedExperimentSeconds();
-        Log.d( LogTag, "Current activity index: " + this.currentActivityIndex );
+        Log.d( LogTag, "Current activity index: " + this.activityIndex);
         Log.d( LogTag, "Accumulated time: " + this.accumulatedTimeInSeconds);
 
         lblCrono.setText( new Duration( elapsedTimeSeconds ).toChronoString() );
 
-        if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
-            final Group.Activity activity = this.activitiesToPlay[ this.currentActivityIndex ];
-            final int maxTimeToSpendInActivity = activity.getTime().getTimeInSeconds();
+        if ( this.onExperiment ) {
+            final Group GROUP = this.groupsToPlay[ this.groupIndex];
+            final Group.Activity ACTIVITY = GROUP.getActivities()[ this.activityIndex];
+            final int maxTimeToSpendInActivity = ACTIVITY.getTime().getTimeInSeconds();
             final int seconds = elapsedTimeSeconds - this.accumulatedTimeInSeconds;
 
             Log.d( LogTag, "Elapsed time: " + seconds + '"' );
@@ -335,13 +345,13 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     /** @return the elapsed time, in millis, from the start of the experiment. */
     private long getElapsedExperimentMillis()
     {
-        return this.chrono.getDuration();
+        return this.chrono.getMillis();
     }
 
     /** @return the elapsed time, in millis, from the start of the experiment. */
     private int getElapsedExperimentSeconds()
     {
-        return (int) ( this.getElapsedExperimentMillis() / 1000 );
+        return (int) ( (double) this.getElapsedExperimentMillis() / 1000 );
     }
 
     /** @return the elapsed time, in seconds, from the start of the current activity. */
@@ -350,21 +360,59 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         return this.getElapsedExperimentSeconds() - this.accumulatedTimeInSeconds;
     }
 
+    /** @return the current tag, depending on the kind of activity. */
+    private String inferTag()
+    {
+        String toret = "";
+
+        if ( this.onExperiment ) {
+            final Group GROUP = this.groupsToPlay[ this.groupIndex ];
+
+            if ( GROUP instanceof MediaGroup ) {
+                toret = ( (MediaGroup) GROUP ).getTag().toString();
+            }
+            else
+            if ( GROUP instanceof ManualGroup ) {
+                final Group.Activity ACTIVITY = GROUP.getActivities()[ this.activityIndex ];
+
+                toret = ACTIVITY.getTag().toString();
+            } else {
+              throw new Error( "ExperimentDirector.inferTag(): unable to find tag" );
+            }
+
+        }
+
+        return toret;
+    }
+
     /** Skips current activity. */
     private void skipCurrentActivity()
     {
-        if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
-            final long elapsedTime = this.getElapsedExperimentMillis();
-            final int secondsInAct = this.getElapsedActivityTime();
+        if ( this.onExperiment
+          && this.groupIndex < this.groupsToPlay.length )
+        {
+            final Group GROUP = this.groupsToPlay[ this.groupIndex ];
 
-            ++this.currentActivityIndex;
-            this.accumulatedTimeInSeconds += secondsInAct;
+            if ( this.activityIndex < GROUP.size() ) {
+                final long elapsedTime = this.getElapsedExperimentMillis();
+                final int secondsInAct = this.getElapsedActivityTime();
 
-            if ( this.currentActivityIndex < this.activitiesToPlay.length ) {
-                Group.Activity act = this.activitiesToPlay[ this.currentActivityIndex ];
-                this.resultBuilder.add( new Result.ActivityChangeEvent( elapsedTime,
-                                                                        act.getTag().toString() ) );
-                this.showActivity();
+                boolean changedGroup = this.calculateNextIndexes();
+                this.accumulatedTimeInSeconds += secondsInAct;
+
+                if ( this.onExperiment ) {
+                    final Group NEW_GROUP = this.groupsToPlay[ this.groupIndex ];
+
+                    if ( changedGroup
+                      || ( NEW_GROUP instanceof ManualGroup ) )
+                    {
+                        this.addToResult( new Result.ActivityChangeEvent( elapsedTime, this.inferTag() ) );
+                    }
+
+                    this.showActivity();
+                } else {
+                    this.stopExperiment();
+                }
             } else {
                 this.stopExperiment();
             }
@@ -381,7 +429,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
      *                and it can also have BleService.RR_TAG for the rr info (as int).
      */
     @Override
-    public void receiveBpm(Intent intent)
+    public void onReceiveBpm(Intent intent)
     {
         final int hr = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
         final int rr = intent.getIntExtra( BleService.RR_TAG, -1 );
@@ -400,11 +448,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             if ( !this.readyToLaunch ) {
                 this.setAbleToLaunch( true );
             } else {
-                if ( this.resultBuilder != null
-                  && this.onExperiment )
-                {
-                    this.resultBuilder.add( new Result.BeatEvent( this.getElapsedExperimentMillis(), rr ) );
-                }
+                this.addToResult( new Result.BeatEvent( this.getElapsedExperimentMillis(), rr ) );
             }
         }
 
@@ -468,12 +512,12 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     /** Stops the experiment. */
     private synchronized void stopExperiment()
     {
-        if ( this.onExperiment ) {
-            this.onExperiment = false;
+        this.chrono.stop();
 
+        if ( !this.onExperiment
+          && this.resultBuilder != null )
+        {
             final long elapsedMillis = this.getElapsedExperimentMillis();
-
-            this.chrono.stop();
 
             try {
                 final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
@@ -487,6 +531,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 } );
 
                 this.orm.store( this.resultBuilder.build( elapsedMillis ) );
+                this.resultBuilder = null;
                 Log.i( LogTag, this.getString( R.string.msgFinishedExperiment ) );
                 dlg.create().show();
             } catch(IOException exc) {
@@ -497,10 +542,44 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         return;
     }
 
+    /** Puts the current group and current activities on their start.
+      * Also sets onExperiment to false in case there are no more activities to change to.
+      * @return true if there was a group change, false otherwise.
+      */
+    private boolean calculateNextIndexes()
+    {
+        final Group[] GROUPS = this.groupsToPlay;
+        boolean toret = false;
+
+        if ( this.groupIndex < GROUPS.length ) {
+            final Group.Activity[] ACTIVITIES = GROUPS[ this.groupIndex ].getActivities();
+
+            ++this.activityIndex;
+
+            if ( this.activityIndex >= ACTIVITIES.length ) {
+                toret = true;
+                this.activityIndex = 0;
+                ++this.groupIndex;
+
+                while( this.groupIndex < GROUPS.length
+                   &&  this.groupsToPlay[ this.groupIndex].getActivities().length == 0 )
+                {
+                    ++this.groupIndex;
+                }
+            }
+        }
+
+        if ( this.groupIndex >= GROUPS.length ) {
+            this.onExperiment = false;
+        }
+
+        return toret;
+    }
+
     /** Launches the experiment. */
     private void launchExperiment()
     {
-        if ( this.activitiesToPlay.length > 0 ) {
+        if ( this.groupsToPlay.length > 0 ) {
             final TextView lblMaxTime = this.findViewById( R.id.lblMaxTime );
             final Duration timeNeeded = this.experiment.calculateTimeNeeded();
 
@@ -509,65 +588,64 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             lblMaxTime.setText( timeNeeded.toChronoString() );
 
             // Create the result object
-            this.resultBuilder = new Result.Builder( this.user, this.experiment, System.currentTimeMillis() );
-            this.resultBuilder.add(
-                    new Result.ActivityChangeEvent(
-                            0,
-                            this.activitiesToPlay[ 0 ].getTag().toString() ) );
-
-            // Prepare crono
             this.onExperiment = true;
-            this.currentActivityIndex = 0;
-            this.accumulatedTimeInSeconds = 0;
-            this.showActivity();
+            this.groupIndex = 0;
+            this.activityIndex = -1;
+            this.calculateNextIndexes();
+            this.resultBuilder = new Result.Builder( this.user, this.experiment, System.currentTimeMillis() );
+            this.addToResult( new Result.ActivityChangeEvent( 0, this.inferTag() ) );
 
             // Start counting time
             this.chrono.reset();
             this.chrono.start();
             Log.i( LogTag, "Starting..." );
+
+            // Prepare first activity
+            this.accumulatedTimeInSeconds = 0;
+            this.showActivity();
         } else {
             this.showStatus( LogTag, this.getString( R.string.ErrNotEnoughActivities ) );
         }
+
+        return;
     }
 
-    /** @return the list of activities to play, honoring the random attribute. */
-    private Group.Activity[] buildActivitiesToPlay()
+    /** Creates the list of activities to play, in two structures: one in with the activities
+      * divided in groups, and another one with a sequential collection of activities.
+      * Honors the random attribute.
+      */
+    @SuppressWarnings("unchecked")
+    private void buildActivitiesToPlay()
     {
-        final Group.Activity[] toret = new Group.Activity[ this.experiment.getNumActivities() ];
+        final ArrayList<Group.Activity> ACTIVITIES = new ArrayList<>( this.experiment.getNumActivities() );
         final Group[] GROUPS_IN_EXPERIMENT = this.experiment.getGroups();
-        final int[] SEQUENCE_OG_GROUPS = createSequence( GROUPS_IN_EXPERIMENT.length, this.experiment.isRandom() );
+        final int NUM_GROUPS = GROUPS_IN_EXPERIMENT.length;
+        final int[] SEQUENCE_OF_GROUPS = createSequence( NUM_GROUPS, this.experiment.isRandom() );
+
         int pos = 0;
+        this.groupsToPlay = new Group[ NUM_GROUPS ];
 
         // Run over all groups honoring randomness of experiment, and gather their activities
-        for(int i: SEQUENCE_OG_GROUPS) {
+        for(int i: SEQUENCE_OF_GROUPS) {
             // Retrieve the activities from groups, also honoring their own randomness
-            final Group GROUP = GROUPS_IN_EXPERIMENT[ i ];
-            final Group.Activity[] GROUP_ACTIVITIES = GROUP.getActivities();
+            final Group GROUP = GROUPS_IN_EXPERIMENT[ i ].copy();
+            final Group.Activity[] GROUP_ACTIVITIES = GROUPS_IN_EXPERIMENT[ i ].getActivities();
             final int[] SEQUENCE_OF_ACTIVITIES = createSequence( GROUP.size(), GROUP.isRandom() );
-            final MediaGroup MEDIA_GROUP;
-
-            // Determine whether this group has a tag
-            if ( GROUP instanceof MediaGroup ) {
-                MEDIA_GROUP = (MediaGroup) GROUP;
-            } else {
-                MEDIA_GROUP = null;
-            }
 
             // Append all activities in this group, randomly or not
+            GROUP.clear();
             for(int j: SEQUENCE_OF_ACTIVITIES) {
-                Group.Activity activity = GROUP_ACTIVITIES[ j ];
+                final Group.Activity ACTIVITY = GROUP_ACTIVITIES[ j ].copy();
 
-                if ( MEDIA_GROUP != null ) {
-                    activity = activity.copy();
-                    activity.setTag( MEDIA_GROUP.getTag() );
-                }
-
-                toret[ pos ] = activity;
-                ++pos;
+                GROUP.add( ACTIVITY );
+                ACTIVITIES.add( ACTIVITY );
             }
+
+            this.groupsToPlay[ pos ] = GROUP;
+            ++pos;
         }
 
-        return toret;
+        this.activitiesToPlay = ACTIVITIES.toArray( new Group.Activity[ 0 ] );
     }
 
     private void abortDueToMissingFile(File f)
@@ -619,15 +697,31 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.tvTextBox.setText( manualActivity.getTag().toString() );
     }
 
-    private void showActivity()
+    /** Adds a new event to the result.
+      * Since the bpm information comes from one thread and the time from another,
+      * this centralized consumer is synchronized.
+      * @param evt the event to store.
+      */
+    private synchronized void addToResult(Result.Event evt)
     {
-        this.showActivity( this.currentActivityIndex );
+        if ( this.resultBuilder != null
+          && this.onExperiment )
+        {
+            this.resultBuilder.add( evt );
+        }
+
+        return;
     }
 
-    private void showActivity(int i)
+    private void showActivity()
+    {
+        this.showActivity( this.groupIndex, this.activityIndex);
+    }
+
+    private void showActivity(int i, int j)
     {
         final TextView lblMaxActTime = this.findViewById( R.id.lblMaxActTime );
-        final Group.Activity activity = this.activitiesToPlay[ i ];
+        final Group.Activity activity = this.groupsToPlay[ i ].getActivities()[ j ];
         final Group group = activity.getGroup();
 
         if ( activity instanceof MediaGroup.MediaActivity ) {
@@ -649,14 +743,14 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             this.loadManualActivity( (ManualGroup.ManualActivity) activity );
         }
 
-        final int exprTimeSecs = (int) Math.round( (double) this.getElapsedExperimentMillis() / 1000 );
-        final Duration durationDelta = new Duration( activity.getTime().getTimeInSeconds() );
-        lblMaxActTime.setText( durationDelta.add( exprTimeSecs ).toChronoString() );
+        final int TOTAL_SECS = this.getElapsedExperimentSeconds();
+        final Duration DURATION_DELTA = new Duration( activity.getTime().getTimeInSeconds() );
+        lblMaxActTime.setText( DURATION_DELTA.add( TOTAL_SECS ).toChronoString() );
 
         Log.i( LogTag, "Starting activity: '" + activity.getTag() + "'"
-                        + "\n\tCurrent time: " + exprTimeSecs + "s"
+                        + "\n\tCurrent time: " + TOTAL_SECS + "s"
                         + "\n\tActivity time: " + activity.getTime().getTimeInSeconds() + "s"
-                        + "\n\tActivity ends at max: " + durationDelta + "s" );
+                        + "\n\tActivity ends at max: " + DURATION_DELTA + "s" );
     }
 
     private static int[] createSequence(int max, boolean shuffle)
@@ -738,11 +832,13 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private TextView tvTextBox;
     private VideoView vVideoBox;
 
-    private int currentActivityIndex;
+    private int activityIndex;
+    private int groupIndex;
     private int accumulatedTimeInSeconds;
     private User user;
     private Experiment experiment;
     private Group.Activity[] activitiesToPlay;
+    private Group[] groupsToPlay;
     private boolean askBeforeExit;
     private boolean readyToLaunch;
     private boolean onExperiment;

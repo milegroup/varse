@@ -334,7 +334,7 @@ public class LineChart extends Drawable {
             // Intermediate vertical lines (marking the x segments)
             final double SLOT_DATA_X = ( this.maxX - this.minX ) / NUM_SLOTS;
 
-            for(int i = 1; i < NUM_SLOTS; ++i) {
+            for(int i = 1; i <= NUM_SLOTS; ++i) {
                 final double DATA_X = this.minX + ( SLOT_DATA_X * i );
                 final int X = this.translateX( DATA_X );
 
@@ -407,29 +407,33 @@ public class LineChart extends Drawable {
     /** Draws the data in the chart. */
     private void drawData()
     {
+        final android.graphics.Point PREVIOUS_POINT = new android.graphics.Point( -1, -1 );
+        int numLabelsShown = 0;
         double lastY = Double.MIN_VALUE;
-        final android.graphics.Point previousPoint = new android.graphics.Point( -1, -1 );
+
 
         for(Point point : this.points) {
             final double DATA_Y = point.getY();
             final int X = this.translateX( point.getX() );
             final int Y = this.translateY( DATA_Y );
 
-            if ( previousPoint.x >= 0 ) {
-                this.line( previousPoint.x, previousPoint.y, X, Y, point.getColor() );
+            if ( PREVIOUS_POINT.x >= 0 ) {
+                this.line( PREVIOUS_POINT.x, PREVIOUS_POINT.y, X, Y, point.getColor() );
 
                 // Show label only if it's different than the previous one
                 if ( ( this.shouldShowLabels()
                     && ( Math.abs( DATA_Y - lastY ) > this.labelThreshold ) )
-                  || DATA_Y == this.minY
-                  || DATA_Y == this.maxY )
+                  || ( numLabelsShown < 2
+                     && ( DATA_Y == this.minY
+                     || DATA_Y == this.maxY ) ) )
                 {
                     this.write( X + 10, Y - 10, DATA_Y );
+                    ++numLabelsShown;
                 }
             }
 
-            previousPoint.x = X;
-            previousPoint.y = Y;
+            PREVIOUS_POINT.x = X;
+            PREVIOUS_POINT.y = Y;
             lastY = DATA_Y;
         }
 
@@ -451,7 +455,8 @@ public class LineChart extends Drawable {
 
 
             if ( TEXT_WIDTH > this.legendBounds.width() ) {
-                tag = tag.substring( 0, MAX_LENGTH ) + "...";
+                final int LENGTH = Math.max( 0, Math.min( MAX_LENGTH, tag.length() ) );
+                tag = tag.substring( 0, LENGTH ) + "...";
             }
 
             this.paint.setColor( colorTag.getColor() );

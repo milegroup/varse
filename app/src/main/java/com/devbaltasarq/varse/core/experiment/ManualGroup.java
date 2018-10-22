@@ -32,7 +32,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
         {
             super( id, tag );
 
-            this.time = time;
+            this.time = time.copy();
         }
 
         @Override
@@ -205,7 +205,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
     @Override
     public ManualGroup copy(Id id)
     {
-        return new ManualGroup( id, this.isRandom(), null, (ManualActivity[]) this.copyActivities() );
+        return new ManualGroup( id, this.isRandom(), this.getExperimentOwner(), this.copyActivities() );
     }
 
     /** Copies the activities in this group.
