@@ -805,8 +805,17 @@ public final class Orm {
 
             // Dest
             final File OUTPUT_FILE = new File( dir, RES_FILE_NAME );
+            final File TAGS_OUTPUT_FILE = new File( dir, "tags_" + RES_FILE_NAME + ".txt" );
+            final File RR_OUTPUT_FILE = new File( dir, "rr_" + RES_FILE_NAME + ".txt" );
+            final Writer TAGS_STREAM = openWriterFor( TAGS_OUTPUT_FILE );
+            final Writer BEATS_STREAM = openWriterFor( RR_OUTPUT_FILE );
+
             dir.mkdirs();
             copy( ORG_FILE, OUTPUT_FILE );
+            res.exportToStdTextFormat( TAGS_STREAM, BEATS_STREAM );
+
+            close( TAGS_STREAM );
+            close( BEATS_STREAM );
         } catch(IOException exc) {
             throw new IOException(
                     "exporting: '"
