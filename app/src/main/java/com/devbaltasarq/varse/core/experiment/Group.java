@@ -34,6 +34,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         protected Activity(Id id, Tag tag)
         {
             super( id );
+
             this.group = null;
             this.tag = tag.copy();
         }
@@ -56,7 +57,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
           */
         public void setTag(Tag tag)
         {
-            this.tag = tag;
+            this.tag = tag.copy();
         }
 
         /** @return the time needed for this activity to complete. */

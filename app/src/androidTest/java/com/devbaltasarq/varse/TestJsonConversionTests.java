@@ -60,8 +60,8 @@ public class TestJsonConversionTests {
         event4 = new Result.ActivityChangeEvent( time += 1000, act2.getTag().toString() );
 
         // Result 1
-        res1 = new Result( Id.createFake(), time, usr1, expr2 );
-        res1.addAll( Arrays.asList( event1, event2, event3, event4 ) );
+        res1 = new Result( Id.createFake(), time, 10000, usr1, expr2,
+                           new Result.Event[] { event1, event2, event3, event4 } );
     }
 
     @Test

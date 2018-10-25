@@ -80,8 +80,8 @@ public class PictureGroup extends MediaGroup {
     public PictureGroup copy(Id id)
     {
         return new PictureGroup( id,
-                                 this.getTag().copy(),
-                                 this.getTimeForEachActivity().copy(),
+                                 this.getTag(),
+                                 this.getTimeForEachActivity(),
                                  this.isRandom(),
                                  this.getExperimentOwner(),
                                  this.copyActivities() );

@@ -70,7 +70,7 @@ public class VideoGroup extends MediaGroup {
     @Override
     public void setTimeForEachActivity(Duration time) throws NoSuchMethodError
     {
-        final String msg = "manual group cannot change its time as a whole";
+        final String msg = "video group cannot change its time as a whole";
 
         Log.e( LogTag, msg );
         throw new NoSuchMethodError( msg );
@@ -79,7 +79,7 @@ public class VideoGroup extends MediaGroup {
     @Override
     public Duration getTimeForEachActivity() throws NoSuchMethodError
     {
-        final String msg = "manual group holds activities with individual times";
+        final String msg = "video group holds activities with individual times";
 
         Log.e( LogTag, msg );
         throw new NoSuchMethodError( msg );
@@ -101,7 +101,7 @@ public class VideoGroup extends MediaGroup {
     public VideoGroup copy(Id id)
     {
         return new VideoGroup( id,
-                               this.getTag().copy(),
+                               this.getTag(),
                                this.isRandom(),
                                this.getExperimentOwner(),
                                this.copyActivities() );

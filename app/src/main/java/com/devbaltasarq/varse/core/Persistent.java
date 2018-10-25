@@ -54,7 +54,7 @@ public abstract class Persistent implements Identifiable {
     /** Creates a new object that can be stored in the db. */
     public Persistent(Id id)
     {
-        this.id = id;
+        this.id = id.copy();
     }
 
     /** Assigns new ids to this object. Useful when storing the object for the first time. */

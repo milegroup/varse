@@ -28,6 +28,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         public MediaActivity(Id id, File f)
         {
             super( id, new Tag( f.getName() ) );
+
             this.file = new File( Orm.buildMediaFileNameForDbFromMediaFileName( f.getName() ) );
         }
 
@@ -193,7 +194,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     {
         super( id, rnd, expr, macts );
 
-        this.tag = tag;
+        this.tag = tag.copy();
         this.format = fmt;
     }
 
@@ -206,7 +207,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     /** Sets the tag to be the given value. */
     public void setTag(Tag tag)
     {
-        this.tag = tag;
+        this.tag = tag.copy();
     }
 
     /** @return The tag. */

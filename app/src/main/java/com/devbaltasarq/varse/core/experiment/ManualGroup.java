@@ -70,7 +70,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
 
         public void setTime(Duration time)
         {
-            this.time = time;
+            this.time = time.copy();
         }
 
         @Override
