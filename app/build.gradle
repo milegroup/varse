@@ -4,7 +4,7 @@ android {
     signingConfigs {
         baltasarq {
             keyAlias 'baltasarq'
-            storeFile file('/home/baltasarq/Dropbox/Personal/firmas/devbaltasarq-key.ks')
+            storeFile file('/home/baltasarq/Dropbox/Personal/firmas/devbaltasarq-upload-key.ks')
         }
     }
     compileSdkVersion 26
@@ -31,6 +31,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:support-annotations:28.0.0'
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:design:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'

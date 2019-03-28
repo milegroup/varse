@@ -109,21 +109,7 @@ public class ResultsActivity extends AppActivity {
         try {
             result = (Result) this.dataStore.retrieve( result.getId(), Persistent.TypeId.Result );
 
-            // Prepare data files
-            final File partialResultFileTags = this.dataStore.createTempFile( "partialFile1",
-                                                                        result.getId().toString() );
-            final File partialResultFileBeats = this.dataStore.createTempFile( "partialFile2",
-                                                                        result.getId().toString() );
-            final Writer tagsWriter = Orm.openWriterFor( partialResultFileTags );
-            final Writer beatsWriter = Orm.openWriterFor( partialResultFileBeats );
-
-            result.exportToStdTextFormat( tagsWriter, beatsWriter );
-            Orm.close( tagsWriter );
-            Orm.close( beatsWriter );
-
-            // Launch data chart viewer
-            ResultViewerActivity.beatsFile = partialResultFileBeats;
-            ResultViewerActivity.tagsFile = partialResultFileTags;
+            ResultViewerActivity.result = result;
             final Intent graphViewerIntent = new Intent( this, ResultViewerActivity.class );
             this.startActivity( graphViewerIntent );
         } catch(IOException exc) {

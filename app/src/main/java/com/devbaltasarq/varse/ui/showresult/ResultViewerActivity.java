@@ -2,24 +2,21 @@ package com.devbaltasarq.varse.ui.showresult;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.Display;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.ui.AppActivity;
 
 import java.io.BufferedReader;
@@ -30,8 +27,7 @@ import java.util.List;
 import java.util.Locale;
 
 /** Represents the result data set as a graph on the screen.
-  * public static File beatsFile y tagsFile deben ser cargadas primero.
-  * @author Leandro (removed chart dependency by baltasarq)
+  * @author Leandro (removed chart dependency and temporary file loading by baltasarq)
   */
 public class ResultViewerActivity extends AppActivity {
     private static final String LogTag = ResultViewerActivity.class.getSimpleName();
@@ -50,37 +46,19 @@ public class ResultViewerActivity extends AppActivity {
         final StandardGestures GESTURES = new StandardGestures( this );
         this.chartView = findViewById( R.id.ivChartViewer );
         this.chartView.setOnTouchListener( GESTURES );
+        this.boxdata = this.findViewById( R.id.lblTextData );
+        this.boxdata.setMovementMethod( new ScrollingMovementMethod() );
 
-        // Check files exist
-        if ( tagsFile == null
-          || !tagsFile.exists() )
-        {
-            this.showStatus( LogTag, "Tags file not found." );
-            return;
-        }
+        // Loads data into dataRRnf and episodes (unfiltered RR in milliseconds)
+        this.dataRRnf = new ArrayList<>();
+        this.episodesInits = new ArrayList<>();
+        this.episodesEnds = new ArrayList<>();
+        this.episodesType = new ArrayList<>();
+        this.numOfTags = 0;
 
-        if ( beatsFile == null
-          || !beatsFile.exists() )
-        {
-            this.showStatus( LogTag, "Heart beats file not found." );
-            return;
-        }
+        this.loadData();
 
-        boxdata = findViewById(R.id.lblTextData);
-        boxdata.setMovementMethod(new ScrollingMovementMethod());
-
-        // Loads data into dataRRnf (unfiltered RR in milliseconds)
-        dataRRnf = new ArrayList<>();
-
-        // Loads tags file
-        episodesInits = new ArrayList<>();
-        episodesEnds = new ArrayList<>();
-        episodesType = new ArrayList<>();
-
-        this.loadData( beatsFile );
-        this.loadTags( tagsFile );
-
-        if ( dataRRnf.size() > 0 ) {
+        if ( this.dataRRnf.size() > 0 ) {
             // Generates dataHRnf (unfiltered sequence of BPS values)
             dataHRnf = new ArrayList<>();
             for (int i = 0; i< dataRRnf.size(); i++) {
@@ -101,8 +79,8 @@ public class ResultViewerActivity extends AppActivity {
             FilterData();
 
 
-            Log.i(LogTag,"Filtered sequence: "+dataBeatTimes.size()+" values");
-            Log.i(LogTag,"Last beat position: "+dataBeatTimes.get(dataBeatTimes.size()-1)+" seconds");
+            Log.i( LogTag,"Filtered sequence: " + dataBeatTimes.size() +" values");
+            Log.i( LogTag,"Last beat position: " + dataBeatTimes.get( dataBeatTimes.size() - 1 ) + " seconds");
 
             // Creates a series of HR values linearly interpolated
             dataHRInterpX = new ArrayList<>();
@@ -113,11 +91,9 @@ public class ResultViewerActivity extends AppActivity {
             Log.i(LogTag,"First value: "+ dataHRInterpX.get(0));
             Log.i(LogTag,"Last value: "+ dataHRInterpX.get(dataHRInterpX.size()-1));
 
-            // Plots interpolated HR signal
-            plotChart();
-
-
-            Analyze();
+            // Plots interpolated HR signal and data analysis
+            this.plotChart();
+            this.Analyze();
         } else {
             this.showStatus( LogTag, "Empty data" );
         }
@@ -131,74 +107,42 @@ public class ResultViewerActivity extends AppActivity {
         return false;
     }
 
-    private void loadData(File f)
+    private void loadData()
     {
-        // Loads the data
-        try {
-            Log.i(LogTag,"Loading data");
-            BufferedReader reader = Orm.openReaderFor( f );
-            String line;
-            float fData;
+        final Result.Event[] EVENTS = result.buildEventsList();
+        Result.ActivityChangeEvent lastTagEvent = null;
 
-            while ((line = reader.readLine()) != null) {
-                fData = Float.parseFloat(line);
-                dataRRnf.add(fData);
+        // Init data holders
+        this.numOfTags = 0;
+        this.dataRRnf = new ArrayList<>( result.size() );
+        this.episodesInits = new ArrayList<>( MAX_TAGS );
+        this.episodesEnds = new ArrayList<>( MAX_TAGS );
+        this.episodesType = new ArrayList<>( MAX_TAGS );
 
-            }
-            Orm.close( reader );
-            Log.i(LogTag,"Size of vector: " + dataRRnf.size());
+        // Store all data
+        for(Result.Event evt: EVENTS) {
+            if ( evt instanceof Result.BeatEvent) {
+                // Store a new beat
+                this.dataRRnf.add( (float) ( (Result.BeatEvent) evt ).getTimeOfNewHeartBeat() );
+            } else {
+                // Store the tags info
+                final Result.ActivityChangeEvent TAG_EVENT = (Result.ActivityChangeEvent) evt;
+                final float TIME_IN_SECS = (float) TAG_EVENT.getMillis() / 1000;
 
-        } catch (IOException exc) {
-            this.showStatus( LogTag, "unable to load data file: " + f.getName() );
-            this.dataRRnf.clear();
-        }
-    }
+                this.episodesEnds.add( (float) result.getDurationInMillis() / 1000 );
 
-    private void loadTags(File f) {
-        // Loads episodic information
-        Log.i(LogTag + ".Tags","Loading tags");
-        int numLines = 0;
-
-        try {
-            BufferedReader reader = Orm.openReaderFor( f );
-            String line;
-
-            while ((line = reader.readLine()) != null) {
-                if (numLines != 0) { // Ignores first line
-                    Log.i(LogTag + ".Tags",line);
-                    String[] parts = line.trim().split(" +|\t");
-                    String[] hms = parts[0].split(":");
-
-                    try {
-                        float init = 3600.0f * Float.parseFloat(hms[0]) + 60.0f*Float.parseFloat(hms[1]) + Float.parseFloat(hms[2]);
-                        float end = init + Float.parseFloat(parts[2]);
-
-                        Log.i(LogTag + ".Tags", "Tag: "+parts[1]);
-                        Log.i(LogTag + ".Tags", "Init: "+parts[0]+" ("+init+" seconds)");
-                        Log.i(LogTag + ".Tags", "End: "+end+" seconds");
-
-                        // Only now create the episode time marks
-                        episodesType.add(parts[1]);
-                        episodesInits.add(init);
-                        episodesEnds.add(end);
-                    } catch(NumberFormatException exc) {
-                        Log.e( LogTag, "floating point conversion error: " + exc.getMessage() );
-                        return;
-                    }
-
-                    numOfTags++;
+                if ( lastTagEvent != null ) {
+                    this.episodesEnds.set( this.episodesEnds.size() - 2, TIME_IN_SECS );
                 }
 
-                numLines++;
+                this.episodesInits.add( TIME_IN_SECS );
+                this.episodesType.add( TAG_EVENT.getTag() );
+                lastTagEvent = TAG_EVENT;
+                ++this.numOfTags;
             }
-
-            Orm.close( reader );
-        } catch (IOException exc) {
-            this.showStatus( LogTag, "Error loading tags file: " + f.getName() );
         }
 
-        Log.i(LogTag,"Number of tags: "+numOfTags);
-
+        Log.i( LogTag,"Size of vector: " + this.dataRRnf.size() );
     }
 
     /** @return the tag corresponding to the given time value. */
@@ -232,40 +176,61 @@ public class ResultViewerActivity extends AppActivity {
     }
 
 
-    private void FilterData() {
-        int winlength = 50, minbpm=24, maxbpm=198;
-        float ulast = 13.0f;
-        dataRR = new ArrayList<>(dataRRnf);
+    private void FilterData()
+    {
+        final int WIN_LENGTH = 50;
+        final float MIN_BPM = 24.0f;
+        final float MAX_BPM = 198.0f;
+        final float U_LAST = 13.0f;
+        final float U_MEAN = 1.5f * U_LAST;
+
         Log.i(LogTag,"I'm going to filter the signal");
 
-        float umean = 1.5f * ulast;
-        int index;
-        index = 1;
-        while (index < dataHR.size() -1) {
-            List<Float> v = dataHR.subList(Math.max(index-winlength,0),index);
+        int index = 1;
 
-            float M = 0.0f;  // M = mean(v)
-            for (int i=0 ; i < v.size() ; i++) {
-                M += v.get(i);
+        this.filteredData = 0;
+
+        while ( index < ( dataHR.size() - 1 ) ) {
+            List<Float> v = dataHR.subList( Math.max( index-WIN_LENGTH, 0 ),index );
+
+            float MEAN_LAST_BEATS = 0.0f;  // M = mean(v)
+            for (int i = 0 ; i < v.size(); i++) {
+                MEAN_LAST_BEATS += v.get( i );
             }
-            M = M/v.size();
+            MEAN_LAST_BEATS = MEAN_LAST_BEATS / v.size();
 
-            if ( ( (100*Math.abs((dataHR.get(index)- dataHR.get(index-1))/ dataHR.get(index-1)) < ulast) ||
-                    (100*Math.abs((dataHR.get(index)- dataHR.get(index+1))/ dataHR.get(index+1)) < ulast) ||
-                    (100*Math.abs((dataHR.get(index)-M)/M) < umean) )
-                    && (dataHR.get(index) > minbpm) && (dataHR.get(index) < maxbpm)) {
+            final float CURRENT_BEAT = this.dataHR.get( index );
+            final float PREVIOUS_BEAT = this.dataHR.get( index - 1 );
+            final float NEXT_BEAT = this.dataHR.get( index + 1 );
+            final float RELATION_PREVIOUS_BEAT = 100
+                                    * Math.abs( ( CURRENT_BEAT - PREVIOUS_BEAT ) / PREVIOUS_BEAT );
+            final float RELATION_NEXT_BEAT = 100
+                                    * Math.abs( ( CURRENT_BEAT - NEXT_BEAT ) / NEXT_BEAT );
+
+            final float RELATION_MEAN_BEAT = 100
+                                    * Math.abs( ( CURRENT_BEAT - MEAN_LAST_BEATS ) / MEAN_LAST_BEATS );
+
+            if ( ( RELATION_PREVIOUS_BEAT < U_LAST
+                || RELATION_NEXT_BEAT < U_LAST
+                || RELATION_MEAN_BEAT < U_MEAN )
+              && CURRENT_BEAT > MIN_BPM
+              && CURRENT_BEAT < MAX_BPM )
+            {
                 index += 1;
             } else {
-//                Log.i(LogTag,"Removing beat index "+index);
-                dataHR.remove(index);
-                dataBeatTimes.remove(index);
-                dataRR.remove(index);
+                Log.i( LogTag,"Removing beat index: " + index );
+
+                ++this.filteredData;
+                this.dataHR.set( index, MEAN_LAST_BEATS );
+                this.dataRR.set( index, 60.0f / MEAN_LAST_BEATS );
             }
         }
 
+        return;
     }
 
-    private void Interpolate() {
+    private void Interpolate()
+    {
         float xmin = dataBeatTimes.get(0);
         float xmax = dataBeatTimes.get(dataBeatTimes.size()-1);
         float step = 1.0f/freq;
@@ -287,8 +252,9 @@ public class ResultViewerActivity extends AppActivity {
         leftHRVal = dataHR.get(leftHRIndex);
         rightHRVal = dataHR.get(rightHRIndex);
 
-        for (int xInterpIndex = 0; xInterpIndex< dataHRInterpX.size(); xInterpIndex++ ){
-            if (dataHRInterpX.get(xInterpIndex)>=rightBeatPos) {
+        for (int xInterpIndex = 0; xInterpIndex< dataHRInterpX.size(); xInterpIndex++ )
+        {
+            if (dataHRInterpX.get(xInterpIndex) >= rightBeatPos) {
                 leftHRIndex++;
                 rightHRIndex++;
                 leftBeatPos = dataBeatTimes.get(leftHRIndex);
@@ -300,9 +266,9 @@ public class ResultViewerActivity extends AppActivity {
             // Estimate HR value in position
             float HR = (rightHRVal-leftHRVal)*(dataHRInterpX.get(xInterpIndex)-leftBeatPos)/(rightBeatPos-leftBeatPos)+leftHRVal;
             dataHRInterp.add(HR);
-
         }
 
+        return;
     }
 
     private List<Float> getSegmentHRInterp(float beg, float end) {
@@ -332,7 +298,7 @@ public class ResultViewerActivity extends AppActivity {
         text.append( String.format( Locale.getDefault(), "%d", dataRRnf.size()) );
         text.append( " values</p>" );
         text.append( "<p>&nbsp;&nbsp;<b>Length of filtered RR signal</b>: " );
-        text.append( String.format( Locale.getDefault(), "%d", dataRR.size()) );
+        text.append( String.format( Locale.getDefault(), "%d", dataRRnf.size() - this.filteredData) );
         text.append( " values</p>" );
 
         text.append( "<p>&nbsp;&nbsp;<b>Beat rejection rate</b>: " );
@@ -811,36 +777,37 @@ public class ResultViewerActivity extends AppActivity {
         this.chartView.setImageDrawable( CHART );
     }
 
-    ImageView chartView;
-    TextView boxdata;
-    List<Float> dataRRnf;
-    List<Float> dataHRnf;
-    List<Float> dataBeatTimesnf;
-    List<Float> dataBeatTimes;
-    List<Float> dataRR;
-    List<Float> dataHR;
-    List<Float> dataHRInterpX;
-    List<Float> dataHRInterp;
-    List<Float> episodesInits;
-    List<Float> episodesEnds;
-    List<String> episodesType;
-    static float freq = 4.0f;                   // Interpolation frequency in hz.
-    int numOfTags = 0;
-    static int MAX_TAGS = 5;
+    private ImageView chartView;
+    private TextView boxdata;
+    private List<Float> dataRRnf;
+    private List<Float> dataHRnf;
+    private List<Float> dataBeatTimesnf;
+    private List<Float> dataBeatTimes;
+    private List<Float> dataRR;
+    private List<Float> dataHR;
+    private List<Float> dataHRInterpX;
+    private List<Float> dataHRInterp;
+    private List<Float> episodesInits;
+    private List<Float> episodesEnds;
+    private List<String> episodesType;
+    private int numOfTags;
+    private int filteredData;
 
-    static float hammingFactor = 1.586f;
+    private static int MAX_TAGS = 5;
 
-    static float totalPowerBeg = 0.0f;
-    static float totalPowerEnd = 4.0f/2.0f;     // Beginning and end of total power band
+    private static float freq = 4.0f;                   // Interpolation frequency in hz.
+    private static float hammingFactor = 1.586f;
 
-    static float LFPowerBeg = 0.05f;
-    static float LFPowerEnd = 0.15f;            // Beginning and end of LF band
+    private static float totalPowerBeg = 0.0f;
+    private static float totalPowerEnd = 4.0f/2.0f;     // Beginning and end of total power band
 
-    static float HFPowerBeg = 0.15f;
-    static float HFPowerEnd = 0.4f;             // Beginning and end of HF band
+    private static float LFPowerBeg = 0.05f;
+    private static float LFPowerEnd = 0.15f;            // Beginning and end of LF band
 
-    public static File beatsFile;
-    public static File tagsFile;
+    private static float HFPowerBeg = 0.15f;
+    private static float HFPowerEnd = 0.4f;             // Beginning and end of HF band
+
+    public static Result result;
 
     /** Manages gestures. */
     public class StandardGestures implements View.OnTouchListener,
