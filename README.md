@@ -6,3 +6,6 @@ Mobile application for studying heart rate variations before experiments involvi
 
 - [VARSE website](https://milegroup.github.io/varse)
 - [Wiki](https://github.com/milegroup/varse/wiki)
+
+Also take a look to VARSERes, a desktop tool created to show raw data exported by VARSE:
+- [VARSRes' Github](https://github.com/baltasarq/varseres)
