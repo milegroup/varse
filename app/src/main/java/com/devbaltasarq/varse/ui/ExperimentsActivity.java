@@ -304,6 +304,8 @@ public class ExperimentsActivity extends AppActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
     {
+        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
+
         switch ( requestCode ) {
             case RQC_ASK_PERMISSION: {
                 // If request is cancelled, the result arrays are empty.

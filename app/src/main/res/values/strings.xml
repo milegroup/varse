@@ -88,6 +88,7 @@
     <string name="ErrExport">Error exporting</string>
     <string name="ErrBlocked">Blocked in error state</string>
     <string name="ErrNoBluetooth">Bluetooth is not supported</string>
+    <string name="ErrNoBluetoothPermissions">Not enough permissions to access Bluetooth</string>
     <string name="ErrScanFailed">BlueTooth device scan failed</string>
     <string name="ErrUnknownDevice">Unknown device</string>
     <string name="ErrNoHR">No health profile detected</string>

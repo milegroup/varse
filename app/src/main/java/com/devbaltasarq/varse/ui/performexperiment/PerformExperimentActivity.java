@@ -1,15 +1,21 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,7 +33,6 @@ import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
-import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
@@ -48,8 +53,9 @@ import java.util.Set;
 
 public class PerformExperimentActivity extends AppActivity implements ScannerUI {
     private final String LogTag = "PerformExperiment";
-    private static final int REQUEST_ENABLE_BT = 367;
-    private static final int REQUEST_TEST_BT_DEVICE = 378;
+    private static final int RQC_ENABLE_BT = 367;
+    private static final int RQC_TEST_BT_DEVICE = 378;
+    private static final int RQC_ASK_CLEARANCE_FOR_BLUETOOTH = 389;
     private static final int MAX_SCAN_PERIOD = 20000;
 
     // Adapter for holding hrDevices found through deviceSearch.
@@ -206,7 +212,11 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         this.cancelAllConnections( false );
 
         if ( this.actionDeviceDiscovery != null ) {
-            this.unregisterReceiver( this.actionDeviceDiscovery );
+            try {
+                this.unregisterReceiver( this.actionDeviceDiscovery );
+            } catch(IllegalArgumentException exc) {
+                Log.e( LogTag, "the receiver for device discovery was not registered." );
+            }
         }
 
         this.clearDeviceListView();
@@ -262,15 +272,67 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     {
         super.onActivityResult( requestCode, resultCode, data );
 
-        if ( requestCode == REQUEST_ENABLE_BT ) {
-            this.configBtLaunched = false;
-            this.initBluetooth();
+        switch ( requestCode ) {
+            case RQC_ENABLE_BT:
+                this.configBtLaunched = false;
+                this.initBluetooth();
 
-            if ( this.bluetoothAdapter == null ) {
-                this.btDefinitelyNotAvailable = true;
-                this.disableFurtherScan();
-            }
+                if ( this.bluetoothAdapter == null ) {
+                    this.btDefinitelyNotAvailable = true;
+                    this.disableFurtherScan();
+                }
+                break;
+            default:
+                final String MSG = "unknown request code was not managed" + requestCode;
+
+                Log.e( LogTag, MSG );
+                throw new InternalError( MSG );
+
         }
+
+        return;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
+
+        switch( requestCode ) {
+            case RQC_ASK_CLEARANCE_FOR_BLUETOOTH:
+                int totalGrants = 0;
+
+                for(int result: grantResults) {
+                    if ( result == PackageManager.PERMISSION_GRANTED ) {
+                        ++totalGrants;
+                    }
+                }
+
+                if ( totalGrants == grantResults.length ) {
+                    this.doStartScanning();
+                } else {
+                    final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
+
+                    DLG.setMessage( R.string.ErrNoBluetoothPermissions );
+                    DLG.setPositiveButton(R.string.lblBack, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                        }
+                    });
+
+                    DLG.create().show();
+                    this.btDefinitelyNotAvailable = true;
+                }
+                break;
+            default:
+                final String MSG = "unknown permission request code was not managed" + requestCode;
+
+                Log.e( LogTag, MSG );
+                throw new InternalError( MSG );
+        }
+
+        return;
     }
 
     /** Creates the list of hrDevices. */
@@ -432,14 +494,14 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             if ( this.bluetoothAdapter != null ) {
                 if ( !activate ) {
                     btStartScan.setVisibility( View.VISIBLE );
-                    btStopScan.setVisibility( View.INVISIBLE );
+                    btStopScan.setVisibility( View.GONE );
                 } else {
-                    btStartScan.setVisibility( View.INVISIBLE );
+                    btStartScan.setVisibility( View.GONE );
                     btStopScan.setVisibility( View.VISIBLE );
                 }
             } else {
-                btStartScan.setVisibility( View.INVISIBLE );
-                btStopScan.setVisibility( View.INVISIBLE );
+                btStartScan.setVisibility( View.GONE );
+                btStopScan.setVisibility( View.GONE );
             }
 
             this.onCreateOptionsMenu( this.scanMenu );
@@ -460,7 +522,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 this.showStatus( this.getString( R.string.lblActivateBluetooth ) );
 
                 final Intent enableBtIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
-                this.startActivityForResult( enableBtIntent, REQUEST_ENABLE_BT );
+                this.startActivityForResult( enableBtIntent, RQC_ENABLE_BT);
             });
         }
 
@@ -474,7 +536,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             this.showStatus( "Test " + this.getString(  R.string.lblDevice ) + ": " + chosenBtDevice.getName() );
 
             final Intent enableBtIntent = new Intent( this, TestHRDevice.class );
-            this.startActivityForResult( enableBtIntent, REQUEST_TEST_BT_DEVICE );
+            this.startActivityForResult( enableBtIntent, RQC_TEST_BT_DEVICE);
         });
     }
 
@@ -484,9 +546,49 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         return this.deviceSearch;
     }
 
-    /** Launches deviceSearch for a given period of time */
+    /** Asks for permissions before start scanning. */
     @Override
     public void startScanning()
+    {
+        if ( !this.btDefinitelyNotAvailable ) {
+            final String[] ALL_PERMISSIONS = new String[]{
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            };
+
+            final ArrayList<String> PERMISSIONS_TO_ASK_FOR = new ArrayList<>( ALL_PERMISSIONS.length );
+
+
+            // Check all permissions
+            for(String permissionId: ALL_PERMISSIONS) {
+                int askAnswerBluetooth = ContextCompat.checkSelfPermission(
+                        this.getApplicationContext(),
+                        permissionId );
+
+                if (askAnswerBluetooth != PackageManager.PERMISSION_GRANTED) {
+                    PERMISSIONS_TO_ASK_FOR.add( permissionId );
+                }
+            }
+
+            // Launch scanning or ask for permissions
+            if ( PERMISSIONS_TO_ASK_FOR.size() > 0 ) {
+                ActivityCompat.requestPermissions(
+                            this,
+                                   PERMISSIONS_TO_ASK_FOR.toArray( new String[ 0 ] ),
+                        RQC_ASK_CLEARANCE_FOR_BLUETOOTH);
+            } else {
+                doStartScanning();
+            }
+
+        }
+
+        return;
+    }
+
+    /** Launches deviceSearch for a given period of time */
+    public void doStartScanning()
     {
         if ( !this.isLookingForDevices() ) {
             this.deviceSearch = true;
