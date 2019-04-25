@@ -233,39 +233,50 @@ public class ResultViewerActivity extends AppActivity {
     {
         float xmin = dataBeatTimes.get(0);
         float xmax = dataBeatTimes.get(dataBeatTimes.size()-1);
-        float step = 1.0f/freq;
+        float step = 1.0f / freq;
 
-        // Calculates positions in x axis
-        dataHRInterpX.add(xmin);
-        float newValue = xmin+step;
-        while (newValue<=xmax) {
-            dataHRInterpX.add(newValue);
-            newValue += step;
-        }
+        if ( dataBeatTimes.size() > 2 ) {
+            int leftHRIndex, rightHRIndex;
+            float leftBeatPos, rightBeatPos, leftHRVal, rightHRVal;
+            leftHRIndex = 0;
+            rightHRIndex = 1;
+            leftBeatPos = dataBeatTimes.get( leftHRIndex );
+            rightBeatPos = dataBeatTimes.get( rightHRIndex );
+            leftHRVal = dataHR.get(leftHRIndex);
+            rightHRVal = dataHR.get(rightHRIndex);
 
-        int leftHRIndex, rightHRIndex;
-        float leftBeatPos, rightBeatPos, leftHRVal, rightHRVal;
-        leftHRIndex = 0;
-        rightHRIndex = 1;
-        leftBeatPos = dataBeatTimes.get(leftHRIndex);
-        rightBeatPos = dataBeatTimes.get(rightHRIndex);
-        leftHRVal = dataHR.get(leftHRIndex);
-        rightHRVal = dataHR.get(rightHRIndex);
-
-        for (int xInterpIndex = 0; xInterpIndex< dataHRInterpX.size(); xInterpIndex++ )
-        {
-            if (dataHRInterpX.get(xInterpIndex) >= rightBeatPos) {
-                leftHRIndex++;
-                rightHRIndex++;
-                leftBeatPos = dataBeatTimes.get(leftHRIndex);
-                rightBeatPos = dataBeatTimes.get(rightHRIndex);
-                leftHRVal = dataHR.get(leftHRIndex);
-                rightHRVal = dataHR.get(rightHRIndex);
+            // Calculates positions in x axis
+            dataHRInterpX.add(xmin);
+            float newValue = xmin+step;
+            while (newValue<=xmax) {
+                dataHRInterpX.add(newValue);
+                newValue += step;
             }
 
-            // Estimate HR value in position
-            float HR = (rightHRVal-leftHRVal)*(dataHRInterpX.get(xInterpIndex)-leftBeatPos)/(rightBeatPos-leftBeatPos)+leftHRVal;
-            dataHRInterp.add(HR);
+            for (int xInterpIndex = 0; xInterpIndex< dataHRInterpX.size(); xInterpIndex++ )
+            {
+                if (dataHRInterpX.get(xInterpIndex) >= rightBeatPos) {
+                    leftHRIndex++;
+                    rightHRIndex++;
+                    leftBeatPos = dataBeatTimes.get(leftHRIndex);
+                    rightBeatPos = dataBeatTimes.get(rightHRIndex);
+                    leftHRVal = dataHR.get(leftHRIndex);
+                    rightHRVal = dataHR.get(rightHRIndex);
+                }
+
+                // Estimate HR value in position
+                float HR = (rightHRVal-leftHRVal)*(dataHRInterpX.get(xInterpIndex)-leftBeatPos)/(rightBeatPos-leftBeatPos)+leftHRVal;
+                dataHRInterp.add(HR);
+            }
+        } else {
+            float xAxis = xmin;
+
+            for(float dataBeatTime: this.dataBeatTimes) {
+                this.dataHRInterp.add( dataBeatTime );
+                this.dataHRInterpX.add( xAxis );
+
+                xAxis += step;
+            }
         }
 
         return;

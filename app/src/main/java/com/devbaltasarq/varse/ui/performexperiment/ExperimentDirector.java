@@ -67,6 +67,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             this.handler = new Handler();
             this.eventHandler = eventHandler;
             this.startTime = 0;
+            this.stopped = false;
         }
 
         /** @return the starting time. */
@@ -96,9 +97,13 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         /** Starts the chronometer */
         public void start()
         {
+            this.stopped = false;
+
             this.sendHR = () -> {
-                this.eventHandler.handle( this );
-                this.handler.postDelayed( this.sendHR,1000);
+                if ( ! this.stopped ) {
+                    this.eventHandler.handle( this );
+                    this.handler.postDelayed( this.sendHR,1000);
+                }
             };
 
             this.handler.post( this.sendHR );
@@ -107,9 +112,12 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         /** Eliminates the daemon so the crono is stopped. */
         public void stop()
         {
+            this.stopped = true;
+            this.handler.removeCallbacks( this.sendHR );
             this.handler.removeCallbacksAndMessages( null );
         }
 
+        private boolean stopped;
         private long startTime;
         private Handler handler;
         private Runnable sendHR;
