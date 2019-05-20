@@ -1,10 +1,10 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -37,6 +37,7 @@ import com.devbaltasarq.varse.core.bluetooth.BleService;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
 import com.devbaltasarq.varse.core.bluetooth.HRListenerActivity;
+import com.devbaltasarq.varse.core.bluetooth.ServiceConnectionWithStatus;
 import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
@@ -193,7 +194,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             lblConnectionStatus.setTextColor( Color.parseColor( "#8B0000" ) );
         }
 
-        // Check whether there something to play
+        // Check whether there is something to play
         if ( this.groupsToPlay.length == 0 ) {
             isAble = false;
         }
@@ -228,6 +229,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         this.setAbleToLaunch( false );
         this.chrono.stop();
+        this.stopExperiment();
 
         BluetoothUtils.closeBluetoothConnections( this );
         Log.d( LogTag, "Director finished, stopped chrono, closed connections." );
@@ -332,6 +334,12 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         lblCrono.setText( new Duration( elapsedTimeSeconds ).toChronoString() );
 
+        // Stop if the service was disconnected
+        if ( !this.serviceConnection.isConnected() ) {
+            this.onExperiment = false;
+        }
+
+        // Now evaluate
         if ( this.onExperiment ) {
             final Group GROUP = this.groupsToPlay[ this.groupIndex];
             final Group.Activity ACTIVITY = GROUP.getActivities()[ this.activityIndex];
@@ -439,24 +447,46 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     @Override
     public void onReceiveBpm(Intent intent)
     {
-        final int hr = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
-        final int rr = intent.getIntExtra( BleService.RR_TAG, -1 );
+        final int HR = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
+        final int MEAN_RR = intent.getIntExtra( BleService.MEAN_RR_TAG, -1 );
+        final int[] RRS = intent.getIntArrayExtra( BleService.RR_TAG );
 
         if ( BuildConfig.DEBUG ) {
-            if ( hr >= 0 ) {
-                Log.d( LogTag, "HR received: " + hr + "bpm" );
+            if ( HR >= 0 ) {
+                Log.d( LogTag, "HR received: " + HR + "bpm" );
             }
 
-            if ( rr >= 0 ) {
-                Log.d( LogTag, "RR received: " + rr + "millisecs" );
+            if ( MEAN_RR >= 0 ) {
+                Log.d( LogTag, "Mean RR received: " + MEAN_RR + "millisecs" );
+            }
+
+            if ( RRS != null ) {
+                final StringBuilder STR_RR = new StringBuilder();
+
+                Log.d( LogTag, "RR's received: " + RRS.length );
+
+                for(int rr: RRS) {
+                    STR_RR.append( rr );
+                    STR_RR.append( ' ' );
+                }
+
+                Log.d( LogTag, "RR's: { " + STR_RR.toString() + "}" );
+            } else {
+                Log.d( LogTag, "No RR's received: " );
             }
         }
 
-        if ( rr >= 0 ) {
+        if ( RRS != null ) {
             if ( !this.readyToLaunch ) {
                 this.setAbleToLaunch( true );
             } else {
-                this.addToResult( new Result.BeatEvent( this.getElapsedExperimentMillis(), rr ) );
+                long time = this.getElapsedExperimentMillis();
+
+                for(int rr: RRS) {
+                    this.addToResult( new Result.BeatEvent( time, rr ) );
+
+                    time += rr;
+                }
             }
         }
 
@@ -542,6 +572,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 this.resultBuilder = null;
                 Log.i( LogTag, this.getString( R.string.msgFinishedExperiment ) );
                 dlg.create().show();
+                this.setRequestedOrientation( this.scrOrientationOnExperiment );
             } catch(IOException exc) {
                 this.showStatus( LogTag, "unable to save experiment result" );
             }
@@ -590,6 +621,10 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         if ( this.groupsToPlay.length > 0 ) {
             final TextView lblMaxTime = this.findViewById( R.id.lblMaxTime );
             final Duration timeNeeded = this.experiment.calculateTimeNeeded();
+
+            // Prevent screen rotation
+            this.scrOrientationOnExperiment = this.getRequestedOrientation();
+            this.setRequestedOrientation( ActivityInfo.SCREEN_ORIENTATION_NOSENSOR );
 
             // Prepare the UI
             this.prepareUIForExperiment();
@@ -819,13 +854,13 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     /** @return the service connection for this activity. */
     @Override
-    public ServiceConnection getServiceConnection()
+    public ServiceConnectionWithStatus getServiceConnection()
     {
         return this.serviceConnection;
     }
 
     @Override
-    public void setServiceConnection(ServiceConnection serviceConnection)
+    public void setServiceConnection(ServiceConnectionWithStatus serviceConnection)
     {
         this.serviceConnection = serviceConnection;
     }
@@ -840,6 +875,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private TextView tvTextBox;
     private VideoView vVideoBox;
 
+    private int scrOrientationOnExperiment;
     private int activityIndex;
     private int groupIndex;
     private int accumulatedTimeInSeconds;
@@ -855,7 +891,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private Result.Builder resultBuilder;
     private Orm orm;
 
-    private ServiceConnection serviceConnection;
+    private ServiceConnectionWithStatus serviceConnection;
     private BroadcastReceiver broadcastReceiver;
     private BleService bleService;
     private BluetoothDeviceWrapper btDevice;

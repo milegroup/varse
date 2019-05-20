@@ -8,7 +8,7 @@ public interface HRListenerActivity {
     ServiceConnection getServiceConnection();
     BroadcastReceiver getBroadcastReceiver();
 
-    void setServiceConnection(ServiceConnection serviceConnection);
+    void setServiceConnection(ServiceConnectionWithStatus serviceConnection);
     void setBroadcastReceiver(BroadcastReceiver broadcastReceiver);
 
     BleService getService();

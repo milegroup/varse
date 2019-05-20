@@ -273,6 +273,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         super.onActivityResult( requestCode, resultCode, data );
 
         switch ( requestCode ) {
+            case RQC_TEST_BT_DEVICE:
             case RQC_ENABLE_BT:
                 this.configBtLaunched = false;
                 this.initBluetooth();
@@ -283,7 +284,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 }
                 break;
             default:
-                final String MSG = "unknown request code was not managed" + requestCode;
+                final String MSG = "unknown request code was not managed: " + requestCode;
 
                 Log.e( LogTag, MSG );
                 throw new InternalError( MSG );

@@ -13,7 +13,6 @@ import android.util.Log;
 
 import com.devbaltasarq.varse.BuildConfig;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 
@@ -31,6 +30,7 @@ public class BleService extends Service {
     public final static String ACTION_DATA_AVAILABLE = INTENT_PREFIX + ".ACTION_DATA_AVAILABLE";
     public final static String HEART_RATE_TAG = "HEART_RATE";
     public final static String RR_TAG = "RR_DISTANCE";
+    public final static String MEAN_RR_TAG = "MEAN_RR_DISTANCE";
 
     public class LocalBinder extends Binder {
         public BleService getService() {
@@ -77,29 +77,35 @@ public class BleService extends Service {
 
         // Handling following the Heart Rate Measurement profile.
         if ( UUID_HEART_RATE_CHR.equals( characteristic.getUuid() ) ) {
-            final int flags = characteristic.getProperties();
+            final int LENGTH = characteristic.getValue().length;
+            final int FLAGS = characteristic.getProperties();
             int heartRate;
-            int rr;
             int format;
             int offset = 1;
 
             // Some valuable debug info
             if ( BuildConfig.DEBUG ) {
-                final byte[] value = characteristic.getValue();
-                final StringBuilder bytes = new StringBuilder( value.length * 3 );
-                Log.d( LogTag, "HR info received: " + value.length + " bytes" );
-                Log.d( LogTag, "Flags: " + characteristic.getProperties() );
+                final byte[] DATA = characteristic.getValue();
+                final StringBuilder bytes = new StringBuilder( LENGTH * 3 );
+                Log.d( LogTag, "HR info received: " + LENGTH + " bytes" );
+                Log.d( LogTag, "Flags: " + FLAGS );
 
-                for (byte bt: value) {
-                    bytes.append( Integer.toString( (int) ( (char) bt ) ) );
+                bytes.append( '#' );
+                bytes.append( LENGTH );
+                bytes.append( ' ' );
+                for (byte bt: DATA) {
+                    bytes.append(
+                            String.format( "%8s",
+                                    Integer.toBinaryString( bt & 0xFF ) )
+                                    .replace( ' ', '0' ) );
                     bytes.append( ' ' );
                 }
 
-                Log.d( LogTag, "{ " + bytes.toString() + "}" );
+                Log.d( LogTag, ":- HR byte sequence { " + bytes.toString() + "}" );
             }
 
             // Extract the heart rate value format
-            if ( ( flags & 1 ) != 0 ) {
+            if ( ( FLAGS & 1 ) != 0 ) {
                 format = BluetoothGattCharacteristic.FORMAT_UINT16;
                 heartRate = characteristic.getIntValue( format, offset );
                 offset += 2;
@@ -115,26 +121,40 @@ public class BleService extends Service {
             Log.d( LogTag, String.format("Received heart rate: %d", heartRate ) );
 
             // Energy Expended Status bit
-            if ( ( flags & 8 ) != 0 ) {
+            if ( ( FLAGS & 8 ) != 0 ) {
                 offset += 2;
             }
 
             // Extract the heart beat distance (RR) bit 4 means that it is present
-            if ( ( flags & 16 ) != 0 ) {
-                Integer objRR = characteristic.getIntValue(
-                                            BluetoothGattCharacteristic.FORMAT_UINT16, offset );
-                // So yes, rr is present
-                if ( objRR != null ) {
-                    rr = objRR;
+            int NUM_RRS = ( LENGTH - offset ) / 2;
+            int[] RR_DATA = new int[ NUM_RRS ];
+            int pos = 0;
+            int totalRR = 0;
 
-                    // rr = ( v / 1024 ) * 1000
-                    Log.d( LogTag, String.format( "Received raw rr: %d", rr ) );
-                    rr = (int) ( ( (double) rr / 1024 ) * 1000);
-                    intent.putExtra( RR_TAG, rr );
-                    Log.d( LogTag, String.format( "Received rr: %d", rr ) );
-                } else {
-                    Log.e( LogTag, String.format( "Missing RR signaled in properties." ) );
+            if ( ( FLAGS & 16 ) != 0 ) {
+                while ( offset < LENGTH ) {
+                    Integer objRR = characteristic.getIntValue(
+                                                BluetoothGattCharacteristic.FORMAT_UINT16, offset );
+                    // So yes, rr is present
+                    if ( objRR != null ) {
+                        int rr = objRR;
+
+                        // rr = ( v / 1024 ) * 1000
+                        Log.d( LogTag, String.format( "Received raw rr (1024-based): %d", rr ) );
+                        rr = (int) ( ( (double) rr / 1024 ) * 1000);
+                        RR_DATA[ pos ] = rr;
+                        totalRR += rr;
+                        Log.d( LogTag, String.format( "Received rr: %d", rr ) );
+                    } else {
+                        Log.e( LogTag, "Missing RR signaled in properties." );
+                    }
+
+                    offset += 2;
+                    ++pos;
                 }
+
+                intent.putExtra( RR_TAG, RR_DATA );
+                intent.putExtra( MEAN_RR_TAG, (int) Math.round( (float) totalRR / NUM_RRS ) );
             } else {
                 Log.d( LogTag, "RR info was not present." );
             }

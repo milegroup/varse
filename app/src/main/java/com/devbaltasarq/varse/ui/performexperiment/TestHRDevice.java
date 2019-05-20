@@ -19,6 +19,7 @@ import com.devbaltasarq.varse.core.bluetooth.BleService;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
 import com.devbaltasarq.varse.core.bluetooth.HRListenerActivity;
+import com.devbaltasarq.varse.core.bluetooth.ServiceConnectionWithStatus;
 import com.devbaltasarq.varse.ui.AppActivity;
 
 
@@ -87,17 +88,17 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
      */
     public void onReceiveBpm(Intent intent)
     {
-        final int hr = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
-        final int rr = intent.getIntExtra( BleService.RR_TAG, -1 );
+        final int HR = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
+        final int MEAN_RR = intent.getIntExtra( BleService.MEAN_RR_TAG, -1 );
         String strHr = "";
         String strRr = "";
 
-        if ( hr >= 0 ) {
-            strHr = Integer.toString( hr );
+        if ( HR >= 0 ) {
+            strHr = Integer.toString( HR );
         }
 
-        if ( rr >= 0 ) {
-            strRr = Integer.toString( rr );
+        if ( MEAN_RR >= 0 ) {
+            strRr = Integer.toString( MEAN_RR );
         }
 
         this.showBpm( strHr, strRr );
@@ -191,7 +192,7 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
     }
 
     @Override
-    public void setServiceConnection(ServiceConnection serviceConnection)
+    public void setServiceConnection(ServiceConnectionWithStatus serviceConnection)
     {
         this.serviceConnection = serviceConnection;
     }
@@ -202,7 +203,7 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         this.broadcastReceiver = broadcastReceiver;
     }
 
-    private ServiceConnection serviceConnection;
+    private ServiceConnectionWithStatus serviceConnection;
     private BroadcastReceiver broadcastReceiver;
     private BleService bleService;
     private BluetoothDeviceWrapper btDevice;

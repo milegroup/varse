@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -220,7 +219,7 @@ public class BluetoothUtils {
     }
 
     /** @return A suitable BleService. */
-    private static void createBleService(HRListenerActivity activity, IBinder service)
+    public static void createBleService(HRListenerActivity activity, IBinder service)
     {
         Log.d( LogTag, "Binding service..." );
 
@@ -230,34 +229,9 @@ public class BluetoothUtils {
         Log.d( LogTag, "Service bound." );
     }
 
-    public static ServiceConnection createServiceConnectionCallBack(final HRListenerActivity activity)
+    public static ServiceConnectionWithStatus createServiceConnectionCallBack(final HRListenerActivity activity)
     {
-        return new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName componentName, IBinder service)
-            {
-                BluetoothUtils.createBleService( activity, service );
-
-                Log.d( LogTag, "Connecting to service..." );
-                final boolean result = activity.getService().connect();
-
-                Log.d( LogTag, "Connect request result: " + result );
-
-                if ( result ) {
-                    Activity context = (Activity) activity;
-                    context.registerReceiver( activity.getBroadcastReceiver(),
-                            BluetoothUtils.createBroadcastReceiverIntentFilter() );
-                }
-
-                return;
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName componentName)
-            {
-                BluetoothUtils.closeBluetoothConnections( activity );
-            }
-        };
+        return new ServiceConnectionWithStatus( activity );
     }
 
     /** Turns down all services and callbacks needed to connect to the band. */

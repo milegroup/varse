@@ -346,9 +346,9 @@ public final class Orm {
         if ( typeId == Persistent.TypeId.Result ) {
             final Result res = (Result) p;
 
-            toret = getFileNameForResult(   p.getId(),
-                                            res.getExperiment().getId(),
-                                            res.getUser().getId() );
+            toret = this.getFileNameForResult( p.getId(),
+                                               res.getExperiment().getId(),
+                                               res.getUser().getId() );
         } else {
             toret = REGULAR_FILE_FORMAT
                     .replace( "$" + FIELD_ID, p.getId().toString() )
@@ -799,14 +799,22 @@ public final class Orm {
         }
 
         try {
+            final String BASE_FILE_NAME = removeFileExt( RES_FILE_NAME );
+            final String TAGS_FILE_NAME = "tags-"
+                                            + res.getUser().getName()
+                                            + "-" + BASE_FILE_NAME + ".tags.txt";
+            final String RR_FILE_NAME = "rr-"
+                                            + res.getUser().getName()
+                                            + "-" + BASE_FILE_NAME + ".rr.txt";
+
             // Org
             final File ORG_FILE = new File( this.dirDb, RES_FILE_NAME );
             this.store( res );
 
             // Dest
             final File OUTPUT_FILE = new File( dir, RES_FILE_NAME );
-            final File TAGS_OUTPUT_FILE = new File( dir, "tags_" + RES_FILE_NAME + ".txt" );
-            final File RR_OUTPUT_FILE = new File( dir, "rr_" + RES_FILE_NAME + ".txt" );
+            final File TAGS_OUTPUT_FILE = new File( dir, TAGS_FILE_NAME );
+            final File RR_OUTPUT_FILE = new File( dir, RR_FILE_NAME );
             final Writer TAGS_STREAM = openWriterFor( TAGS_OUTPUT_FILE );
             final Writer BEATS_STREAM = openWriterFor( RR_OUTPUT_FILE );
 
@@ -1378,6 +1386,22 @@ public final class Orm {
             {
                 toret = fileName.substring( posDot + 1 );
             }
+        }
+
+        return toret;
+    }
+
+    /** @return the given file name, after extracting the extension.
+      * @param fileName the file name to remove the extension from.
+      * @return the file name without extension.
+      */
+    public static String removeFileExt(String fileName)
+    {
+        final int DOT_POS = fileName.lastIndexOf( '.' );
+        String toret = fileName;
+
+        if ( DOT_POS > -1 ) {
+            toret = fileName.substring(0, DOT_POS);
         }
 
         return toret;

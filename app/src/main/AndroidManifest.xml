@@ -73,6 +73,7 @@
         <activity
             android:name=".ui.performexperiment.ExperimentDirector"
             android:label="@string/lblPerformExperiment"
+
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.ResultsActivity"
