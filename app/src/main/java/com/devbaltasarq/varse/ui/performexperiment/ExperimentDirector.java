@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -215,6 +216,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     {
         super.onResume();
 
+        this.getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
+
         BluetoothUtils.openBluetoothConnections( this,
                 this.getString( R.string.lblConnected ),
                 this.getString( R.string.lblDisconnected ) );
@@ -230,6 +233,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.setAbleToLaunch( false );
         this.chrono.stop();
         this.stopExperiment();
+
+        this.getWindow().clearFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
 
         BluetoothUtils.closeBluetoothConnections( this );
         Log.d( LogTag, "Director finished, stopped chrono, closed connections." );
@@ -550,35 +555,36 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     /** Stops the experiment. */
     private synchronized void stopExperiment()
     {
+        // Finish for good
         this.chrono.stop();
+        this.onExperiment = false;
+        this.setRequestedOrientation( this.scrOrientationOnExperiment );
 
-        if ( !this.onExperiment
-          && this.resultBuilder != null )
-        {
+        // Store results
+        if ( this.resultBuilder != null ) {
             final long elapsedMillis = this.getElapsedExperimentMillis();
 
             try {
-                final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
-
-                dlg.setTitle( this.experiment.getName() );
-                dlg.setMessage( R.string.msgFinishedExperiment );
-                dlg.setCancelable( false );
-                dlg.setPositiveButton( R.string.lblBack, (d, i) -> {
-                    this.askBeforeExit = false;
-                    this.finish();
-                } );
-
                 this.orm.store( this.resultBuilder.build( elapsedMillis ) );
                 this.resultBuilder = null;
                 Log.i( LogTag, this.getString( R.string.msgFinishedExperiment ) );
-                dlg.create().show();
-                this.setRequestedOrientation( this.scrOrientationOnExperiment );
             } catch(IOException exc) {
                 this.showStatus( LogTag, "unable to save experiment result" );
             }
         }
 
-        return;
+        // Warn the experiment has finished
+        final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
+
+        dlg.setTitle( this.experiment.getName() );
+        dlg.setMessage( R.string.msgFinishedExperiment );
+        dlg.setCancelable( false );
+        dlg.setPositiveButton( R.string.lblBack, (d, i) -> {
+            this.askBeforeExit = false;
+            this.finish();
+        });
+
+        dlg.create().show();
     }
 
     /** Puts the current group and current activities on their start.
