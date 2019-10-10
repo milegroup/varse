@@ -71,6 +71,7 @@
     <string name="lblDefaultTag">default</string>
 
     <string name="msgAreYouSure">Are you sure?</string>
+    <string name="msgResettingSettings">Resetting settings</string>
     <string name="msgLoseData">You will lose all unsaved data</string>
     <string name="msgFileNotFound">File not found</string>
     <string name="msgIncompatibleMedia">Incompatible media</string>
@@ -80,22 +81,25 @@
     <string name="msgExported">Data set exported</string>
     <string name="msgImported">Data set imported</string>
     <string name="msgFinishedExperiment">Experiment performed</string>
+    <string name="msgFinishedBackup">Backup finished</string>
+    <string name="msgForceCloudBackup">Force backup to the cloud</string>
 
     <!-- Errors -->
-    <string name="ErrStore">Unable to initialise storage</string>
-    <string name="ErrIO">Input/output error</string>
-    <string name="ErrDeleting">Error deleting from storage</string>
-    <string name="ErrExport">Error exporting</string>
-    <string name="ErrBlocked">Blocked in error state</string>
-    <string name="ErrNoBluetooth">Bluetooth is not supported</string>
-    <string name="ErrNoBluetoothPermissions">Not enough permissions to access Bluetooth</string>
-    <string name="ErrScanFailed">BlueTooth device scan failed</string>
-    <string name="ErrUnknownDevice">Unknown device</string>
-    <string name="ErrNoHR">No health profile detected</string>
-    <string name="ErrPermissionDenied">Permission denied</string>
-    <string name="ErrUnsupportedFileType">Unsupported file type</string>
-    <string name="ErrUnableToShowActivity">Unable to show activity</string>
-    <string name="ErrNotEnoughActivities">Not enough activities</string>
+    <string name="errStore">Unable to initialise storage</string>
+    <string name="errIO">Input/output error</string>
+    <string name="errDeleting">Error deleting from storage</string>
+    <string name="errExport">Error exporting</string>
+    <string name="errBlocked">Blocked in error state</string>
+    <string name="errNoBluetooth">Bluetooth is not supported</string>
+    <string name="errNoBluetoothPermissions">Not enough permissions to access Bluetooth</string>
+    <string name="errScanFailed">BlueTooth device scan failed</string>
+    <string name="errUnknownDevice">Unknown device</string>
+    <string name="errNoHR">No health profile detected</string>
+    <string name="errPermissionDenied">Permission denied</string>
+    <string name="errUnsupportedFileType">Unsupported file type</string>
+    <string name="errUnableToShowActivity">Unable to show activity</string>
+    <string name="errNotEnoughActivities">Not enough activities</string>
+    <string name="errInitializingSettings">Initializing settings</string>
 
     <!-- Choices for time units -->
     <string name="lblMinutes">Minutes</string>

@@ -1,3 +1,8 @@
+# Configuration and doc file for mail sending service
+app/src/main/res/values/mail_auth.xml
+app/src/main/res/values/dropbox_token.xml
+design/dropbox_backup.md
+
 # Built application files
 *.apk
 *.ap_

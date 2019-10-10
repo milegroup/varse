@@ -55,6 +55,7 @@ public final class Orm {
     public static final String FIELD_TYPE_ID = Persistent.TypeId.FIELD;
     public static final String FIELD_ACTIVITIES = "activities";
 
+    private static final String SETTINGS_FILE_NAME = "settings.json";
     private static final String DIR_DB = "db";
     private static final String DIR_RES = "res";
     private static final String DIR_MEDIA_PREFIX = "media";
@@ -76,6 +77,7 @@ public final class Orm {
     {
         Log.i( LogTag, "Preparing store..." );
 
+        this.dirFiles = context.getFilesDir();
         this.createDirectories( context );
         this.removeCache( context );
         this.createCaches();
@@ -472,6 +474,12 @@ public final class Orm {
         final Id id = owner != null ? owner.getId() : p.getId();
 
         return DIR_MEDIA_PREFIX + FILE_NAME_PART_SEPARATOR + id.get();
+    }
+
+    /** @returns a File pointing to the settings file. */
+    public File getSettingsPath()
+    {
+        return new File( this.dirFiles, SETTINGS_FILE_NAME );
     }
 
     /** Builds the directory for the experiment's media.
@@ -986,6 +994,25 @@ public final class Orm {
     /** Enumerates all objects of a given type.
      *  @return An array of pairs of Id's and Strings.
      */
+    public File[] enumerateFiles(Persistent.TypeId typeId) throws IOException
+    {
+        HashSet<File> toret = this.filesExperiment;
+
+        // Decide cache file list
+        if ( typeId == Persistent.TypeId.Result ) {
+            toret = this.filesResult;
+        }
+        else
+        if ( typeId == Persistent.TypeId.User ) {
+            toret = this.filesUser;
+        }
+
+        return toret.toArray( new File[ 0 ] );
+    }
+
+    /** Enumerates all objects of a given type.
+     *  @return An array of pairs of Id's and Strings.
+     */
     @SuppressWarnings("unchecked")
     private PartialObject[] enumerateObjects(Persistent.TypeId typeId) throws IOException
     {
@@ -1474,6 +1501,7 @@ public final class Orm {
     private HashSet<File> filesExperiment;
     private HashSet<File> filesResult;
     private Map<Id, ArrayList<File>> resultsPerExperiment;
+    private File dirFiles;
     private File dirDb;
     private File dirRes;
     private File dirTmp;

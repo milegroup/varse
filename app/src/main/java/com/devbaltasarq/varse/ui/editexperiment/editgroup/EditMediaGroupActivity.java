@@ -249,9 +249,9 @@ public class EditMediaGroupActivity extends EditGroupActivity {
                 }
             }
         } catch(IOException exc) {
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
         } catch(IllegalArgumentException exc) {
-            this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
+            this.showStatus( LogTag, this.getString( R.string.errUnsupportedFileType) );
         }
 
         return;
@@ -274,7 +274,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         {
             this.storeMediaFor( db, uri, mediaGroup );
         } else {
-            this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
+            this.showStatus( LogTag, this.getString( R.string.errUnsupportedFileType) );
         }
 
         return;

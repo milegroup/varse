@@ -77,7 +77,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             final BluetoothDeviceWrapper device = this.getItem( i );
             final TextView lblDeviceName = view.findViewById( R.id.lblDeviceName );
             final TextView lblDeviceAddress = view.findViewById( R.id.lblDeviceAddress );
-            String deviceName = this.getContext().getString( R.string.ErrUnknownDevice );
+            String deviceName = this.getContext().getString( R.string.errUnknownDevice);
             String deviceAddress = "00:00:00:00:00:00";
 
             // Set device's name, if possible.
@@ -90,7 +90,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             if ( deviceName == null
               || deviceName.isEmpty() )
             {
-                lblDeviceName.setText( R.string.ErrUnknownDevice );
+                lblDeviceName.setText( R.string.errUnknownDevice);
             } else {
                 lblDeviceName.setText( deviceName );
             }
@@ -162,7 +162,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 if ( btDevice != null ) {
                     cntxt.setChosenDevice( btDevice );
                 } else {
-                    cntxt.showStatus( cntxt.getString( R.string.ErrUnknownDevice ) );
+                    cntxt.showStatus( cntxt.getString( R.string.errUnknownDevice) );
                 }
         });
 
@@ -314,7 +314,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 } else {
                     final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
 
-                    DLG.setMessage( R.string.ErrNoBluetoothPermissions );
+                    DLG.setMessage( R.string.errNoBluetoothPermissions);
                     DLG.setPositiveButton(R.string.lblBack, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
@@ -675,7 +675,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     public void denyAdditionToList(BluetoothDevice btDevice)
     {
         PerformExperimentActivity.this.runOnUiThread( () -> {
-            this.showStatus( this.getString( R.string.ErrNoHR ) + ": " + btDevice.getName() );
+            this.showStatus( this.getString( R.string.errNoHR) + ": " + btDevice.getName() );
         });
     }
 
@@ -710,7 +710,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 btStartScan.setEnabled( false );
                 btStartScan.setVisibility( View.INVISIBLE );
 
-                this.showStatus( this.getString( R.string.ErrNoBluetooth) );
+                this.showStatus( this.getString( R.string.errNoBluetooth) );
             });
         }
 
@@ -770,7 +770,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             }
         } catch(IOException exc) {
             this.disableFurtherScan();
-            this.showStatus( this.getString( R.string.ErrIO ) );
+            this.showStatus( this.getString( R.string.errIO) );
         } finally {
             // Determine whether to allow to launch experiments or not
             fbLaunchExpr.setEnabled( this.experimentsList.length > 0 );

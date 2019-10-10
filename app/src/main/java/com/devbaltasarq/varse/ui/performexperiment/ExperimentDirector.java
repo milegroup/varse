@@ -3,7 +3,6 @@ package com.devbaltasarq.varse.ui.performexperiment;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -653,7 +652,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             this.accumulatedTimeInSeconds = 0;
             this.showActivity();
         } else {
-            this.showStatus( LogTag, this.getString( R.string.ErrNotEnoughActivities ) );
+            this.showStatus( LogTag, this.getString( R.string.errNotEnoughActivities) );
         }
 
         return;
@@ -703,7 +702,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                                     + ":\n" + f.getName();
 
         AlertDialog.Builder dlg = new AlertDialog.Builder( this );
-        dlg.setTitle( R.string.ErrUnableToShowActivity );
+        dlg.setTitle( R.string.errUnableToShowActivity);
         dlg.setMessage( ERROR_MSG );
 
         Log.e( LogTag, ERROR_MSG + "\n\t" + f.getAbsolutePath() );

@@ -27,9 +27,7 @@ import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.ui.showresult.ResultViewerActivity;
 import com.devbaltasarq.varse.ui.adapters.ListViewResultArrayAdapter;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.Writer;
 
 public class ResultsActivity extends AppActivity {
     private final static String LogTag = ResultsActivity.class.getSimpleName();
@@ -133,7 +131,7 @@ public class ResultsActivity extends AppActivity {
                 this.doExportResult( result );
             }
         } catch(IOException exc) {
-            this.showStatus( LogTag, this.getString( R.string.ErrExport ) );
+            this.showStatus( LogTag, this.getString( R.string.errExport) );
         }
 
         return;
@@ -153,8 +151,8 @@ public class ResultsActivity extends AppActivity {
                 this.dataStore.remove( result );
                 this.loadResults();
             } catch(IOException exc) {
-                Log.e( LogTag, this.getString( R.string.ErrDeleting ) + ": " + exc.getMessage() );
-                this.showStatus( LogTag, this.getString( R.string.ErrDeleting ) );
+                Log.e( LogTag, this.getString( R.string.errDeleting) + ": " + exc.getMessage() );
+                this.showStatus( LogTag, this.getString( R.string.errDeleting) );
             }
         });
         dlg.setNegativeButton( R.string.lblNo, null );
@@ -170,7 +168,7 @@ public class ResultsActivity extends AppActivity {
             this.showStatus( LogTag, this.getString( R.string.msgExported ) + ": " + lblResult );
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.ErrExport ) + ": " + lblResult );
+            this.showStatus( LogTag, this.getString( R.string.errExport) + ": " + lblResult );
         }
 
         return;
@@ -199,7 +197,7 @@ public class ResultsActivity extends AppActivity {
                 experiment = experimentsList[ 0 ];
             }
         } catch(IOException exc) {
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
         }
 
         return;
@@ -245,7 +243,7 @@ public class ResultsActivity extends AppActivity {
             }
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
         }
 
         return;

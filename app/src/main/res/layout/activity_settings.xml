@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.SettingsActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+
+            <ImageButton
+                android:id="@+id/btCloseSettings"
+                android:padding="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:contentDescription="@string/lblBack"
+                android:background="#00000000"
+                app:srcCompat="?attr/actionModeCloseDrawable" />
+
+            <ImageView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:contentDescription="@string/action_settings"
+                android:padding="10dp"
+                android:tint="#ffffffff"
+                app:srcCompat="@drawable/ic_wrench" />
+
+            <TextView
+                android:padding="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"/>
+
+            <TextView   android:id="@+id/lblSettings"
+                android:padding="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/action_settings"/>
+
+            </android.support.v7.widget.Toolbar>
+    </android.support.design.widget.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#c0c0c0" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="5dp"
+                    app:srcCompat="@drawable/ic_cloud_backup"/>
+
+                <TextView
+                    android:layout_weight=".8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Link to backup"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+
+                <ImageButton android:id="@+id/btResetVerification"
+                    android:visibility="gone"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    app:srcCompat="@drawable/ic_disconnect_cloud"
+                    android:backgroundTint="#00000000"
+                    android:contentDescription="Reset verification" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView   android:id="@+id/lblEmail"
+                    android:layout_marginEnd="5dp"
+                    android:text="E.mail"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <EditText   android:id="@+id/edEmail"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight=".8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <ImageButton android:id="@+id/btSendVerificationEmail"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    app:srcCompat="@drawable/ic_chk_email"
+                    android:backgroundTint="#00000000"
+                    android:contentDescription="Send verification email" />
+            </LinearLayout>
+
+            <LinearLayout   android:id="@+id/lyVerificationCode"
+                android:visibility="gone"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView   android:id="@+id/lblVerificationCode"
+                    android:layout_marginEnd="5dp"
+                    android:text="Verification code"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <EditText   android:id="@+id/edVerificationCode"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight=".7"
+                    android:inputType="number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <ImageButton android:id="@+id/btVerifyEmail"
+                    android:visibility="gone"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    app:srcCompat="@drawable/ic_question"
+                    android:backgroundTint="#00000000"
+                    android:contentDescription="Verify email" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#c0c0c0" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"
+                app:srcCompat="@drawable/ic_cloud_backup"/>
+
+            <TextView
+                android:layout_weight=".7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:text="@string/msgForceCloudBackup" />
+
+            <ImageButton
+                android:id="@+id/btForceBackup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00000000"
+                android:contentDescription="@string/msgForceCloudBackup"
+                android:enabled="false"
+                app:srcCompat="@drawable/ic_reload" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#c0c0c0" />
+
+    </LinearLayout>
+</LinearLayout>

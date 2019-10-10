@@ -3,11 +3,12 @@
     package="com.devbaltasarq.varse"
     android:installLocation="preferExternal">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -25,6 +26,7 @@
         android:roundIcon="@drawable/ic_app_icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <service
             android:name=".core.bluetooth.BleService"
             android:enabled="true" />
@@ -74,7 +76,6 @@
         <activity
             android:name=".ui.performexperiment.ExperimentDirector"
             android:label="@string/lblPerformExperiment"
-
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.ResultsActivity"
@@ -82,8 +83,11 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.showresult.ResultViewerActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:label="@string/lblResults" />
+            android:label="@string/lblResults"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".ui.SettingsActivity"
+            android:label="@string/action_settings"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

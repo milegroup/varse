@@ -24,8 +24,10 @@ import com.devbaltasarq.varse.core.AppInfo;
 import com.devbaltasarq.varse.core.FileNameAdapter;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.Persistent;
-import com.devbaltasarq.varse.core.experiment.Tag;
+import com.devbaltasarq.varse.core.Settings;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
+
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,6 +92,18 @@ public class MainActivity extends AppActivity
 
         // Initialize the database
         Orm.init( this.getApplicationContext(), FileNameAdapter.get() );
+
+        // Initialize settings
+        try {
+            Settings.open();
+        } catch(JSONException exc)
+        {
+            this.showStatus( LogTag,
+                    this.getString( R.string.errInitializingSettings)
+                        + exc.getMessage() );
+            Settings.create();
+            this.showStatus( LogTag, this.getString( R.string.msgResettingSettings ) );
+        }
     }
 
     @Override
@@ -140,6 +154,10 @@ public class MainActivity extends AppActivity
                     this.startActivity( new Intent( this, ResultsActivity.class ) );
                     toret = true;
                     break;
+                case R.id.nav_settings:
+                    this.startActivity( new Intent( this, SettingsActivity.class ) );
+                    toret = true;
+                    break;
                 case R.id.nav_import:
                 case R.id.action_import:
                     this.pickFile();
@@ -148,7 +166,7 @@ public class MainActivity extends AppActivity
             }
         } else {
             Log.e( LogTag, "Tried to operate in blocked app" );
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
         }
 
         return toret;
@@ -226,7 +244,7 @@ public class MainActivity extends AppActivity
                 {
                     this.importFile( uri );
                 } else {
-                    this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
+                    this.showStatus( LogTag, this.getString( R.string.errUnsupportedFileType) );
                 }
             } else {
                 this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
@@ -281,11 +299,11 @@ public class MainActivity extends AppActivity
                             + ": " + LBL_EXPERIMENT );
                 }
             } else {
-                this.showStatus( LogTag, this.getString( R.string.ErrUnsupportedFileType ) );
+                this.showStatus( LogTag, this.getString( R.string.errUnsupportedFileType) );
             }
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
             Log.e( LogTag, "Importing: '" + uri + "': " + exc.getMessage() );
         }
     }

@@ -87,7 +87,7 @@ public class ExperimentsActivity extends AppActivity {
                 Orm.get().purgeOrphanMedia();
             }
         } catch(IOException exc) {
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
         }
 
         return;
@@ -122,7 +122,7 @@ public class ExperimentsActivity extends AppActivity {
             }
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
         }
 
         return;
@@ -159,7 +159,7 @@ public class ExperimentsActivity extends AppActivity {
         } catch(IOException exc)
         {
             Log.e( LogTag, "error retrieving experiment: " + exc.getMessage() );
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
         }
     }
 
@@ -192,7 +192,7 @@ public class ExperimentsActivity extends AppActivity {
                 this.experimentEntries.remove( position );
                 this.updateExperimentsList();
             } else {
-                this.showStatus( LogTag, this.getString( R.string.ErrDeleting )
+                this.showStatus( LogTag, this.getString( R.string.errDeleting)
                                             + ": " + e.toString() );
             }
         });
@@ -287,7 +287,7 @@ public class ExperimentsActivity extends AppActivity {
         } catch(IOException exc)
         {
             this.showStatus( LogTag,
-                    this.getString( R.string.ErrExport )
+                    this.getString( R.string.errExport)
                             + ": " + lblExperiment
                             + ": '" + e.getName() + '\'' );
         }
@@ -313,7 +313,7 @@ public class ExperimentsActivity extends AppActivity {
                   && grantResults[ 0 ] == PackageManager.PERMISSION_GRANTED ) {
                     doExportExperiment( selectedExperiment );
                 } else {
-                    this.showStatus( LogTag, this.getString( R.string.ErrPermissionDenied ) );
+                    this.showStatus( LogTag, this.getString( R.string.errPermissionDenied) );
                 }
                 return;
             }

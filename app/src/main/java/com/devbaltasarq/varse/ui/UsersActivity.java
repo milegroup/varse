@@ -63,7 +63,7 @@ public class UsersActivity extends AppActivity {
             lvUsers.setAdapter( adapter );
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.ErrIO ) );
+            this.showStatus( LogTag, this.getString( R.string.errIO) );
         }
     }
 
@@ -83,7 +83,7 @@ public class UsersActivity extends AppActivity {
                     Orm.get().store( new User( Id.createFake(), edId.getText().toString() ) );
                     UsersActivity.this.showUsers();
                 } catch(IOException exc) {
-                    activity.showStatus( LogTag, activity.getString( R.string.ErrIO ) );
+                    activity.showStatus( LogTag, activity.getString( R.string.errIO) );
                 }
             }
         });
