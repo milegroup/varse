@@ -947,6 +947,11 @@ public final class Orm {
         return usr;
     }
 
+    public File getFileById(Id id, Persistent.TypeId typeId)
+    {
+        return new File( this.dirDb, this.getFileNameFor( id, typeId ) );
+    }
+
     /** Retrieves a single object from a table, given its id.
      * @param id The id of the object to retrieve.
      * @param typeId The id of the type of the object.
@@ -956,7 +961,7 @@ public final class Orm {
     public Persistent retrieve(Id id, Persistent.TypeId typeId) throws IOException
     {
         Persistent toret;
-        final File DATA_FILE = new File( this.dirDb, this.getFileNameFor( id, typeId ) );
+        final File DATA_FILE = this.getFileById( id, typeId );
         Reader reader = null;
 
         try {

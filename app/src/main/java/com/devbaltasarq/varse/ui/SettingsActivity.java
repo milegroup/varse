@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.ui;
 
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -7,6 +8,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.devbaltasarq.varse.R;
@@ -20,13 +22,16 @@ import com.dropbox.core.DbxException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 public class SettingsActivity extends AppActivity {
     public final static String LOG_TAG = SettingsActivity.class.getSimpleName();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_settings );
 
@@ -74,6 +79,13 @@ public class SettingsActivity extends AppActivity {
                 SettingsActivity.this.forceBackup();
             }
         });
+
+        // Initialize
+        this.backupFinished = true;
+
+        // Prevent screen rotation
+        this.scrOrientation = this.getRequestedOrientation();
+        this.setRequestedOrientation( ActivityInfo.SCREEN_ORIENTATION_NOSENSOR );
     }
 
     @Override
@@ -100,6 +112,21 @@ public class SettingsActivity extends AppActivity {
     public boolean askBeforeLeaving()
     {
         return false;
+    }
+
+    @Override
+    public void finish()
+    {
+        if ( !this.backupFinished ) {
+            Toast.makeText( this,
+                    this.getString( R.string.msgWaitForBackup ),
+                    Toast.LENGTH_SHORT ).show();
+        } else {
+            this.setRequestedOrientation( this.scrOrientation );
+            super.finish();
+        }
+
+        return;
     }
 
     private void close()
@@ -224,6 +251,7 @@ public class SettingsActivity extends AppActivity {
     private void forceBackup()
     {
         final ImageButton BT_FORCE_BACKUP = this.findViewById( R.id.btForceBackup );
+        final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbProgressCompleteBackup );
         final SettingsActivity SELF = this;
         final Orm ORM = Orm.get();
         final DropboxClient DBOX_SERVICE = new DropboxClient( this );
@@ -234,16 +262,35 @@ public class SettingsActivity extends AppActivity {
         this.handlerThread.start();
         this.handler = new Handler( this.handlerThread.getLooper() );
 
+        this.backupFinished = false;
         this.handler.post( new Runnable() {
             @Override
             public void run() {
                 try {
-                    // Upload everything
+                    // Collect files
+                    ArrayList<File> allFiles = new ArrayList<>();
+
                     for(Persistent.TypeId typeId: Persistent.TypeId.values()) {
-                        for(File f: ORM.enumerateFiles( typeId ) ) {
-                            DBOX_SERVICE.uploadToDropbox( f, Settings.get().getEmail() );
-                        }
+                        allFiles.addAll( Arrays.asList( ORM.enumerateFiles( typeId ) ) );
                     }
+
+                    PB_PROGRESS.setMax( allFiles.size() );
+                    PB_PROGRESS.setProgress( 0 );
+
+                    SELF.runOnUiThread( new Runnable() {
+                        @Override
+                        public void run() {
+                            PB_PROGRESS.setVisibility( View.VISIBLE );
+                        }
+                    });
+
+                    // Upload everything
+                    for(File f: allFiles) {
+                        DBOX_SERVICE.uploadToDropbox( f, Settings.get().getEmail() );
+                        PB_PROGRESS.incrementProgressBy( 1 );
+                    }
+
+                    allFiles.clear();
 
                     SELF.runOnUiThread( new Runnable() {
                         @Override
@@ -264,10 +311,12 @@ public class SettingsActivity extends AppActivity {
                     SELF.runOnUiThread( new Runnable() {
                         @Override
                         public void run() {
+                            PB_PROGRESS.setVisibility( View.GONE );
                             BT_FORCE_BACKUP.setEnabled( true );
 
                             SettingsActivity.this.handler.removeCallbacksAndMessages( null );
                             SettingsActivity.this.handlerThread.quit();
+                            SettingsActivity.this.backupFinished = true;
                         }
                     });
                 }
@@ -277,6 +326,8 @@ public class SettingsActivity extends AppActivity {
         return;
     }
 
+    private boolean backupFinished;
+    private int scrOrientation;
     private String verificationCodeSent;
     private Handler handler;
     private HandlerThread handlerThread;

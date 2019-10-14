@@ -7,14 +7,14 @@ android {
             storeFile file('/home/baltasarq/Dropbox/Personal/firmas/devbaltasarq-upload-key.ks')
         }
     }
-    compileSdkVersion 26
+    compileSdkVersion 28
     defaultConfig {
         applicationId "com.devbaltasarq.varse"
         minSdkVersion 21
-        targetSdkVersion 26
+        targetSdkVersion 28
         vectorDrawables.useSupportLibrary = true
-        versionCode 2
-        versionName "1.5.6"
+        versionCode 4
+        versionName "1.5.8"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

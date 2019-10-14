@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
@@ -14,19 +16,25 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.devbaltasarq.varse.R;
+import com.devbaltasarq.varse.core.DropboxClient;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Result;
+import com.devbaltasarq.varse.core.Settings;
 import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.ui.showresult.ResultViewerActivity;
 import com.devbaltasarq.varse.ui.adapters.ListViewResultArrayAdapter;
+import com.dropbox.core.DbxException;
 
+import java.io.File;
 import java.io.IOException;
 
 public class ResultsActivity extends AppActivity {
@@ -34,7 +42,8 @@ public class ResultsActivity extends AppActivity {
     private  static final int RQC_ASK_PERMISSION = 78;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_results );
 
@@ -45,6 +54,7 @@ public class ResultsActivity extends AppActivity {
         final Spinner cbExperiments = this.findViewById( R.id.cbExperiments );
 
         // Init
+        this.backupFinished = true;
         this.dataStore = Orm.get();
         this.dataStore.removeCache( this.getApplicationContext() );
 
@@ -102,6 +112,26 @@ public class ResultsActivity extends AppActivity {
         experiment = null;
     }
 
+    @Override
+    public boolean askBeforeLeaving()
+    {
+        return false;
+    }
+
+    @Override
+    public void finish()
+    {
+        if ( !this.backupFinished ) {
+            Toast.makeText( this,
+                    this.getString( R.string.msgWaitForBackup ),
+                    Toast.LENGTH_SHORT ).show();
+        } else {
+            super.finish();
+        }
+
+        return;
+    }
+
     public void showResults(Result result)
     {
         try {
@@ -133,6 +163,70 @@ public class ResultsActivity extends AppActivity {
         } catch(IOException exc) {
             this.showStatus( LogTag, this.getString( R.string.errExport) );
         }
+
+        return;
+    }
+
+    public void uploadResult(Result res)
+    {
+        final ResultsActivity SELF = this;
+        final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbIndeterminateResultUpload );
+        final Orm ORM = this.dataStore;
+        final DropboxClient DBOX_SERVICE = new DropboxClient( this );
+
+        this.handlerThread = new HandlerThread( "dropbox_backup" );
+        this.handlerThread.start();
+        this.handler = new Handler( this.handlerThread.getLooper() );
+
+        this.backupFinished = false;
+        PB_PROGRESS.setVisibility( View.VISIBLE );
+
+        this.handler.post( new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final Result RES = (Result) Orm.get().retrieve( res.getId(), Persistent.TypeId.Result );
+
+                    // Collect files
+                    File[] allFiles = new File[] {
+                            ORM.getFileById( RES.getId(), Persistent.TypeId.Result ),
+                            ORM.getFileById( RES.getExperiment().getId(), Persistent.TypeId.Experiment )
+                    };
+
+                    // Upload them
+                    for(File f: allFiles) {
+                        DBOX_SERVICE.uploadToDropbox( f, Settings.get().getEmail() );
+                    }
+
+                    SELF.runOnUiThread( new Runnable() {
+                        @Override
+                        public void run() {
+                            SELF.showStatus( LogTag, SELF.getString( R.string.msgFinishedBackup ) );
+                        }
+                    });
+                } catch (IOException | DbxException exc)
+                {
+                    SELF.runOnUiThread( new Runnable() {
+                        @Override
+                        public void run() {
+                            SELF.showStatus( LogTag, SELF.getString( R.string.errIO ) );
+                        }
+                    });
+
+                } finally {
+                    SELF.runOnUiThread( new Runnable() {
+                        @Override
+                        public void run() {
+                            PB_PROGRESS.setVisibility( View.GONE );
+
+                            ResultsActivity.this.handler.removeCallbacksAndMessages( null );
+                            ResultsActivity.this.handlerThread.quit();
+                            ResultsActivity.this.backupFinished = true;
+                        }
+                    });
+                }
+            }
+        });
 
         return;
     }
@@ -258,12 +352,9 @@ public class ResultsActivity extends AppActivity {
         this.loadResults();
     }
 
-    @Override
-    public boolean askBeforeLeaving()
-    {
-        return false;
-    }
-
+    private boolean backupFinished;
+    private HandlerThread handlerThread;
+    private Handler handler;
     private Persistent[] experimentsList;
     private Orm dataStore;
 

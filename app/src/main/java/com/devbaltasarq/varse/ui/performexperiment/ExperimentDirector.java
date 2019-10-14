@@ -42,6 +42,7 @@ import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.ui.AppActivity;
+import com.devbaltasarq.varse.ui.MainActivity;
 import com.devbaltasarq.varse.ui.adapters.ListViewActivityArrayAdapter;
 
 import java.io.File;
@@ -139,7 +140,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final TextView lblRecord = this.findViewById( R.id.lblRecord );
         final TextView lblDeviceName = this.findViewById( R.id.lblDeviceName );
         final FrameLayout flContainer = this.findViewById( R.id.flContainer );
-        final CardView cdCrono = this.findViewById( R.id.cdCrono );
 
         this.setSupportActionBar( toolbar );
 
@@ -173,9 +173,24 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         lblDeviceName.setText( this.btDevice.getName() );
         lblExperiment.setText( this.experiment.getName() );
         flContainer.setOnLongClickListener( (v) -> {
-            cdCrono.setVisibility( View.VISIBLE );
+            ExperimentDirector.this.setInfoVisibility();
             return true;
         });
+    }
+
+    private void setInfoVisibility()
+    {
+        final CardView cdInfo = this.findViewById( R.id.cdInfo );
+
+        int visibility = cdInfo.getVisibility();
+
+        if ( visibility == View.VISIBLE ) {
+            visibility = View.GONE;
+        } else {
+            visibility = View.VISIBLE;
+        }
+
+        cdInfo.setVisibility( visibility );
     }
 
     private void setAbleToLaunch(boolean isAble)
@@ -451,9 +466,12 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     @Override
     public void onReceiveBpm(Intent intent)
     {
+        final TextView LBL_INSTANT_BPM = this.findViewById( R.id.lblInstantBpm );
         final int HR = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
         final int MEAN_RR = intent.getIntExtra( BleService.MEAN_RR_TAG, -1 );
         final int[] RRS = intent.getIntArrayExtra( BleService.RR_TAG );
+
+        LBL_INSTANT_BPM.setText( HR + this.getString( R.string.lblBpm ) );
 
         if ( BuildConfig.DEBUG ) {
             if ( HR >= 0 ) {

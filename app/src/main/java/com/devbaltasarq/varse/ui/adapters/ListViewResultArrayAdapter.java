@@ -40,13 +40,15 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
 
         final ImageButton btExportResult = rowView.findViewById( R.id.btExportResult );
         final ImageButton btDeleteResult = rowView.findViewById( R.id.btDeleteResult );
-        final ImageButton btShowResults = rowView.findViewById( R.id.btShowResult);
+        final ImageButton btUploadResult = rowView.findViewById( R.id.btUploadResult );
+        final ImageButton btShowResults = rowView.findViewById( R.id.btShowResult );
         final TextView lblExperimentDesc = rowView.findViewById( R.id.lblResultDesc );
 
         lblExperimentDesc.setText( this.getResultDesc( cntxt, res ) );
 
         btDeleteResult.setOnClickListener( (v) -> cntxt.deleteResult( res ) );
         btExportResult.setOnClickListener( (v) -> cntxt.exportResult( res ) );
+        btUploadResult.setOnClickListener( (v) -> cntxt.uploadResult( res ) );
         btShowResults.setOnClickListener( (v) -> cntxt.showResults( res ) );
 
         return rowView;

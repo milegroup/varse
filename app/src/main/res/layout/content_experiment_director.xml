@@ -122,9 +122,9 @@
     </android.support.v7.widget.CardView>
 
     <android.support.v7.widget.CardView
-        android:id="@+id/cdCrono"
+        android:id="@+id/cdInfo"
         android:visibility="gone"
-        android:gravity="center_horizontal|center_vertical"
+        android:gravity="center_vertical|center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
@@ -137,32 +137,38 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal|center_vertical">
+            android:gravity="center_vertical|center_horizontal">
 
             <TextView    android:id="@+id/lblCrono"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="32sp"/>
+                android:textSize="24sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="32sp"
+                android:textSize="24sp"
                 android:text="/" />
             <TextView   android:id="@+id/lblMaxActTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="32sp"
+                android:textSize="24sp"
                 android:text="00:00" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="32sp"
+                android:textSize="24sp"
                 android:text="/" />
             <TextView   android:id="@+id/lblMaxTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="32sp"
+                android:textSize="24sp"
                 android:text="00:00" />
+            <TextView   android:id="@+id/lblInstantBpm"
+                android:layout_marginLeft="10dp"
+                android:textSize="24sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+            </TextView>
         </LinearLayout>
     </android.support.v7.widget.CardView>
 
