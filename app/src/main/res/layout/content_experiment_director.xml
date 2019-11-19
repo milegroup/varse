@@ -142,30 +142,32 @@
             <TextView    android:id="@+id/lblCrono"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"/>
+                android:textSize="18sp"
+                android:text="00:00" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
+                android:textSize="18sp"
                 android:text="/" />
             <TextView   android:id="@+id/lblMaxActTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
+                android:textSize="18sp"
                 android:text="00:00" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
+                android:textSize="18sp"
                 android:text="/" />
             <TextView   android:id="@+id/lblMaxTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
+                android:textSize="18sp"
                 android:text="00:00" />
             <TextView   android:id="@+id/lblInstantBpm"
                 android:layout_marginLeft="10dp"
-                android:textSize="24sp"
+                android:textSize="18sp"
+                android:text="60ppm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
             </TextView>

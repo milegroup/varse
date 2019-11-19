@@ -112,7 +112,7 @@ public class MainActivity extends AppActivity
         super.onResume();
 
         // Initialize the database
-        Orm.get().removeCache( this.getApplicationContext() );
+        Orm.get().removeCache();
     }
 
     private void toggleAppVersionShown()

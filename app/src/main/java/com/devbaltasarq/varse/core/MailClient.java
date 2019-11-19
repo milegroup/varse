@@ -54,8 +54,6 @@ public class MailClient {
         this.subject = subject;
         this.from = AppInfo.APP_EMAIL;
         this.toList = toList;
-        this.ccList = null;
-        this.bccList = null;
         this.authenticationRequired = true;
 
         this.owner = owner;
@@ -86,15 +84,15 @@ public class MailClient {
             try {
                 this.doSend();
 
-                OWNER.runOnUiThread( () -> {
-                    Toast.makeText( OWNER, "Mail sent.", Toast.LENGTH_LONG ).show();
-                });
+                OWNER.runOnUiThread( () ->
+                    Toast.makeText( OWNER, "Mail sent.", Toast.LENGTH_LONG ).show()
+                );
             } catch(MessagingException exc) {
                 Log.e( LOG_TAG, exc.getMessage() );
 
-                OWNER.runOnUiThread( () -> {
-                    Toast.makeText( OWNER, "Failed sending email.", Toast.LENGTH_LONG ).show();
-                });
+                OWNER.runOnUiThread( () ->
+                    Toast.makeText( OWNER, "Failed sending email.", Toast.LENGTH_LONG ).show()
+                );
             }
 
             MailClient.this.handler.removeCallbacksAndMessages( null );
@@ -103,19 +101,19 @@ public class MailClient {
     }
 
     /** Send an e-mail
-      * @throws MessagingException
-      * @throws AddressException
+      * @throws MessagingException if message's body is incorrect
+      * @throws AddressException if any address is incorrect
       */
     private void doSend() throws AddressException, MessagingException
     {
         final Properties PROPS = new Properties();
         Session session;
 
-        // set the host smtp address
+        // Set the host smtp address
         PROPS.put( "mail.transport.protocol", "smtp" );
         PROPS.put( "mail.smtp.host", this.smtpServer );
-        PROPS.put( "mail.user", from );
-        PROPS.put( "mail.smtp.user", from );
+        PROPS.put( "mail.user", this.from );
+        PROPS.put( "mail.smtp.user", this.from );
         PROPS.put( "mail.smtp.password", this.owner.getString( R.string.mail_auth_pswd ) );
 
         if ( this.authenticationRequired ) {
@@ -128,116 +126,72 @@ public class MailClient {
             session = Session.getDefaultInstance( PROPS, null );
         }
 
-        // get the default session
+        // Get the default session
         if ( Debug.isDebuggerConnected() ) {
             session.setDebug( true );
         }
 
-        // create message
-        final Message MSG = new javax.mail.internet.MimeMessage(session);
+        // Create message
+        final Message MSG = new javax.mail.internet.MimeMessage( session );
 
-        // set from and to address
+        // Set from and to address
         try {
-            MSG.setFrom(new InternetAddress(from, from));
-            MSG.setReplyTo(new InternetAddress[]{new InternetAddress(from,from)});
+            MSG.setFrom( new InternetAddress( this.from, this.from ) );
+            MSG.setReplyTo( new InternetAddress[]{ new InternetAddress( this.from, this.from ) } );
         } catch (Exception e) {
-            MSG.setFrom(new InternetAddress(from));
-            MSG.setReplyTo(new InternetAddress[]{new InternetAddress(from)});
+            MSG.setFrom( new InternetAddress( this.from ) );
+            MSG.setReplyTo( new InternetAddress[]{ new InternetAddress( this.from ) } );
         }
 
-        // set send date
-        MSG.setSentDate(Calendar.getInstance().getTime());
+        // Set send date
+        MSG.setSentDate( Calendar.getInstance().getTime() );
 
         // parse the recipients TO address
-        java.util.StringTokenizer st = new java.util.StringTokenizer(toList, ",");
-        int numberOfRecipients = st.countTokens();
+        String[] toAddresses = this.toList.split( "," );
+        int numberOfRecipients = toAddresses.length;
+        javax.mail.internet.InternetAddress[] addressTo =
+                new javax.mail.internet.InternetAddress[ numberOfRecipients ];
 
-        javax.mail.internet.InternetAddress[] addressTo = new javax.mail.internet.InternetAddress[numberOfRecipients];
-
-        int i = 0;
-        while (st.hasMoreTokens()) {
-            addressTo[i++] = new javax.mail.internet.InternetAddress(st
-                    .nextToken());
-        }
-        MSG.setRecipients(javax.mail.Message.RecipientType.TO, addressTo);
-
-        // parse the recipients CC address
-        if (ccList != null && !"".equals(ccList)) {
-            st = new java.util.StringTokenizer(ccList, ",");
-            int numberOfCCRecipients = st.countTokens();
-
-            javax.mail.internet.InternetAddress[] addressCC = new javax.mail.internet.InternetAddress[numberOfCCRecipients];
-
-            i = 0;
-            while (st.hasMoreTokens()) {
-                addressCC[i++] = new javax.mail.internet.InternetAddress(st
-                        .nextToken());
-            }
-
-            MSG.setRecipients(javax.mail.Message.RecipientType.CC, addressCC);
+        for(int i = 0; i < numberOfRecipients; ++i) {
+            addressTo[ i ] = new javax.mail.internet.InternetAddress( toAddresses[ i ] );
         }
 
-        // parse the recipients BCC address
-        if (bccList != null && !"".equals(bccList)) {
-            st = new java.util.StringTokenizer(bccList, ",");
-            int numberOfBCCRecipients = st.countTokens();
-
-            javax.mail.internet.InternetAddress[] addressBCC = new javax.mail.internet.InternetAddress[numberOfBCCRecipients];
-
-            i = 0;
-            while (st.hasMoreTokens()) {
-                addressBCC[i++] = new javax.mail.internet.InternetAddress(st
-                        .nextToken());
-            }
-
-            MSG.setRecipients(javax.mail.Message.RecipientType.BCC, addressBCC);
-        }
+        MSG.setRecipients( javax.mail.Message.RecipientType.TO, addressTo );
 
         // Set header
         MSG.addHeader("X-Mailer",
                     AppInfo.NAME + MailClient.class.getSimpleName() );
 
-        // Setting the subject and content type
-        MSG.setSubject(subject);
-
+        // Set body message
         Multipart mp = new MimeMultipart( "related" );
 
-        // Set body message
         MimeBodyPart bodyMsg = new MimeBodyPart();
         bodyMsg.setText( this.txtBody, "utf-8" );
         mp.addBodyPart( bodyMsg );
+
+        MimeBodyPart bodyHtml = new MimeBodyPart();
+        bodyHtml.setContent( "<b>" + this.txtBody + "</b>", "text/html; charset=utf-8" );
+        mp.addBodyPart( bodyHtml );
+
+        // Setting the subject and content type
+        MSG.setSubject( this.subject );
         MSG.setContent( mp );
 
         // Send it
+        MSG.saveChanges();
         javax.mail.Transport.send( MSG );
     }
 
     public String getToList() {
-        return toList;
+        return this.toList;
     }
 
     public void setToList(String toList) {
         this.toList = toList;
     }
 
-    public String getCcList() {
-        return ccList;
-    }
-
-    public void setCcList(String ccList) {
-        this.ccList = ccList;
-    }
-
-    public String getBccList() {
-        return bccList;
-    }
-
-    public void setBccList(String bccList) {
-        this.bccList = bccList;
-    }
-
     public String getSubject() {
-        return subject;
+        return this.subject;
     }
 
     public void setSubject(String subject) {
@@ -253,7 +207,7 @@ public class MailClient {
     }
 
     public boolean isAuthenticationRequired() {
-        return authenticationRequired;
+        return this.authenticationRequired;
     }
 
     public void setAuthenticationRequired(boolean authenticationRequired) {
@@ -261,11 +215,8 @@ public class MailClient {
     }
 
     private String smtpServer;
-    private String serverDomain;
     private int port;
     private String toList;
-    private String ccList;
-    private String bccList;
     private String subject;
     private String from;
     private String txtBody;

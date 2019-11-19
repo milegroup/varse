@@ -220,6 +220,7 @@ public class ResultViewerActivity extends AppActivity {
             } else {
                 Log.i( LogTag,"Removing beat index: " + index );
 
+                index += 1;
                 ++this.filteredData;
                 this.dataHR.set( index, MEAN_LAST_BEATS );
                 this.dataRR.set( index, 60.0f / MEAN_LAST_BEATS );

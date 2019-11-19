@@ -42,7 +42,6 @@ import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.ui.AppActivity;
-import com.devbaltasarq.varse.ui.MainActivity;
 import com.devbaltasarq.varse.ui.adapters.ListViewActivityArrayAdapter;
 
 import java.io.File;
@@ -494,7 +493,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
                 Log.d( LogTag, "RR's: { " + STR_RR.toString() + "}" );
             } else {
-                Log.d( LogTag, "No RR's received: " );
+                Log.d( LogTag, "No RR's received." );
             }
         }
 

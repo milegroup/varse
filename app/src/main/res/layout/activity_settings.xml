@@ -55,7 +55,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_margin="10dp">
 
         <View
             android:layout_width="match_parent"
@@ -168,7 +169,7 @@
                 android:layout_marginEnd="5dp"
                 app:srcCompat="@drawable/ic_cloud_backup"/>
 
-            <TextView
+            <TextView       android:id="@+id/lblBackup"
                 android:layout_weight=".7"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -186,6 +187,51 @@
         </LinearLayout>
 
         <ProgressBar    android:id="@+id/pbProgressCompleteBackup"
+            android:visibility="gone"
+            android:progressBackgroundTint="@android:color/darker_gray"
+            android:progressTint="@color/colorPrimaryDark"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#c0c0c0" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"
+                app:srcCompat="@drawable/ic_cloud_recovery"/>
+
+            <TextView       android:id="@+id/lblRecovery"
+                android:layout_weight=".7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:text="@string/msgRecovery" />
+
+            <ImageButton
+                android:id="@+id/btRecovery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#00000000"
+                android:contentDescription="@string/msgRecovery"
+                android:enabled="false"
+                app:srcCompat="@drawable/ic_reload" />
+        </LinearLayout>
+
+        <ProgressBar    android:id="@+id/pbProgressRecovery"
             android:visibility="gone"
             android:progressBackgroundTint="@android:color/darker_gray"
             android:progressTint="@color/colorPrimaryDark"

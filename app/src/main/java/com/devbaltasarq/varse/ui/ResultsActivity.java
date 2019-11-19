@@ -22,7 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.devbaltasarq.varse.R;
-import com.devbaltasarq.varse.core.DropboxClient;
+import com.devbaltasarq.varse.core.DropboxUsrClient;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.PartialObject;
@@ -56,7 +56,7 @@ public class ResultsActivity extends AppActivity {
         // Init
         this.backupFinished = true;
         this.dataStore = Orm.get();
-        this.dataStore.removeCache( this.getApplicationContext() );
+        this.dataStore.removeCache();
 
         // Event handlers
         btBack.setOnClickListener( (v) -> this.finish() );
@@ -172,7 +172,8 @@ public class ResultsActivity extends AppActivity {
         final ResultsActivity SELF = this;
         final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbIndeterminateResultUpload );
         final Orm ORM = this.dataStore;
-        final DropboxClient DBOX_SERVICE = new DropboxClient( this );
+        final String USR_EMAIL = Settings.get().getEmail();
+        final DropboxUsrClient DBOX_SERVICE = new DropboxUsrClient( this, USR_EMAIL );
 
         this.handlerThread = new HandlerThread( "dropbox_backup" );
         this.handlerThread.start();
@@ -181,9 +182,7 @@ public class ResultsActivity extends AppActivity {
         this.backupFinished = false;
         PB_PROGRESS.setVisibility( View.VISIBLE );
 
-        this.handler.post( new Runnable() {
-            @Override
-            public void run() {
+        this.handler.post( () -> {
                 try {
                     final Result RES = (Result) Orm.get().retrieve( res.getId(), Persistent.TypeId.Result );
 
@@ -195,37 +194,22 @@ public class ResultsActivity extends AppActivity {
 
                     // Upload them
                     for(File f: allFiles) {
-                        DBOX_SERVICE.uploadToDropbox( f, Settings.get().getEmail() );
+                        DBOX_SERVICE.uploadDataFile( f );
                     }
 
-                    SELF.runOnUiThread( new Runnable() {
-                        @Override
-                        public void run() {
-                            SELF.showStatus( LogTag, SELF.getString( R.string.msgFinishedBackup ) );
-                        }
-                    });
+                    SELF.runOnUiThread( () -> SELF.showStatus( LogTag, SELF.getString( R.string.msgFinishedBackup ) ) );
                 } catch (IOException | DbxException exc)
                 {
-                    SELF.runOnUiThread( new Runnable() {
-                        @Override
-                        public void run() {
-                            SELF.showStatus( LogTag, SELF.getString( R.string.errIO ) );
-                        }
-                    });
-
+                    SELF.runOnUiThread( () -> SELF.showStatus( LogTag, SELF.getString( R.string.errIO ) ) );
                 } finally {
-                    SELF.runOnUiThread( new Runnable() {
-                        @Override
-                        public void run() {
-                            PB_PROGRESS.setVisibility( View.GONE );
+                    SELF.runOnUiThread( () -> {
+                        PB_PROGRESS.setVisibility( View.GONE );
 
-                            ResultsActivity.this.handler.removeCallbacksAndMessages( null );
-                            ResultsActivity.this.handlerThread.quit();
-                            ResultsActivity.this.backupFinished = true;
-                        }
+                        ResultsActivity.this.handler.removeCallbacksAndMessages( null );
+                        ResultsActivity.this.handlerThread.quit();
+                        ResultsActivity.this.backupFinished = true;
                     });
                 }
-            }
         });
 
         return;

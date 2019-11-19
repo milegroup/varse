@@ -5,6 +5,7 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.util.JsonReader;
 import android.util.Log;
+import android.util.Pair;
 
 import com.devbaltasarq.varse.core.experiment.Tag;
 
@@ -28,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -57,7 +59,7 @@ public final class Orm {
 
     private static final String SETTINGS_FILE_NAME = "settings.json";
     private static final String DIR_DB = "db";
-    private static final String DIR_RES = "res";
+    static final String DIR_RES = "res";
     private static final String DIR_MEDIA_PREFIX = "media";
     private static final String FILE_NAME_PART_SEPARATOR = "-";
     private static final String FIELD_EXT = "ext";
@@ -75,11 +77,21 @@ public final class Orm {
     /** Prepares the ORM to operate. */
     private Orm(Context context)
     {
+        this.context = context;
+        this.reset();
+    }
+
+    /** Forces a reset of the ORM, so the contents of the store is reflected
+      *  in the internal data structures.
+      */
+    public final void reset()
+    {
         Log.i( LogTag, "Preparing store..." );
 
-        this.dirFiles = context.getFilesDir();
-        this.createDirectories( context );
-        this.removeCache( context );
+        this.dirFiles = this.context.getFilesDir();
+
+        this.createDirectories();
+        this.removeCache();
         this.createCaches();
 
         Log.i( LogTag, "Store ready at: " + this.dirDb.getAbsolutePath() );
@@ -89,21 +101,21 @@ public final class Orm {
     }
 
     /** Creates the needed directories, if do not exist. */
-    private void createDirectories(Context context)
+    private void createDirectories()
     {
-        this.dirDb = context.getDir( DIR_DB,  Context.MODE_PRIVATE );
-        this.dirRes = context.getDir( DIR_RES,  Context.MODE_PRIVATE );
-        this.dirTmp = context.getCacheDir();
+        this.dirDb = this.context.getDir( DIR_DB,  Context.MODE_PRIVATE );
+        this.dirRes = this.context.getDir( DIR_RES,  Context.MODE_PRIVATE );
+        this.dirTmp = this.context.getCacheDir();
     }
 
     /** Removes all files in cache. */
-    public void removeCache(Context context)
+    public void removeCache()
     {
         if ( this.dirTmp != null ) {
             removeTreeAt( this.dirTmp );
         }
 
-        this.dirTmp = context.getCacheDir();
+        this.dirTmp = this.context.getCacheDir();
     }
 
     /** Create the cache of files. */
@@ -987,6 +999,20 @@ public final class Orm {
         return toret;
     }
 
+    /** @return a list of the files in the resource's directory.
+      *         Remember that files for each experiment are saved under subdir. */
+    public List<Pair<String, File[]>> enumerateResFiles()
+    {
+        File[] SUB_DIRS = this.dirRes.listFiles();
+        final ArrayList<Pair<String, File[]>> TORET = new ArrayList<>();
+
+        for(File subDir: SUB_DIRS) {
+            TORET.add( Pair.create( subDir.getName(), subDir.listFiles() ) );
+        }
+
+        return TORET;
+    }
+
     /** Enumerates all Result objects for a given experiment.
      *  @return An array of pairs of Id's and Strings.
      */
@@ -999,7 +1025,7 @@ public final class Orm {
     /** Enumerates all objects of a given type.
      *  @return An array of pairs of Id's and Strings.
      */
-    public File[] enumerateFiles(Persistent.TypeId typeId) throws IOException
+    public File[] enumerateFiles(Persistent.TypeId typeId)
     {
         HashSet<File> toret = this.filesExperiment;
 
@@ -1175,6 +1201,11 @@ public final class Orm {
     public String[] enumerateUserNames() throws IOException
     {
         return enumerateObjNames( Persistent.TypeId.User );
+    }
+
+    File getResDir()
+    {
+        return this.dirRes;
     }
 
     /** @return the partial object loaded from file f. */
@@ -1358,6 +1389,36 @@ public final class Orm {
         return;
     }
 
+    /** Saves the given file in the store, with the given file name.
+      * This is especially used when recovering from the cloud.
+      * Caution: the copied file is not yet reflected in the data structures.
+      * Call reset() in order to restore the balance of the force once all files
+      * are copied.
+      * @param f the file
+      * @param fileName
+      */
+    void copyDataFileAs(File f, String fileName) throws IOException
+    {
+        copy( f, new File( this.dirDb, fileName ) );
+    }
+
+    /** Saves the given file in the res dir, with the given file name.
+     * This is especially used when recovering from the cloud.
+     * Caution: the copied file is not yet reflected in the data structures.
+     * Call reset() in order to restore the balance of the force once all files
+     * are copied.
+     * @param resSubDir the subdir inside the resource directory.
+     * @param f the file
+     * @param fileName
+     */
+    void copyResFileAs(String resSubDir, File f, String fileName) throws IOException
+    {
+        File subDir = new File( this.dirRes, resSubDir );
+
+        subDir.mkdir();
+        copy( f, new File( subDir, fileName ) );
+    }
+
     /** Removes a whole dir and all its subdirectories, recursively.
       * @param dir The directory to remove.
       */
@@ -1465,7 +1526,6 @@ public final class Orm {
       */
     public static String buildMediaFileNameForDbFromMediaFileName(String fileName)
     {
-        // Android Studio complains here about API level
         // This is an extra indirection to avoid calling directly Tag.encode( fileName ).
         return fileNameAdapter.encode( fileName );
     }
@@ -1510,6 +1570,7 @@ public final class Orm {
     private File dirDb;
     private File dirRes;
     private File dirTmp;
+    private Context context;
 
     private static FileNameAdapter fileNameAdapter;
     private static Orm instance;

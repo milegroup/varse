@@ -8,11 +8,11 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Debug;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.devbaltasarq.varse.BuildConfig;
-
+import java.util.Arrays;
 import java.util.UUID;
 
 
@@ -23,6 +23,180 @@ import java.util.UUID;
 public class BleService extends Service {
     private final static String LogTag = BleService.class.getSimpleName();
 
+    /** This is the min accepted value (in millis), for any read rr (including itself).
+     *      100 - 600bpm
+     *       50 - 1200bpm
+     */
+    private final static int MIN_RR_VALUE = 100;
+
+
+    private static class GattHeartRateCharAnalyzer {
+        private final static String LogTag = GattHeartRateCharAnalyzer.class.getSimpleName();
+
+        GattHeartRateCharAnalyzer(final BluetoothGattCharacteristic GATT_CHAR)
+        {
+            this.GATT_CHAR = GATT_CHAR;
+            this.offset = 1;
+            this.heartRate = this.meanRRs = -1;
+            this.rr = new int[ 0 ];
+        }
+
+        int getHeartRate()
+        {
+            return this.heartRate;
+        }
+
+        int[] getRR()
+        {
+            return this.rr;
+        }
+
+        int getMeanRRs()
+        {
+            return this.meanRRs;
+        }
+
+        void extractData()
+        {
+            final UUID UUID_HEART_RATE_CHR = BluetoothUtils.UUID_HR_MEASUREMENT_CHR;
+
+            // Handling following the Heart Rate Measurement profile.
+            if ( UUID_HEART_RATE_CHR.equals( GATT_CHAR.getUuid() ) ) {
+                final int FLAGS = GATT_CHAR.getProperties();
+                this.offset = 1;
+
+                if ( Debug.isDebuggerConnected() ) {
+                    this.logDebugInfoForGattChar();
+                }
+
+                this.extractHeartRateData();
+                Log.d( LogTag, String.format("Received heart rate: %d", heartRate ) );
+
+                // Energy Expended Status bit
+                if ( ( FLAGS & 8 ) != 0 ) {
+                    this.offset += 2;
+                }
+
+                // Heart beat distance (RR) is present if bit 4 is set
+                if ( ( FLAGS & 16 ) != 0 ) {
+                    this.extractRRData();
+                } else {
+                    Log.d( LogTag, "RR info was not present." );
+                }
+            } else {
+                Log.w( LogTag, "Read data not for HR profile, instead: "
+                        + GATT_CHAR.getUuid().toString()  );
+            }
+        }
+
+        private void logDebugInfoForGattChar()
+        {
+            final int LENGTH = GATT_CHAR.getValue().length;
+            final int FLAGS = GATT_CHAR.getProperties();
+            final byte[] DATA = GATT_CHAR.getValue();
+            final StringBuilder bytes = new StringBuilder( LENGTH * 3 );
+
+            Log.d( LogTag, "HR info received: " + LENGTH + " bytes" );
+            Log.d( LogTag, "Flags: " + FLAGS );
+
+            bytes.append( '#' );
+            bytes.append( LENGTH );
+            bytes.append( ' ' );
+            for (byte bt: DATA) {
+                bytes.append(
+                        String.format( "%8s",
+                                Integer.toBinaryString( bt & 0xFF ) )
+                                .replace( ' ', '0' ) );
+                bytes.append( ' ' );
+            }
+
+            Log.d( LogTag, ":- HR byte sequence { " + bytes.toString() + "}" );
+        }
+
+        private void extractHeartRateData()
+        {
+            final int FLAGS = this.GATT_CHAR.getProperties();
+
+            // Extract the heart rate value format
+            if ( ( FLAGS & 1 ) != 0 ) {
+                this.heartRate = this.GATT_CHAR.getIntValue(
+                        BluetoothGattCharacteristic.FORMAT_UINT16,
+                        this.offset );
+                this.offset += 2;
+                Log.d( LogTag, "Heart rate format UINT16." );
+            } else {
+                this.heartRate = GATT_CHAR.getIntValue(
+                        BluetoothGattCharacteristic.FORMAT_UINT8,
+                        this.offset );
+                this.offset += 1;
+                Log.d( LogTag, "Heart rate format UINT8." );
+            }
+
+            return;
+        }
+
+        /** Extracts the RR data from the GATT characteristic.
+          * Take into account that a first data filter is carried out here:
+          * not all values are finally exported.
+          * The following criteria es applied:
+          * - each rr raw must be above MIN_RR_VALUE.
+          */
+        private void extractRRData()
+        {
+            final int LENGTH = this.GATT_CHAR.getValue().length;
+            final int EXPECTED_NUM_RRS = ( LENGTH - offset ) / 2;
+            int numRRs = 0;
+            this.rr = new int[ EXPECTED_NUM_RRS ];
+
+            this.meanRRs = 0;
+
+            while ( this.offset < LENGTH ) {
+                Integer valueRR = this.GATT_CHAR.getIntValue(
+                                    BluetoothGattCharacteristic.FORMAT_UINT16,
+                                    this.offset );
+
+                // So yes, rr is present
+                if ( valueRR != null ) {
+                    int rr = valueRR;
+
+                    // rr = ( v / 1024 ) * 1000
+                    Log.d( LogTag, String.format( "Received raw rr (1024-based): %d", rr ) );
+                    rr = (int) ( ( (double) rr / 1024 ) * 1000);
+
+                    if ( rr >= MIN_RR_VALUE ) {
+                        this.rr[ numRRs ] = rr;
+                        this.meanRRs += rr;
+                        ++numRRs;
+                        Log.d( LogTag, String.format( "Received rr: %d", rr ) );
+                    } else {
+                        Log.e( LogTag, String.format( "Received incorrect rr: %d", rr ) );
+                    }
+                } else {
+                    Log.e( LogTag, "Missing RR that was yet signaled in properties." );
+                }
+
+                this.offset += 2;
+            }
+
+            // Get mean rr and render results
+            if ( numRRs > 0 ) {
+                if ( numRRs < EXPECTED_NUM_RRS ) {
+                    this.rr = Arrays.copyOf( this.rr, numRRs );
+                }
+
+                this.meanRRs /= numRRs;
+            }
+
+            return;
+        }
+
+        final private BluetoothGattCharacteristic GATT_CHAR;
+        private int meanRRs;
+        private int offset;
+        private int heartRate;
+        private int[] rr;
+    }
+
     private final static String INTENT_PREFIX = BleService.class.getPackage().getName();
     public final static String ACTION_GATT_CONNECTED = INTENT_PREFIX + ".ACTION_GATT_CONNECTED";
     public final static String ACTION_GATT_DISCONNECTED = INTENT_PREFIX + ".ACTION_GATT_DISCONNECTED";
@@ -32,8 +206,8 @@ public class BleService extends Service {
     public final static String RR_TAG = "RR_DISTANCE";
     public final static String MEAN_RR_TAG = "MEAN_RR_DISTANCE";
 
-    public class LocalBinder extends Binder {
-        public BleService getService() {
+    class LocalBinder extends Binder {
+        BleService getService() {
             return BleService.this;
         }
     }
@@ -70,100 +244,22 @@ public class BleService extends Service {
     }
 
     private void broadcastUpdate(final String action,
-                                 final BluetoothGattCharacteristic characteristic)
+                                 final BluetoothGattCharacteristic GATT_CHAR)
     {
-        final UUID UUID_HEART_RATE_CHR = BluetoothUtils.UUID_HR_MEASUREMENT_CHR;
-        final Intent intent = new Intent( action );
+        final Intent INTENT = new Intent( action );
+        final GattHeartRateCharAnalyzer GATT_ANALYZER = new GattHeartRateCharAnalyzer( GATT_CHAR );
 
-        // Handling following the Heart Rate Measurement profile.
-        if ( UUID_HEART_RATE_CHR.equals( characteristic.getUuid() ) ) {
-            final int LENGTH = characteristic.getValue().length;
-            final int FLAGS = characteristic.getProperties();
-            int heartRate;
-            int format;
-            int offset = 1;
+        GATT_ANALYZER.extractData();
 
-            // Some valuable debug info
-            if ( BuildConfig.DEBUG ) {
-                final byte[] DATA = characteristic.getValue();
-                final StringBuilder bytes = new StringBuilder( LENGTH * 3 );
-                Log.d( LogTag, "HR info received: " + LENGTH + " bytes" );
-                Log.d( LogTag, "Flags: " + FLAGS );
+        final int[] RR_DATA = GATT_ANALYZER.getRR();
 
-                bytes.append( '#' );
-                bytes.append( LENGTH );
-                bytes.append( ' ' );
-                for (byte bt: DATA) {
-                    bytes.append(
-                            String.format( "%8s",
-                                    Integer.toBinaryString( bt & 0xFF ) )
-                                    .replace( ' ', '0' ) );
-                    bytes.append( ' ' );
-                }
-
-                Log.d( LogTag, ":- HR byte sequence { " + bytes.toString() + "}" );
-            }
-
-            // Extract the heart rate value format
-            if ( ( FLAGS & 1 ) != 0 ) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                heartRate = characteristic.getIntValue( format, offset );
-                offset += 2;
-                Log.d( LogTag, "Heart rate format UINT16." );
-            } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                heartRate = characteristic.getIntValue( format, offset );
-                offset += 1;
-                Log.d( LogTag, "Heart rate format UINT8." );
-            }
-
-            intent.putExtra( HEART_RATE_TAG, heartRate );
-            Log.d( LogTag, String.format("Received heart rate: %d", heartRate ) );
-
-            // Energy Expended Status bit
-            if ( ( FLAGS & 8 ) != 0 ) {
-                offset += 2;
-            }
-
-            // Extract the heart beat distance (RR) bit 4 means that it is present
-            int NUM_RRS = ( LENGTH - offset ) / 2;
-            int[] RR_DATA = new int[ NUM_RRS ];
-            int pos = 0;
-            int totalRR = 0;
-
-            if ( ( FLAGS & 16 ) != 0 ) {
-                while ( offset < LENGTH ) {
-                    Integer objRR = characteristic.getIntValue(
-                                                BluetoothGattCharacteristic.FORMAT_UINT16, offset );
-                    // So yes, rr is present
-                    if ( objRR != null ) {
-                        int rr = objRR;
-
-                        // rr = ( v / 1024 ) * 1000
-                        Log.d( LogTag, String.format( "Received raw rr (1024-based): %d", rr ) );
-                        rr = (int) ( ( (double) rr / 1024 ) * 1000);
-                        RR_DATA[ pos ] = rr;
-                        totalRR += rr;
-                        Log.d( LogTag, String.format( "Received rr: %d", rr ) );
-                    } else {
-                        Log.e( LogTag, "Missing RR signaled in properties." );
-                    }
-
-                    offset += 2;
-                    ++pos;
-                }
-
-                intent.putExtra( RR_TAG, RR_DATA );
-                intent.putExtra( MEAN_RR_TAG, (int) Math.round( (float) totalRR / NUM_RRS ) );
-            } else {
-                Log.d( LogTag, "RR info was not present." );
-            }
-        } else {
-            Log.w( LogTag, "Read data not for HR profile, instead: "
-                                    + characteristic.getUuid().toString()  );
+        if ( RR_DATA.length > 0 ) {
+            INTENT.putExtra( RR_TAG, GATT_ANALYZER.getRR() );
+            INTENT.putExtra( MEAN_RR_TAG, GATT_ANALYZER.getMeanRRs() );
         }
 
-        this.sendBroadcast( intent );
+        INTENT.putExtra( HEART_RATE_TAG, GATT_ANALYZER.getHeartRate() );
+        this.sendBroadcast( INTENT );
     }
 
     /**
@@ -275,9 +371,6 @@ public class BleService extends Service {
         // Implements callback methods for GATT events that the app cares about.
         // For example, connection change and services discovered.
         return new BluetoothGattCallback() {
-            private static final int STATE_DISCONNECTED = 0;
-            private static final int STATE_CONNECTED = 2;
-
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
             {

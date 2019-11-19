@@ -70,6 +70,7 @@
     <string name="lblNo">No</string>
     <string name="lblDefaultTag">default</string>
     <string name="lblUpload">Cloud backup</string>
+    <string name="lblRecovery">Recovery</string>
 
     <string name="msgAreYouSure">Are you sure?</string>
     <string name="msgResettingSettings">Resetting settings</string>
@@ -83,8 +84,10 @@
     <string name="msgImported">Data set imported</string>
     <string name="msgFinishedExperiment">Experiment performed</string>
     <string name="msgFinishedBackup">Backup finished</string>
+    <string name="msgFinishedRecovery">Recovery finished</string>
     <string name="msgForceCloudBackup">Force backup to the cloud</string>
     <string name="msgWaitForBackup">Please wait until backup is finished.</string>
+    <string name="msgRecovery">Recovery from the cloud</string>
 
     <!-- Errors -->
     <string name="errStore">Unable to initialise storage</string>

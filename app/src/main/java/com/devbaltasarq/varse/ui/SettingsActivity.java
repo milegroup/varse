@@ -1,19 +1,24 @@
 package com.devbaltasarq.varse.ui;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;
-import com.devbaltasarq.varse.core.DropboxClient;
+import com.devbaltasarq.varse.core.DropboxUsrClient;
 import com.devbaltasarq.varse.core.MailClient;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.Persistent;
@@ -21,13 +26,15 @@ import com.devbaltasarq.varse.core.Settings;
 import com.dropbox.core.DbxException;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public class SettingsActivity extends AppActivity {
     public final static String LOG_TAG = SettingsActivity.class.getSimpleName();
+
+    // TODO: it is needed to backup and recover resource files as well...
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -41,47 +48,49 @@ public class SettingsActivity extends AppActivity {
         final ImageButton BT_VERIFY = this.findViewById( R.id.btVerifyEmail );
         final ImageButton BT_RESET = this.findViewById( R.id.btResetVerification );
         final ImageButton BT_FORCE_BACKUP = this.findViewById( R.id.btForceBackup );
+        final ImageButton BT_RECOVERY = this.findViewById( R.id.btRecovery );
+        final TextView LBL_BACKUP = this.findViewById( R.id.lblBackup );
+        final TextView LBL_RECOVERY = this.findViewById( R.id.lblRecovery );
 
         // Listeners
-        BT_CLOSE.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SettingsActivity.this.close();
-            }
-        });
+        BT_CLOSE.setOnClickListener( (v) -> SettingsActivity.this.close() );
 
-        BT_SEND_EMAIL.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        BT_SEND_EMAIL.setOnClickListener( (v) -> {
                 final String EMAIL = ED_EMAIL.getText().toString();
 
                 SettingsActivity.this.sendVerificationEMail( EMAIL );
-            }
         });
 
-        BT_VERIFY.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SettingsActivity.this.verifyEmail();
-            }
-        });
+        BT_VERIFY.setOnClickListener( (v) -> SettingsActivity.this.verifyEmail() );
 
-        BT_RESET.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SettingsActivity.this.resetVerification();
-            }
-        });
+        BT_RESET.setOnClickListener( (v) -> SettingsActivity.this.resetVerification() );
 
-        BT_FORCE_BACKUP.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SettingsActivity.this.forceBackup();
-            }
-        });
+        View.OnClickListener backupListener = (v) -> SettingsActivity.this.forceBackup();
+
+        LBL_BACKUP.setOnClickListener( backupListener );
+        BT_FORCE_BACKUP.setOnClickListener( backupListener );
+
+        View.OnClickListener recoveryListener = (v) -> {
+                final SettingsActivity SELF = SettingsActivity.this;
+                final AlertDialog.Builder DLG = new AlertDialog.Builder( SELF );
+
+                DLG.setMessage( R.string.msgAreYouSure );
+                DLG.setNegativeButton( R.string.lblBack, null );
+                DLG.setPositiveButton( R.string.lblRecovery, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        SELF.recovery();
+                    }
+                });
+
+                DLG.show();
+        };
+
+        LBL_RECOVERY.setOnClickListener( recoveryListener );
+        BT_RECOVERY.setOnClickListener( recoveryListener );
 
         // Initialize
-        this.backupFinished = true;
+        this.cloudOperationFinished = true;
 
         // Prevent screen rotation
         this.scrOrientation = this.getRequestedOrientation();
@@ -117,7 +126,7 @@ public class SettingsActivity extends AppActivity {
     @Override
     public void finish()
     {
-        if ( !this.backupFinished ) {
+        if ( !this.cloudOperationFinished) {
             Toast.makeText( this,
                     this.getString( R.string.msgWaitForBackup ),
                     Toast.LENGTH_SHORT ).show();
@@ -238,23 +247,112 @@ public class SettingsActivity extends AppActivity {
         final Random RND = new Random();
 
         // Create an random number
-        String toret = "";
+        StringBuilder toret = new StringBuilder( RND_NUM_DIGITS );
 
         for(int i = 0; i < RND_NUM_DIGITS; ++i) {
-            toret += Character.toString( (char) ( '0' + RND.nextInt(10 ) ) );
+            toret.append( Character.toString( (char) ( '0' + RND.nextInt(10 ) ) ) );
         }
 
-        return toret;
+        return toret.toString();
+    }
+
+    /** Recovery from the cloud. **/
+    private void recovery()
+    {
+        Log.d( LOG_TAG, "Starting recovery..." );
+
+        if ( !this.cloudOperationFinished ) {
+            Log.d( LOG_TAG, "Recovery: previous operation unfinished, bouncing out." );
+            return;
+        }
+
+        final ImageButton BT_RECOVERY = this.findViewById( R.id.btForceBackup );
+        final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbProgressRecovery );
+        final SettingsActivity SELF = this;
+        final Orm ORM = Orm.get();
+        final String USER_EMAIL = Settings.get().getEmail();
+
+        BT_RECOVERY.setEnabled( false );
+
+        this.cloudOperationFinished = false;
+        this.handlerThread = new HandlerThread( "dropbox_backup" );
+        this.handlerThread.start();
+        this.handler = new Handler( this.handlerThread.getLooper() );
+
+        this.handler.post( () -> {
+                try {
+                    final DropboxUsrClient DBOX_SERVICE = new DropboxUsrClient( this, USER_EMAIL );
+
+                    // Collect files
+                    String[] dataFiles = DBOX_SERVICE.listUsrFiles();
+                    List<Pair<String, String[]>> resFiles = DBOX_SERVICE.listUsrResFiles();
+                    int numFiles = dataFiles.length;
+
+                    // Calculate the number of files
+                    for(Pair<String, String[]> resFile: resFiles) {
+                        numFiles += resFile.second.length;
+                    }
+
+                    PB_PROGRESS.setMax( numFiles );
+                    PB_PROGRESS.setProgress( 0 );
+
+                    SELF.runOnUiThread( () ->
+                        PB_PROGRESS.setVisibility( View.VISIBLE )
+                    );
+
+                    // Download everything
+                    for(String fileName: dataFiles) {
+                        DBOX_SERVICE.downloadDataFileTo( fileName, ORM );
+
+                        PB_PROGRESS.incrementProgressBy( 1 );
+                    }
+
+                    for(Pair<String, String[]> resFileSet: resFiles) {
+                        for(String resFile: resFileSet.second) {
+                            DBOX_SERVICE.downloadResFileTo( resFileSet.first, resFile, ORM );
+
+                            PB_PROGRESS.incrementProgressBy( 1 );
+                        }
+                    }
+
+                    SELF.runOnUiThread(
+                            () -> SELF.showStatus( LOG_TAG, SELF.getString( R.string.msgFinishedRecovery ) ) );
+                } catch (DbxException exc)
+                {
+                    SELF.runOnUiThread(
+                            () -> SELF.showStatus( LOG_TAG, SELF.getString( R.string.errIO ) ) );
+
+                } finally {
+                    SELF.runOnUiThread( () -> {
+                        PB_PROGRESS.setVisibility( View.GONE );
+                        BT_RECOVERY.setEnabled( true );
+                        ORM.reset();
+
+                        SELF.handler.removeCallbacksAndMessages( null );
+                        SELF.handlerThread.quit();
+                        SELF.cloudOperationFinished = true;
+                    });
+                }
+        });
+
+        return;
     }
 
     /** Backup all now. */
     private void forceBackup()
     {
+        Log.d( LOG_TAG, "Starting backup..." );
+
+        if ( !this.cloudOperationFinished ) {
+            Log.d( LOG_TAG, "Backup: previous operation unfinished, bouncing out." );
+            return;
+        }
+
         final ImageButton BT_FORCE_BACKUP = this.findViewById( R.id.btForceBackup );
         final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbProgressCompleteBackup );
         final SettingsActivity SELF = this;
         final Orm ORM = Orm.get();
-        final DropboxClient DBOX_SERVICE = new DropboxClient( this );
+        final String USR_EMAIL = Settings.get().getEmail();
 
         BT_FORCE_BACKUP.setEnabled( false );
 
@@ -262,71 +360,68 @@ public class SettingsActivity extends AppActivity {
         this.handlerThread.start();
         this.handler = new Handler( this.handlerThread.getLooper() );
 
-        this.backupFinished = false;
-        this.handler.post( new Runnable() {
-            @Override
-            public void run() {
+        this.cloudOperationFinished = false;
+        this.handler.post( () -> {
                 try {
+                    final DropboxUsrClient DBOX_SERVICE = new DropboxUsrClient( this, USR_EMAIL );
+
                     // Collect files
-                    ArrayList<File> allFiles = new ArrayList<>();
+                    final ArrayList<File> DATA_FILES = new ArrayList<>();
+                    final List<Pair<String, File[]>> RES_FILES = ORM.enumerateResFiles();
+                    int numFiles = 0;
 
                     for(Persistent.TypeId typeId: Persistent.TypeId.values()) {
-                        allFiles.addAll( Arrays.asList( ORM.enumerateFiles( typeId ) ) );
+                        DATA_FILES.addAll( Arrays.asList( ORM.enumerateFiles( typeId ) ) );
                     }
 
-                    PB_PROGRESS.setMax( allFiles.size() );
+                    // Find the total number of files
+                    numFiles = DATA_FILES.size();
+
+                    for(Pair<String, File[]> subDir: RES_FILES) {
+                        numFiles += subDir.second.length;
+                    }
+
+                    PB_PROGRESS.setMax( numFiles );
                     PB_PROGRESS.setProgress( 0 );
 
-                    SELF.runOnUiThread( new Runnable() {
-                        @Override
-                        public void run() {
-                            PB_PROGRESS.setVisibility( View.VISIBLE );
-                        }
-                    });
+                    SELF.runOnUiThread( () -> PB_PROGRESS.setVisibility( View.VISIBLE ) );
 
-                    // Upload everything
-                    for(File f: allFiles) {
-                        DBOX_SERVICE.uploadToDropbox( f, Settings.get().getEmail() );
+                    // Upload data files
+                    for(File f: DATA_FILES) {
+                        DBOX_SERVICE.uploadDataFile( f );
                         PB_PROGRESS.incrementProgressBy( 1 );
                     }
 
-                    allFiles.clear();
-
-                    SELF.runOnUiThread( new Runnable() {
-                        @Override
-                        public void run() {
-                            SELF.showStatus( LOG_TAG, SELF.getString( R.string.msgFinishedBackup ) );
+                    // Upload resource files
+                    for(Pair<String, File[]> pair: RES_FILES) {
+                        for(File f: pair.second) {
+                            DBOX_SERVICE.uploadResFile( pair.first, f );
+                            PB_PROGRESS.incrementProgressBy( 1 );
                         }
-                    });
-                } catch (IOException | DbxException exc)
+                    }
+
+                    DATA_FILES.clear();
+
+                    SELF.runOnUiThread( () -> SELF.showStatus( LOG_TAG, SELF.getString( R.string.msgFinishedBackup ) ) );
+                } catch (DbxException exc)
                 {
-                    SELF.runOnUiThread( new Runnable() {
-                        @Override
-                        public void run() {
-                            SELF.showStatus( LOG_TAG, SELF.getString( R.string.errIO ) );
-                        }
-                    });
-
+                    SELF.runOnUiThread( () -> SELF.showStatus( LOG_TAG, SELF.getString( R.string.errIO ) ) );
                 } finally {
-                    SELF.runOnUiThread( new Runnable() {
-                        @Override
-                        public void run() {
+                    SELF.runOnUiThread( () -> {
                             PB_PROGRESS.setVisibility( View.GONE );
                             BT_FORCE_BACKUP.setEnabled( true );
 
-                            SettingsActivity.this.handler.removeCallbacksAndMessages( null );
-                            SettingsActivity.this.handlerThread.quit();
-                            SettingsActivity.this.backupFinished = true;
-                        }
+                            SELF.handler.removeCallbacksAndMessages( null );
+                            SELF.handlerThread.quit();
+                            SELF.cloudOperationFinished = true;
                     });
                 }
-            }
         });
 
         return;
     }
 
-    private boolean backupFinished;
+    private boolean cloudOperationFinished;
     private int scrOrientation;
     private String verificationCodeSent;
     private Handler handler;
