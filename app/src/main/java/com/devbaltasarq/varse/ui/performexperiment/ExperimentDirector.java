@@ -382,7 +382,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         return this.chrono.getMillis();
     }
 
-    /** @return the elapsed time, in millis, from the start of the experiment. */
+    /** @return the elapsed time, in seconds, from the start of the experiment. */
     private int getElapsedExperimentSeconds()
     {
         return (int) ( (double) this.getElapsedExperimentMillis() / 1000 );
