@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.CardView;
@@ -65,7 +66,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         /** Creates a new chronometer with an event handler. */
         public Chronometer(Listener<Chronometer> eventHandler)
         {
-            this.handler = new Handler();
+            this.handler = new Handler( Looper.getMainLooper() );
             this.eventHandler = eventHandler;
             this.startTime = 0;
             this.stopped = false;

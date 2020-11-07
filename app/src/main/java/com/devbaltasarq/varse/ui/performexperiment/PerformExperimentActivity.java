@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -52,7 +53,7 @@ import java.util.List;
 import java.util.Set;
 
 public class PerformExperimentActivity extends AppActivity implements ScannerUI {
-    private final String LogTag = "PerformExperiment";
+    private final String LogTag = PerformExperimentActivity.class.getSimpleName();
     private static final int RQC_ENABLE_BT = 367;
     private static final int RQC_TEST_BT_DEVICE = 378;
     private static final int RQC_ASK_CLEARANCE_FOR_BLUETOOTH = 389;
@@ -90,7 +91,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             if ( deviceName == null
               || deviceName.isEmpty() )
             {
-                lblDeviceName.setText( R.string.errUnknownDevice);
+                lblDeviceName.setText( R.string.errUnknownDevice );
             } else {
                 lblDeviceName.setText( deviceName );
             }
@@ -127,47 +128,53 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         fbLaunchExpr.setOnClickListener( (v) -> this.performExperiment() );
 
         cbExperiments.setOnItemSelectedListener(
-                new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
-                        PerformExperimentActivity.this.onExperimentChosen( pos );
-                    }
+            new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
+                    PerformExperimentActivity.this.onExperimentChosen( pos );
+                }
 
-                    @Override
-                    public void onNothingSelected(AdapterView<?> adapterView) {
-                        PerformExperimentActivity.this.onExperimentChosen( 0 );
-                    }
-        });
-
-        btClosePerformExperiment.setOnClickListener((view) ->
-                PerformExperimentActivity.this.finish()
-        );
-
-        btStartScan.setOnClickListener( (view) ->
-                PerformExperimentActivity.this.startScanning()
-        );
-
-        btStopScan.setOnClickListener( (view) ->
-                PerformExperimentActivity.this.cancelAllConnections()
-        );
-
-        btTestHRDevice.setOnClickListener( (view) ->
-                PerformExperimentActivity.this.launchDeviceTester()
-        );
-
-        lvDevices.setOnItemClickListener( (adptView, view, pos, l) -> {
-                final PerformExperimentActivity cntxt = PerformExperimentActivity.this;
-                final BluetoothDeviceWrapper btDevice = cntxt.devicesListAdapter.getItem( pos );
-
-                if ( btDevice != null ) {
-                    cntxt.setChosenDevice( btDevice );
-                } else {
-                    cntxt.showStatus( cntxt.getString( R.string.errUnknownDevice) );
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+                    PerformExperimentActivity.this.onExperimentChosen( 0 );
                 }
         });
 
+        btClosePerformExperiment.setOnClickListener((view) ->
+            PerformExperimentActivity.this.finish()
+        );
+
+        btStartScan.setOnClickListener( (view) ->
+            PerformExperimentActivity.this.startScanning()
+        );
+
+        btStopScan.setOnClickListener( (view) ->
+            PerformExperimentActivity.this.cancelAllConnections()
+        );
+
+        btTestHRDevice.setOnClickListener( (view) ->
+            PerformExperimentActivity.this.launchDeviceTester()
+        );
+
+        lvDevices.setOnItemClickListener( (adptView, view, pos, l) -> {
+            final PerformExperimentActivity cntxt = PerformExperimentActivity.this;
+            final BluetoothDeviceWrapper btDevice = cntxt.devicesListAdapter.getItem( pos );
+
+            if ( btDevice != null ) {
+                cntxt.setChosenDevice( btDevice );
+            } else {
+                cntxt.showStatus( cntxt.getString( R.string.errUnknownDevice) );
+            }
+        });
+
+        lvDevices.setOnItemLongClickListener(
+            (AdapterView<?> adapterView, View view, int i, long l) -> {
+                PerformExperimentActivity.this.showLastScanInfo();
+                return true;
+        });
+
         // Initialize
-        this.handler = new Handler();
+        this.handler = new Handler( Looper.getMainLooper() );
         this.configBtLaunched = false;
         this.btDefinitelyNotAvailable = false;
         this.deviceSearch = false;
@@ -343,15 +350,15 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
         // Create lists, if needed
         if ( this.hrDevices == null ) {
-            this.hrDevices = new ArrayList<>();
+            this.hrDevices = new ArrayList<>( 8 );
         }
 
         if ( this.discoveredDevices == null ) {
-            this.discoveredDevices = new ArrayList<>();
+            this.discoveredDevices = new ArrayList<>( 16 );
         }
 
         if ( this.addrFound == null ) {
-            this.addrFound = new HashSet<>();
+            this.addrFound = new HashSet<>( 16 );
         }
 
         if ( this.bluetoothFiltering == null ) {
@@ -373,6 +380,31 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         this.devicesListAdapter = new BtDeviceListAdapter( this, this.hrDevices);
         lvDevices.setAdapter( this.devicesListAdapter );
         this.clearDeviceListView();
+    }
+
+    private void showLastScanInfo()
+    {
+        final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
+        final String[] DEVICES_NAMES = new String[ this.discoveredDevices.size() ];
+
+        DLG.setTitle( "Found devices in last scan" );
+
+        if ( this.discoveredDevices.size() > 0 ) {
+            // Prepare all devices names
+            for(int i = 0; i < this.discoveredDevices.size(); ++i) {
+                DEVICES_NAMES[ i ] = this.discoveredDevices.get( i ).getName();
+            }
+
+            // Prepare dialog with built names
+            DLG.setItems(
+                    DEVICES_NAMES,
+                    null
+            );
+        } else {
+            DLG.setMessage( "No devices found." );
+        }
+
+        DLG.create().show();
     }
 
     /** Removes all hrDevices in the list. */
