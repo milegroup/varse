@@ -133,6 +133,12 @@ public class BluetoothDeviceWrapper {
         return demoDevice;
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format("%s (%s)", this.getName(), this.getAddress() );
+    }
+
     private BluetoothDevice btDevice;
     private DemoBluetoothDevice demoDevice;
 }

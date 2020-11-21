@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.devbaltasarq.varse.BuildConfig;
@@ -19,10 +20,10 @@ public final class DemoBluetoothDevice {
     private static final int MIN_HR = 60;
     private static final int MAX_HR = 90;
 
-    /** Creates the bluetooth demo device. */
+    /** Use get() **/
     private DemoBluetoothDevice()
     {
-        this.handler = new Handler();
+        this.handler = null;
     }
 
     /** @return the name of the demo device. */
@@ -77,7 +78,10 @@ public final class DemoBluetoothDevice {
     /** Connects to the demo device. */
     public void connect(final BluetoothGattCallback callBack)
     {
-        this.handler = new Handler();
+        // Prepare background task manager
+        this.handler = new Handler( Looper.getMainLooper() );
+
+        // Prepare the task
         this.lastRR = 800;
 
         this.sendHR = () -> {
@@ -88,6 +92,8 @@ public final class DemoBluetoothDevice {
 
             final int NEW_HR = MIN_HR + ( rnd.nextInt( MAX_HR - MIN_HR ) );
             this.lastRR =  (int) ( ( (double) 60 / NEW_HR ) * 1000 );
+
+            // Keep the task looping
             this.handler.postDelayed( this.sendHR, this.lastRR );
         };
 
@@ -97,7 +103,9 @@ public final class DemoBluetoothDevice {
     /** Eliminates the daemon sending fake HR data. */
     public void disconnect()
     {
-        this.handler.removeCallbacksAndMessages( null );
+        if ( this.handler != null ) {
+            this.handler.removeCallbacksAndMessages( null );
+        }
     }
 
     /** @return gets the only copy of the demo device. */

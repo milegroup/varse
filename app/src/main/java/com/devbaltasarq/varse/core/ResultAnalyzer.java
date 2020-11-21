@@ -6,24 +6,21 @@ package com.devbaltasarq.varse.core;
 
 import android.util.Log;
 
-import com.devbaltasarq.varse.R;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+
 public class ResultAnalyzer {
     private static String LogTag = ResultAnalyzer.class.getSimpleName();
 
     // Stress level calculation constants
-    private static float STRESS_LEVEL_A1 = 1.0f;
-    private static float STRESS_LEVEL_A2 = 1.0f;
-    private static float STRESS_LEVEL_A3 = 1.0f;
-
-    private static float DEFAULT_STDn = 50.0f;          // ms
-    private static float DEFAULT_RMSn = 40.0f;          // ms
-    private static float DEFAULT_BPMn = 60.0f;          // bpm
+    private static final float STRESS_LEVEL_A1 = -8.64502f;
+    private static final float STRESS_LEVEL_A2 = -0.01312f;
+    private static final float STRESS_LEVEL_A3 = 0.04295f;
+    private static final float STRESS_LEVEL_A4 = -0.01223f;
+    private static final float STRESS_LEVEL_INDEPENDENT_TERM = 5.97785f;
 
     public ResultAnalyzer(final Result RESULT, final int MAX_TAGS)
     {
@@ -34,10 +31,6 @@ public class ResultAnalyzer {
         this.numOfTags = 0;
 
         this.maxTags = MAX_TAGS;
-        this.valueSTDn = DEFAULT_STDn;
-        this.valueRMSn = DEFAULT_RMSn;
-        this.valueMeanBPMn = DEFAULT_BPMn;
-
         this.result = RESULT;
     }
 
@@ -81,14 +74,11 @@ public class ResultAnalyzer {
             // Calculate stress level
             this.valueRMS = this.calculateRMSSD( this.dataRR );
             this.valueSTD = this.calculateSTD( this.dataRR );
-            this.valueMeanFC = this.calculateMean( this.dataHR );
-            this.stress = this.calculateStress();
-
-            // Calculate the median
-            this.madrr = this.calculateMADRR( this.dataRR );
-
-            // Calculate the entropy
-            this.apen = this.calculateApEn( this.dataRR, 2, 0.2f );
+            this.valueMeanBPM = this.calculateMean( this.dataHR );
+            this.valuePNN50 = this.calculatePNN50( this.dataRR );
+            this.valueMADRR = this.calculateMADRR( this.dataRR );       // Median
+            this.valueApEn = this.calculateApEn( this.dataRR, 2, 0.2f ); // Entropy
+            this.valueStress = this.calculateStress();
         }
     }
 
@@ -295,34 +285,33 @@ public class ResultAnalyzer {
 
         TEXT.append( "<br/><h3>HRV time-domain results</h3>" );
         TEXT.append( "<p>&nbsp;&nbsp;<b>Mean RR (AVNN)</b>: " );
-        TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateMean(dataRR)) );
+        TEXT.append( String.format( Locale.getDefault(), "%.2f", this.valueMeanBPM ) );
         TEXT.append( " ms</p>" );
         TEXT.append( "<p>&nbsp;&nbsp;<b>STD RR (SDNN)</b>: " );
-        TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateSTD(dataRR)) );
+        TEXT.append( String.format( Locale.getDefault(), "%.2f", this.valueSTD ) );
         TEXT.append( " ms</p>" );
         TEXT.append( "<p>&nbsp;&nbsp;<b>pNN50</b>: " );
-        TEXT.append( String.format( Locale.getDefault(), "%.2f", calculatePNN50(dataRR)) );
+        TEXT.append( String.format( Locale.getDefault(), "%.2f", this.valuePNN50 ) );
         TEXT.append( "%</p>" );
         TEXT.append( "<p>&nbsp;&nbsp;<b>rMSSD</b>: " );
-        TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateRMSSD(dataRR)) );
+        TEXT.append( String.format( Locale.getDefault(), "%.2f", this.valueRMS ) );
         TEXT.append( " ms</p>" );
         TEXT.append( "<p>&nbsp;&nbsp;<b>normHRV</b>: " );
         TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateNormHRV(dataRR)) );
         TEXT.append( "</p>" );
 
-        TEXT.append( "<br/><h3>Stress level</h3>" );
-        TEXT.append( "<p>&nbsp;&nbsp;Stress (0 - 1): " );
-        TEXT.append( this.stress );
+        TEXT.append( "<br/><h3>Stress factors</h3>" );
+        TEXT.append( "<p>&nbsp;&nbsp;Stress probe: " );
+        TEXT.append( this.getProbeStress() );
+        TEXT.append( "<br/>&nbsp;&nbsp;&nbsp;&nbsp;(>.5 indicates stress))" );
         TEXT.append( "</p>" );
 
-        TEXT.append( "<br/><h3>MadRR</h3>" );
         TEXT.append( "<p>&nbsp;&nbsp;MadRR: " );
-        TEXT.append( this.madrr );
+        TEXT.append( this.valueMADRR );
         TEXT.append( "ms.</p>" );
 
-        TEXT.append( "<br/><h3>ApEn</h3>" );
         TEXT.append( "<p>&nbsp;&nbsp;ApEn: " );
-        TEXT.append( this.apen );
+        TEXT.append( this.valueApEn );
         TEXT.append( "ms.</p>" );
 
         // ------------------------
@@ -791,13 +780,21 @@ public class ResultAnalyzer {
     /** Calculates the stress level, resulting in a value between -1 and >1. */
     private float calculateStress()
     {
-        return 0.33f * (
-                STRESS_LEVEL_A1 * ( ( this.valueSTDn - this.valueSTD )
-                        / this.valueSTDn )
-                        + STRESS_LEVEL_A2 * ( ( this.valueRMSn - this.valueRMS )
-                        / this.valueRMSn )
-                        + STRESS_LEVEL_A3 * ( ( this.valueMeanFC - this.valueMeanBPMn )
-                        / this.valueMeanBPMn) );
+        final float TERM1 = STRESS_LEVEL_A1 * this.valueApEn;
+        final float TERM2 = STRESS_LEVEL_A2 * this.valueMADRR;
+        final float TERM3 = STRESS_LEVEL_A3 * this.valueMeanBPM;
+        final float TERM4 = STRESS_LEVEL_A4 * this.valuePNN50;
+
+        this.valueStress = TERM1 + TERM2 + TERM3 + TERM4 + STRESS_LEVEL_INDEPENDENT_TERM;
+        return this.valueStress;
+    }
+
+    /** @return a value between 0 and 1. Values > .5 indicate stress. */
+    public float getProbeStress()
+    {
+        final float ODDS_RATIO = (float) Math.exp( this.valueStress );
+
+        return ( ODDS_RATIO / ( ODDS_RATIO + 1 ) );
     }
 
     public int getRRnfCount()
@@ -845,15 +842,13 @@ public class ResultAnalyzer {
     private int numOfTags;
     private int filteredData;
 
-    private float madrr;
-    private float apen;
-    private float stress;
+    private float valueMADRR;
+    private float valueApEn;
+    private float valueStress;
+    private float valuePNN50;
     private float valueSTD;
     private float valueRMS;
-    private float valueMeanFC;
-    private float valueSTDn;
-    private float valueRMSn;
-    private float valueMeanBPMn;
+    private float valueMeanBPM;
 
     private final Result result;
 

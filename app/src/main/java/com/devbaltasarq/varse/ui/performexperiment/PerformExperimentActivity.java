@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -149,7 +150,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         );
 
         btStopScan.setOnClickListener( (view) ->
-            PerformExperimentActivity.this.cancelAllConnections()
+            PerformExperimentActivity.this.terminateDiscoveryAndFiltering()
         );
 
         btTestHRDevice.setOnClickListener( (view) ->
@@ -173,8 +174,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 return true;
         });
 
-        // Initialize
-        this.handler = new Handler( Looper.getMainLooper() );
+        // Initalize UI
         this.configBtLaunched = false;
         this.btDefinitelyNotAvailable = false;
         this.deviceSearch = false;
@@ -187,8 +187,15 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     {
         super.onResume();
 
+        // Read data from ORM
         this.obtainData();
 
+        // Initialize background tasks
+        this.bkgrnd = new HandlerThread( "PEA-bckgrnd" );
+        this.bkgrnd.start();
+        this.handler = new Handler( this.bkgrnd.getLooper() );
+
+        // Prepare bluetooth
         if ( !this.btDefinitelyNotAvailable ) {
             this.initBluetooth();
 
@@ -204,6 +211,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 this.launchBtConfigPage();
             } else {
                 // Scans health devices
+                this.terminateDiscoveryAndFiltering();
                 this.startScanning();
             }
         }
@@ -216,7 +224,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     {
         super.onPause();
 
-        this.cancelAllConnections( false );
+        this.terminateDiscoveryAndFiltering();
 
         if ( this.actionDeviceDiscovery != null ) {
             try {
@@ -226,7 +234,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             }
         }
 
-        this.clearDeviceListView();
+        this.bkgrnd.quit();
     }
 
     @Override
@@ -377,7 +385,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         this.setChosenDevice( chosenBtDevice );
 
         // Clear devices found list
-        this.devicesListAdapter = new BtDeviceListAdapter( this, this.hrDevices);
+        this.devicesListAdapter = new BtDeviceListAdapter( this, this.hrDevices );
         lvDevices.setAdapter( this.devicesListAdapter );
         this.clearDeviceListView();
     }
@@ -565,12 +573,12 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     /** Launches a tester activity to check the device. */
     private void launchDeviceTester()
     {
-        PerformExperimentActivity.this.runOnUiThread( () -> {
-            this.showStatus( "Test " + this.getString(  R.string.lblDevice ) + ": " + chosenBtDevice.getName() );
+        this.terminateDiscoveryAndFiltering();
 
-            final Intent enableBtIntent = new Intent( this, TestHRDevice.class );
-            this.startActivityForResult( enableBtIntent, RQC_TEST_BT_DEVICE);
-        });
+        this.showStatus( "Test " + this.getString(  R.string.lblDevice ) + ": " + chosenBtDevice.getName() );
+
+        final Intent enableBtIntent = new Intent( this, TestHRDevice.class );
+        this.startActivityForResult( enableBtIntent, RQC_TEST_BT_DEVICE);
     }
 
     /** @return whether the device is looking for (scanning and filtering), hrDevices or not. */
@@ -624,9 +632,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     public void doStartScanning()
     {
         if ( !this.isLookingForDevices() ) {
-            this.deviceSearch = true;
-            this.closeAllGattConnections();
-            this.clearDeviceListView();
+            this.cancelAllConnections( false );
 
             this.handler.postDelayed( () -> {
                 if ( this.bluetoothAdapter.isDiscovering() ) {
@@ -635,6 +641,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 }
             }, MAX_SCAN_PERIOD );
 
+            this.deviceSearch = true;
             this.bluetoothAdapter.startDiscovery();
 
             PerformExperimentActivity.this.runOnUiThread( () -> {
@@ -652,10 +659,16 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         if ( this.bluetoothAdapter != null
           && this.bluetoothAdapter.isDiscovering() )
         {
-            this.bluetoothAdapter.cancelDiscovery();
+            this.terminateDiscoveryAndFiltering();
         }
 
         return;
+    }
+
+    private void terminateDiscoveryAndFiltering()
+    {
+        this.cancelAllConnections( false );
+        this.closeAllGattConnections();
     }
 
     /** Stops deviceSearch, starting the filtering for HR devices. */
@@ -905,6 +918,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     private BtDeviceListAdapter devicesListAdapter;
     private BluetoothHRFiltering bluetoothFiltering;
     private Menu scanMenu;
+    private HandlerThread bkgrnd;
     private Handler handler;
     private boolean configBtLaunched;
     private boolean deviceSearch;
