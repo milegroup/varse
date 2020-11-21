@@ -52,18 +52,36 @@ public class BluetoothUtils {
             toret = hrService.getCharacteristic( UUID_HR_MEASUREMENT_CHR );
 
             if ( toret != null ) {
-                Log.d( LogTag, "HR characteristic in: " + deviceName );
+                Log.d( LogTag, "Setting HR ("
+                                        + toret.getUuid().toString()
+                                        + ") in: " + deviceName );
 
+                // Enabling notifications for HR
                 final BluetoothGattDescriptor descriptor = toret.getDescriptor( UUID_CLIENT_CHAR_CONFIG );
 
-                gatt.setCharacteristicNotification( toret, true );
-                descriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE );
-                gatt.writeDescriptor( descriptor );
+                if ( !descriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE ) )
+                {
+                    Log.e( LogTag, "    Cannot create descriptor for HR in: " + deviceName );
+                }
+
+                if ( !gatt.writeDescriptor( descriptor ) ) {
+                    Log.e( LogTag, "    Cannot enable notifications for HR in: " + deviceName );
+                    toret = null;
+                } else {
+                    gatt.setCharacteristicNotification( toret, true );
+                    Log.d( LogTag, "HR set ok ("
+                            + toret.getUuid().toString()
+                            + ") in: " + deviceName );
+                }
             } else {
                 Log.d( LogTag, "No HR characteristic found in: " + deviceName );
             }
         } else {
             Log.d( LogTag, "No HR service in: " + deviceName );
+        }
+
+        if ( toret != null ) {
+            Log.d( LogTag, "    Returning built HR char: " + toret.getUuid().toString() );
         }
 
         return toret;
@@ -189,11 +207,19 @@ public class BluetoothUtils {
                 }
                 else
                 if ( BleService.ACTION_GATT_SERVICES_DISCOVERED.equals( action ) ) {
-                    final BluetoothGattCharacteristic hrGattCharacteristic =
-                            BluetoothUtils.getHeartRateChar( hrListenerAct.getService().getGatt() );
+                    if ( this.hrGattCharacteristic == null ) {
+                        this.hrGattCharacteristic =
+                                BluetoothUtils.getHeartRateChar(
+                                        hrListenerAct.getService().getGatt() );
+                    }
 
-                    hrListenerAct.getService().readCharacteristic( hrGattCharacteristic );
-                    Log.d( LogTag, "Reading hr..." );
+                    if ( hrGattCharacteristic != null ) {
+                        hrListenerAct.getService().readCharacteristic( hrGattCharacteristic );
+                        Log.d( LogTag, "Reading hr..." );
+                    } else {
+                        Log.e( LogTag, "Won't read hr since was not found..." );
+                    }
+
                 } else {
                     // ACTION_DATA_AVAILABLE: received data from the device.
                     //                        This can be a result of read or notification operations.
@@ -202,6 +228,8 @@ public class BluetoothUtils {
                     }
                 }
             }
+
+            private BluetoothGattCharacteristic hrGattCharacteristic;
         };
     }
 
@@ -219,19 +247,19 @@ public class BluetoothUtils {
     }
 
     /** @return A suitable BleService. */
-    public static void createBleService(HRListenerActivity activity, IBinder service)
+    public static void createBleService(final HRListenerActivity ACTIVITY, IBinder service)
     {
         Log.d( LogTag, "Binding service..." );
 
-        activity.setService( ( (BleService.LocalBinder) service ).getService() );
-        activity.getService().initialize( activity.getBtDevice() );
+        ACTIVITY.setService( ( (BleService.LocalBinder) service ).getService() );
+        ACTIVITY.getService().initialize( ACTIVITY.getBtDevice() );
 
         Log.d( LogTag, "Service bound." );
     }
 
-    public static ServiceConnectionWithStatus createServiceConnectionCallBack(final HRListenerActivity activity)
+    public static ServiceConnectionWithStatus createServiceConnectionCallBack(final HRListenerActivity ACTIVITY)
     {
-        return new ServiceConnectionWithStatus( activity );
+        return new ServiceConnectionWithStatus( ACTIVITY );
     }
 
     /** Turns down all services and callbacks needed to connect to the band. */

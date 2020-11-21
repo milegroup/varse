@@ -283,15 +283,16 @@ public class BleService extends Service {
         if ( this.adapter != null
           && this.btDevice != null )
         {
-            final String address = this.btDevice.getAddress();
+            final String deviceId = this.btDevice.toString();
 
             if ( this.gatt == null ) {
-                Log.d( LogTag, "Trying to create a new connection to: " + address );
+                Log.d( LogTag, "Trying to create a new connection to: " + deviceId );
                 this.gatt = this.btDevice.connect( this, this.readingGattCallback );
 
                 if ( this.gatt == null ) {
-                    Log.e( LogTag, "Error trying to create a new connection: " + address );
+                    Log.e( LogTag, "Error trying to create a new connection: " + deviceId );
                 } else {
+                    Log.d( LogTag, "Created a new connection to: " + deviceId );
                     toret = true;
                 }
             }
@@ -334,7 +335,10 @@ public class BleService extends Service {
             if ( this.adapter != null
               && this.gatt != null )
             {
-                this.gatt.readCharacteristic( characteristic );
+                if ( !this.gatt.readCharacteristic( characteristic ) ) {
+                    Log.e( LogTag, "GATT Characteristic invalid: "
+                                           + characteristic.getUuid().toString() );
+                }
             } else {
                 Log.w( LogTag, "Connection is not ready for: " + this.btDevice.getName() );
             }
@@ -379,7 +383,12 @@ public class BleService extends Service {
                 if ( newState == BluetoothProfile.STATE_CONNECTED ) {
                     intentAction = ACTION_GATT_CONNECTED;
                     BleService.this.broadcastUpdate( intentAction );
-                    gatt.discoverServices();
+                    Log.i( LogTag, "Trying to connect to GATT server for reading.");
+
+                    if ( !gatt.discoverServices() ) {
+                        Log.e( LogTag, "Unable to discover services for: " + gatt.getDevice().getName() );
+                    }
+
                     Log.i( LogTag, "Connected to GATT server for reading.");
                 }
                 else

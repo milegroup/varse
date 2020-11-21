@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -21,8 +22,8 @@ public class BluetoothHRFiltering {
     {
         this.ui = ui;
         this.filtering = false;
+        this.handler = null;
         this.clearLists();
-        this.handler = new Handler();
     }
 
     /** Start the process of filtering the devices.
@@ -31,6 +32,8 @@ public class BluetoothHRFiltering {
     public void filter(BluetoothDevice[] btDevices)
     {
         if ( !this.filtering ) {
+            this.handler = new Handler( Looper.getMainLooper() );
+
             final int NUM_DEVICES = btDevices.length;
 
             this.btDevices = Arrays.copyOf( btDevices, NUM_DEVICES );
@@ -113,7 +116,10 @@ public class BluetoothHRFiltering {
     /** Closes all open GATT connections. */
     public void closeAllGattConnections()
     {
-        this.handler.removeCallbacksAndMessages( null );
+        if ( this.handler != null ) {
+            this.handler.removeCallbacksAndMessages( null );
+            this.handler = null;
+        }
 
         for(BluetoothDevice btDevice: this.openConnections.keySet()) {
             this.closeGattConnection( btDevice, false );
