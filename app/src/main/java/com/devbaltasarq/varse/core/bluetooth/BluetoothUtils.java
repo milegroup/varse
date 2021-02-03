@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.core.bluetooth;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -14,9 +15,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static android.content.Context.BIND_AUTO_CREATE;
@@ -27,6 +33,41 @@ public class BluetoothUtils {
     public static final UUID UUID_HR_MEASUREMENT_CHR = UUID.fromString( "00002a37-0000-1000-8000-00805f9b34fb" );
     public static final UUID UUID_HR_MEASUREMENT_SRV = UUID.fromString( "0000180D-0000-1000-8000-00805f9b34fb" );
     public static final UUID UUID_CLIENT_CHAR_CONFIG = UUID.fromString( "00002902-0000-1000-8000-00805f9b34fb" );
+
+    private static final String[] BT_PERMISSION_LIST = new String[] {
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+    };
+
+    public static String[] fixBluetoothNeededPermissions(Context cntxt)
+    {
+        final ArrayList<String> BUILT_PERMISSIONS = new ArrayList<>(
+                Arrays.asList( BT_PERMISSION_LIST ) );
+
+        if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
+        {
+            BUILT_PERMISSIONS.add( Manifest.permission.ACCESS_BACKGROUND_LOCATION );
+        }
+
+        final ArrayList<String> TORET = new ArrayList<>();
+
+        // Check all permissions
+        for(String permissionId: BUILT_PERMISSIONS) {
+            int askAnswerBluetooth = ContextCompat.checkSelfPermission(
+                    cntxt.getApplicationContext(),
+                    permissionId );
+
+            if ( askAnswerBluetooth != PackageManager.PERMISSION_GRANTED ) {
+                TORET.add( permissionId );
+            }
+        }
+
+        BUILT_PERMISSIONS.clear();
+        return TORET.toArray( new String[ 0 ] );
+    }
 
     public static BluetoothAdapter getBluetoothAdapter(Context cntxt)
     {
@@ -52,26 +93,26 @@ public class BluetoothUtils {
             toret = hrService.getCharacteristic( UUID_HR_MEASUREMENT_CHR );
 
             if ( toret != null ) {
-                Log.d( LogTag, "Setting HR ("
+                Log.d( LogTag, "Building HR characteristic ("
                                         + toret.getUuid().toString()
                                         + ") in: " + deviceName );
 
                 // Enabling notifications for HR
-                final BluetoothGattDescriptor descriptor = toret.getDescriptor( UUID_CLIENT_CHAR_CONFIG );
+                gatt.setCharacteristicNotification( toret, true );
 
-                if ( !descriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE ) )
+                Log.d( LogTag, "HR enabled notifications ("
+                        + toret.getUuid().toString() + ") in: " + deviceName );
+
+                final BluetoothGattDescriptor DESCRIPTOR = toret.getDescriptor( UUID_CLIENT_CHAR_CONFIG );
+
+                if ( !DESCRIPTOR.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE ) )
                 {
                     Log.e( LogTag, "    Cannot create descriptor for HR in: " + deviceName );
                 }
 
-                if ( !gatt.writeDescriptor( descriptor ) ) {
+                if ( !gatt.writeDescriptor( DESCRIPTOR ) ) {
                     Log.e( LogTag, "    Cannot enable notifications for HR in: " + deviceName );
                     toret = null;
-                } else {
-                    gatt.setCharacteristicNotification( toret, true );
-                    Log.d( LogTag, "HR set ok ("
-                            + toret.getUuid().toString()
-                            + ") in: " + deviceName );
                 }
             } else {
                 Log.d( LogTag, "No HR characteristic found in: " + deviceName );
@@ -193,39 +234,38 @@ public class BluetoothUtils {
             @Override
             public void onReceive(Context context, Intent intent)
             {
-                final String action = intent.getAction();
-                final HRListenerActivity hrListenerAct = (HRListenerActivity) context;
+                final String ACTION = intent.getAction();
+                final HRListenerActivity LISTENER_ACTIVITY = (HRListenerActivity) context;
+                final BleService SERVICE = LISTENER_ACTIVITY.getService();
 
                 // ACTION_GATT_CONNECTED: connected to a GATT server.
-                if ( BleService.ACTION_GATT_CONNECTED.equals( action ) ) {
-                    hrListenerAct.showStatus( MSG_CONNECTED );
+                if ( BleService.ACTION_GATT_CONNECTED.equals( ACTION ) ) {
+                    LISTENER_ACTIVITY.showStatus( MSG_CONNECTED );
                 }
                 else
                 // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-                if ( BleService.ACTION_GATT_DISCONNECTED.equals( action ) ) {
-                    hrListenerAct.showStatus( MSG_DISCONNECTED );
+                if ( BleService.ACTION_GATT_DISCONNECTED.equals( ACTION ) ) {
+                    LISTENER_ACTIVITY.showStatus( MSG_DISCONNECTED );
                 }
                 else
-                if ( BleService.ACTION_GATT_SERVICES_DISCOVERED.equals( action ) ) {
+                if ( BleService.ACTION_GATT_SERVICES_DISCOVERED.equals( ACTION ) ) {
                     if ( this.hrGattCharacteristic == null ) {
                         this.hrGattCharacteristic =
-                                BluetoothUtils.getHeartRateChar(
-                                        hrListenerAct.getService().getGatt() );
+                            BluetoothUtils.getHeartRateChar( SERVICE.getGatt() );
                     }
 
-                    if ( hrGattCharacteristic != null ) {
-                        hrListenerAct.getService().readCharacteristic( hrGattCharacteristic );
+                    if ( this.hrGattCharacteristic != null ) {
+                        SERVICE.readCharacteristic( this.hrGattCharacteristic );
                         Log.d( LogTag, "Reading hr..." );
                     } else {
                         Log.e( LogTag, "Won't read hr since was not found..." );
                     }
-
-                } else {
-                    // ACTION_DATA_AVAILABLE: received data from the device.
-                    //                        This can be a result of read or notification operations.
-                    if ( BleService.ACTION_DATA_AVAILABLE.equals( action ) ) {
-                        hrListenerAct.onReceiveBpm( intent );
-                    }
+                }
+                else
+                // ACTION_DATA_AVAILABLE: received data from the device.
+                //                        This can be a result of read or notification operations.
+                if ( BleService.ACTION_DATA_AVAILABLE.equals( ACTION ) ) {
+                    LISTENER_ACTIVITY.onReceiveBpm( intent );
                 }
             }
 

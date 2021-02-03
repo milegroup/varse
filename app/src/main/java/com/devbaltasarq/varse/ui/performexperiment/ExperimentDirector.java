@@ -25,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.devbaltasarq.varse.BuildConfig;
@@ -231,6 +232,10 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         super.onResume();
 
         this.getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
+
+        if ( BluetoothUtils.fixBluetoothNeededPermissions( this ).length > 0 ) {
+            Toast.makeText( this, "Insufficient permissions", Toast.LENGTH_SHORT ).show();
+        }
 
         BluetoothUtils.openBluetoothConnections( this,
                 this.getString( R.string.lblConnected ),
@@ -469,7 +474,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final TextView LBL_INSTANT_BPM = this.findViewById( R.id.lblInstantBpm );
         final int HR = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
         final int MEAN_RR = intent.getIntExtra( BleService.MEAN_RR_TAG, -1 );
-        final int[] RRS = intent.getIntArrayExtra( BleService.RR_TAG );
+        int[] rrs = intent.getIntArrayExtra( BleService.RR_TAG );
 
         LBL_INSTANT_BPM.setText( HR + this.getString( R.string.lblBpm ) );
 
@@ -482,12 +487,12 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 Log.d( LogTag, "Mean RR received: " + MEAN_RR + "millisecs" );
             }
 
-            if ( RRS != null ) {
+            if ( rrs != null ) {
                 final StringBuilder STR_RR = new StringBuilder();
 
-                Log.d( LogTag, "RR's received: " + RRS.length );
+                Log.d( LogTag, "RR's received: " + rrs.length );
 
-                for(int rr: RRS) {
+                for(int rr: rrs) {
                     STR_RR.append( rr );
                     STR_RR.append( ' ' );
                 }
@@ -498,13 +503,21 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             }
         }
 
-        if ( RRS != null ) {
+        if ( HR >= 0 ) {
+            // Build RR's, if necessary
+            if ( rrs == null ) {
+                rrs = new int[] {
+                        (int) ( ( (float) HR / 60.0 ) * 1000 )
+                };
+            }
+
+            // Start or store
             if ( !this.readyToLaunch ) {
                 this.setAbleToLaunch( true );
             } else {
                 long time = this.getElapsedExperimentMillis();
 
-                for(int rr: RRS) {
+                for(int rr: rrs) {
                     this.addToResult( new Result.BeatEvent( time, rr ) );
 
                     time += rr;

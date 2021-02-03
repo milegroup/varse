@@ -43,7 +43,7 @@ public class BluetoothHRFiltering {
 
             Log.d( LogTag, "Start filtering for " + NUM_DEVICES + " devices." );
 
-            if ( this.btDevices.length > 0 ) {
+            if ( NUM_DEVICES > 0 ) {
                 this.handler.postDelayed( this::finishedFiltering, MAX_FILTERING_PERIOD );
 
                 for(BluetoothDevice btDevice: this.btDevices) {
@@ -116,16 +116,18 @@ public class BluetoothHRFiltering {
     /** Closes all open GATT connections. */
     public void closeAllGattConnections()
     {
-        if ( this.handler != null ) {
-            this.handler.removeCallbacksAndMessages( null );
-            this.handler = null;
-        }
-
         for(BluetoothDevice btDevice: this.openConnections.keySet()) {
             this.closeGattConnection( btDevice, false );
         }
 
         this.openConnections.clear();
+
+        if ( this.handler != null ) {
+            this.handler.removeCallbacksAndMessages( null );
+            this.handler = null;
+        }
+
+        return;
     }
 
     /** Closes an open GATT connection.
@@ -239,8 +241,8 @@ public class BluetoothHRFiltering {
                     this.ui.getContext(),false,
                     BluetoothUtils.createGattServiceFilteringCallback(
                             this.ui.getContext(),
-                            (device, gattChr ) -> this.filterInDevice( btDevice ),
-                            (device, gattChr ) -> this.filterOutDevice( btDevice )
+                            ( device, gattChr ) -> this.filterInDevice( btDevice ),
+                            ( device, gattChr ) -> this.filterOutDevice( btDevice )
                     ));
 
             this.openConnections.put( btDevice, btGatt );

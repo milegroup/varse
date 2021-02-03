@@ -1,6 +1,5 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -13,11 +12,9 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -49,6 +46,7 @@ import com.devbaltasarq.varse.ui.AppActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -150,7 +148,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         );
 
         btStopScan.setOnClickListener( (view) ->
-            PerformExperimentActivity.this.terminateDiscoveryAndFiltering()
+            PerformExperimentActivity.this.cancelAllConnections( true )
         );
 
         btTestHRDevice.setOnClickListener( (view) ->
@@ -211,7 +209,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 this.launchBtConfigPage();
             } else {
                 // Scans health devices
-                this.terminateDiscoveryAndFiltering();
+                this.cancelAllConnections( false );
                 this.startScanning();
             }
         }
@@ -224,7 +222,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     {
         super.onPause();
 
-        this.terminateDiscoveryAndFiltering();
+        this.cancelAllConnections( true );
 
         if ( this.actionDeviceDiscovery != null ) {
             try {
@@ -563,7 +561,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 this.showStatus( this.getString( R.string.lblActivateBluetooth ) );
 
                 final Intent enableBtIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
-                this.startActivityForResult( enableBtIntent, RQC_ENABLE_BT);
+                this.startActivityForResult( enableBtIntent, RQC_ENABLE_BT );
             });
         }
 
@@ -573,7 +571,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     /** Launches a tester activity to check the device. */
     private void launchDeviceTester()
     {
-        this.terminateDiscoveryAndFiltering();
+        this.cancelAllConnections( false );
 
         this.showStatus( "Test " + this.getString(  R.string.lblDevice ) + ": " + chosenBtDevice.getName() );
 
@@ -592,37 +590,18 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     public void startScanning()
     {
         if ( !this.btDefinitelyNotAvailable ) {
-            final String[] ALL_PERMISSIONS = new String[]{
-                    Manifest.permission.BLUETOOTH,
-                    Manifest.permission.BLUETOOTH_ADMIN,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-            };
-
-            final ArrayList<String> PERMISSIONS_TO_ASK_FOR = new ArrayList<>( ALL_PERMISSIONS.length );
-
-
-            // Check all permissions
-            for(String permissionId: ALL_PERMISSIONS) {
-                int askAnswerBluetooth = ContextCompat.checkSelfPermission(
-                        this.getApplicationContext(),
-                        permissionId );
-
-                if (askAnswerBluetooth != PackageManager.PERMISSION_GRANTED) {
-                    PERMISSIONS_TO_ASK_FOR.add( permissionId );
-                }
-            }
+            final String[] BT_PERMISSIONS_NEEDED =
+                    BluetoothUtils.fixBluetoothNeededPermissions( this );
 
             // Launch scanning or ask for permissions
-            if ( PERMISSIONS_TO_ASK_FOR.size() > 0 ) {
+            if ( BT_PERMISSIONS_NEEDED.length > 0 ) {
                 ActivityCompat.requestPermissions(
                             this,
-                                   PERMISSIONS_TO_ASK_FOR.toArray( new String[ 0 ] ),
-                        RQC_ASK_CLEARANCE_FOR_BLUETOOTH);
+                                   BT_PERMISSIONS_NEEDED,
+                                   RQC_ASK_CLEARANCE_FOR_BLUETOOTH );
             } else {
                 doStartScanning();
             }
-
         }
 
         return;
@@ -653,30 +632,16 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         return;
     }
 
-    /** Cancels the discovering. */
-    private void cancelDiscovery()
-    {
-        if ( this.bluetoothAdapter != null
-          && this.bluetoothAdapter.isDiscovering() )
-        {
-            this.terminateDiscoveryAndFiltering();
-        }
-
-        return;
-    }
-
-    private void terminateDiscoveryAndFiltering()
-    {
-        this.cancelAllConnections( false );
-        this.closeAllGattConnections();
-    }
-
     /** Stops deviceSearch, starting the filtering for HR devices. */
     @Override
     public void stopScanning()
     {
         if ( this.isLookingForDevices() ) {
-            this.cancelDiscovery();
+            if ( this.bluetoothAdapter != null
+              && this.bluetoothAdapter.isDiscovering() )
+            {
+                this.cancelAllConnections( false );
+            }
 
             PerformExperimentActivity.this.runOnUiThread( () ->
                     this.showStatus( this.getString( R.string.lblFilteringByService ) + "..." ) );
@@ -699,9 +664,8 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
     private void cancelAllConnections(boolean warn)
     {
-        this.handler.removeCallbacksAndMessages( null );
-        this.cancelDiscovery();
         this.filteringFinished( warn );
+        this.handler.removeCallbacksAndMessages( null );
     }
 
     public void addDeviceToListView(BluetoothDevice btDevice)

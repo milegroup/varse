@@ -222,8 +222,8 @@ public class BleService extends Service {
 
         if ( btDevice != null ) {
             this.btDevice = btDevice;
-            this.readingGattCallback = this.createGattCallbackForReading();
             this.adapter = BluetoothUtils.getBluetoothAdapter( this.getBaseContext() );
+            this.readingGattCallback = this.createGattCallbackForReading();
 
             if ( this.adapter == null ) {
                 Log.e( LogTag, "Unable to get a bluetooth adapter" );
@@ -254,7 +254,7 @@ public class BleService extends Service {
         final int[] RR_DATA = GATT_ANALYZER.getRR();
 
         if ( RR_DATA.length > 0 ) {
-            INTENT.putExtra( RR_TAG, GATT_ANALYZER.getRR() );
+            INTENT.putExtra( RR_TAG, RR_DATA );
             INTENT.putExtra( MEAN_RR_TAG, GATT_ANALYZER.getMeanRRs() );
         }
 
@@ -335,6 +335,8 @@ public class BleService extends Service {
             if ( this.adapter != null
               && this.gatt != null )
             {
+                Log.i( LogTag, "Reading characteristic: " + characteristic );
+                Log.d( LogTag, "Properties: " + characteristic.getPermissions() );
                 if ( !this.gatt.readCharacteristic( characteristic ) ) {
                     Log.e( LogTag, "GATT Characteristic invalid: "
                                            + characteristic.getUuid().toString() );
@@ -365,7 +367,7 @@ public class BleService extends Service {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
-        close();
+        this.close();
         return super.onUnbind( intent );
     }
 
@@ -402,11 +404,13 @@ public class BleService extends Service {
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status)
             {
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    broadcastUpdate( ACTION_GATT_SERVICES_DISCOVERED );
+                if ( status == BluetoothGatt.GATT_SUCCESS ) {
+                    BleService.this.broadcastUpdate( ACTION_GATT_SERVICES_DISCOVERED );
                 } else {
                     Log.w( LogTag, "onServicesDiscovered received failed status: " + status);
                 }
+
+                return;
             }
 
             @Override

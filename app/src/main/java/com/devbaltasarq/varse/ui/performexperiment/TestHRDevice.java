@@ -1,18 +1,13 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
-import android.app.Activity;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.bluetooth.BleService;
@@ -60,6 +55,14 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
                                                     this.getString( R.string.lblConnected ),
                                                     this.getString( R.string.lblDisconnected ) );
         this.showInactive();
+
+        // Bluetooth permissions
+        final String[] BT_PERMISSIONS_NEEDED =
+                BluetoothUtils.fixBluetoothNeededPermissions( this );
+
+        if ( BT_PERMISSIONS_NEEDED.length > 0 ) {
+            Toast.makeText( this, "Needing more Bluetooth permissions", Toast.LENGTH_LONG ).show();
+        }
 
         Log.d( LogTag, "UI started, service tried to bound." );
     }
@@ -115,14 +118,14 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
           && !bpm.isEmpty()  )
         {
             TestHRDevice.this.runOnUiThread( () -> lblBpm.setText( bpm ) );
-        } else {
-            this.showInactive();
-        }
 
-        if ( rr != null
-          && !rr.isEmpty()  )
-        {
-            TestHRDevice.this.runOnUiThread( () -> lblRR.setText( rr ) );
+            if ( rr != null
+              && !rr.isEmpty()  )
+            {
+                TestHRDevice.this.runOnUiThread( () -> lblRR.setText( rr ) );
+            } else {
+                this.showRRInactive();
+            }
         } else {
             this.showInactive();
         }
