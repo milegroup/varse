@@ -37,7 +37,7 @@ import java.util.function.Function;
 
 /** Relates the database of JSON files to objects. */
 public final class Orm {
-    private static final String LogTag = Orm.class.getSimpleName();
+    private static final String LOG_TAG = Orm.class.getSimpleName();
 
     private static final String FIELD_ID = Id.FIELD;
     public static final String FIELD_EXPERIMENT_ID = "experiment_id";
@@ -86,7 +86,7 @@ public final class Orm {
       */
     public final void reset()
     {
-        Log.i( LogTag, "Preparing store..." );
+        Log.i(LOG_TAG, "Preparing store..." );
 
         this.dirFiles = this.context.getFilesDir();
 
@@ -94,10 +94,10 @@ public final class Orm {
         this.removeCache();
         this.createCaches();
 
-        Log.i( LogTag, "Store ready at: " + this.dirDb.getAbsolutePath() );
-        Log.i( LogTag, "    #user files: " + this.filesUser.size() );
-        Log.i( LogTag, "    #experiment files: " + this.filesExperiment.size() );
-        Log.i( LogTag, "    #result files: " + this.filesResult.size() );
+        Log.i(LOG_TAG, "Store ready at: " + this.dirDb.getAbsolutePath() );
+        Log.i(LOG_TAG, "    #user files: " + this.filesUser.size() );
+        Log.i(LOG_TAG, "    #experiment files: " + this.filesExperiment.size() );
+        Log.i(LOG_TAG, "    #result files: " + this.filesResult.size() );
     }
 
     /** Creates the needed directories, if do not exist. */
@@ -121,13 +121,13 @@ public final class Orm {
     /** Create the cache of files. */
     private void createCaches()
     {
-        final File[] fileList = this.dirDb.listFiles();
+        final File[] FILE_LIST = this.dirDb.listFiles();
         this.filesUser = new HashSet<>();
         this.filesExperiment = new HashSet<>();
         this.filesResult = new HashSet<>();
         this.resultsPerExperiment = new HashMap<>();
 
-        for (File f: fileList) {
+        for (File f: FILE_LIST) {
             this.updateCaches( f );
         }
 
@@ -156,13 +156,13 @@ public final class Orm {
       */
     private void updateCaches(File f)
     {
-        final Persistent.TypeId typeId = this.getTypeIdForExt( f );
+        final Persistent.TypeId TYPE_ID = this.getTypeIdForExt( f );
 
         this.addToGeneralCache( f );
 
-        if ( typeId == Persistent.TypeId.Result ) {
-            final Id exprId = new Id( this.parseExperimentIdFromResultFile( f ) );
-            this.addToResultsCache( f, exprId );
+        if ( TYPE_ID == Persistent.TypeId.Result ) {
+            final Id EXPR_ID = new Id( this.parseExperimentIdFromResultFile( f ) );
+            this.addToResultsCache( f, EXPR_ID );
         }
     }
 
@@ -255,10 +255,10 @@ public final class Orm {
       */
     private void addToGeneralCache(File f)
     {
-        final HashSet<File> cachedList = this.getCacheForType( this.getTypeIdForExt( f ) );
+        final HashSet<File> CACHED_LIST = this.getCacheForType( this.getTypeIdForExt( f ) );
 
-        if ( !cachedList.contains( f ) ) {
-            cachedList.add( f );
+        if ( !CACHED_LIST.contains( f ) ) {
+            CACHED_LIST.add( f );
         }
 
         return;
@@ -278,20 +278,20 @@ public final class Orm {
      */
     private Persistent.TypeId getTypeIdForExt(File f)
     {
-        final String ExtUser = getFileExtFor( Persistent.TypeId.User );
-        final String ExtExperiment = getFileExtFor( Persistent.TypeId.Experiment );
-        final String ExtResult = getFileExtFor( Persistent.TypeId.Result );
+        final String EXT_USR = getFileExtFor( Persistent.TypeId.User );
+        final String EXT_EXPERIMENT = getFileExtFor( Persistent.TypeId.Experiment );
+        final String EXT_RESULT = getFileExtFor( Persistent.TypeId.Result );
         Persistent.TypeId toret = null;
 
-        if ( f.getName().endsWith( ExtUser ) ) {
+        if ( f.getName().endsWith( EXT_USR ) ) {
             toret = Persistent.TypeId.User;
         }
         else
-        if ( f.getName().endsWith( ExtExperiment ) ) {
+        if ( f.getName().endsWith( EXT_EXPERIMENT ) ) {
             toret = Persistent.TypeId.Experiment;
         }
         else
-        if ( f.getName().endsWith( ExtResult ) ) {
+        if ( f.getName().endsWith( EXT_RESULT ) ) {
             toret = Persistent.TypeId.Result;
         }
 
@@ -314,19 +314,19 @@ public final class Orm {
                 for(PartialObject po: this.enumerateObjects( Persistent.TypeId.Result ))
                 {
                     if ( po.getId().equals( id ) ) {
-                        final String resultInfo = po.getName();
+                        final String RESULT_INFO = po.getName();
 
-                        final Id exprId = new Id( Result.parseExperimentIdFromName( resultInfo ) );
-                        final Id userId = new Id( Result.parseUserIdFromName( resultInfo ) );
+                        final Id EXPR_ID = new Id( Result.parseExperimentIdFromName( RESULT_INFO ) );
+                        final Id USER_ID = new Id( Result.parseUserIdFromName( RESULT_INFO ) );
 
-                        toret = this.getFileNameForResult( id, exprId, userId );
+                        toret = this.getFileNameForResult( id, EXPR_ID, USER_ID );
                         break;
                     }
                 }
             } catch(IOException exc) {
                 final String ERROR_MESSAGE = "error retrieving result with id: " + id.get() + ": "
                                         + exc.getMessage();
-                Log.e( LogTag, ERROR_MESSAGE );
+                Log.e(LOG_TAG, ERROR_MESSAGE );
                 throw new Error( ERROR_MESSAGE );
             }
         } else {
@@ -358,11 +358,11 @@ public final class Orm {
         String toret;
 
         if ( typeId == Persistent.TypeId.Result ) {
-            final Result res = (Result) p;
+            final Result RES = (Result) p;
 
             toret = this.getFileNameForResult( p.getId(),
-                                               res.getExperiment().getId(),
-                                               res.getUser().getId() );
+                                               RES.getExperiment().getId(),
+                                               RES.getUser().getId() );
         } else {
             toret = REGULAR_FILE_FORMAT
                     .replace( "$" + FIELD_ID, p.getId().toString() )
@@ -380,26 +380,26 @@ public final class Orm {
       */
     private long parseIdFromFile(File file)
     {
-        final String fileName = file.getName();
-        final int separatorPos = fileName.indexOf( FILE_NAME_PART_SEPARATOR );
+        final String FILE_NAME = file.getName();
+        final int SEPARATOR_POS = FILE_NAME.indexOf( FILE_NAME_PART_SEPARATOR );
         long toret;
 
-        if ( separatorPos >= 0 ) {
-            int extSeparatorPos = fileName.lastIndexOf( '.' );
+        if ( SEPARATOR_POS >= 0 ) {
+            int extSeparatorPos = FILE_NAME.lastIndexOf( '.' );
 
             if ( extSeparatorPos < 0 ) {
-                extSeparatorPos = fileName.length();
+                extSeparatorPos = FILE_NAME.length();
             }
 
-            final String id = fileName.substring( separatorPos + 1, extSeparatorPos );
+            final String ID = FILE_NAME.substring( SEPARATOR_POS + 1, extSeparatorPos );
 
             try {
-                toret = Long.parseLong( id );
+                toret = Long.parseLong( ID );
             } catch(NumberFormatException exc) {
-                throw new Error( "parseIdFromFile: malformed id: " + id );
+                throw new Error( "parseIdFromFile: malformed id: " + ID );
             }
         } else {
-            throw new Error( "parseIdFromFile: separator not found in file name: " + fileName );
+            throw new Error( "parseIdFromFile: separator not found in file name: " + FILE_NAME );
         }
 
         return toret;
@@ -412,27 +412,27 @@ public final class Orm {
      */
     private long parseExperimentIdFromResultFile(File f)
     {
-        final String fileName = f.getName();
-        int exprIdPos = fileName.indexOf( FIELD_EXPERIMENT_ID );
+        final String FILE_NAME = f.getName();
+        int exprIdPos = FILE_NAME.indexOf( FIELD_EXPERIMENT_ID );
         long toret;
 
         if ( exprIdPos >= 0 ) {
-            int extSeparatorPos = fileName.lastIndexOf( '.' );
+            int extSeparatorPos = FILE_NAME.lastIndexOf( '.' );
 
             if ( extSeparatorPos < 0 ) {
-                extSeparatorPos = fileName.length();
+                extSeparatorPos = FILE_NAME.length();
             }
 
             exprIdPos += 1 + FIELD_EXPERIMENT_ID.length();
-            final String id = fileName.substring( exprIdPos, extSeparatorPos );
+            final String ID = FILE_NAME.substring( exprIdPos, extSeparatorPos );
 
             try {
-                toret = Long.parseLong( id );
+                toret = Long.parseLong( ID );
             } catch(NumberFormatException exc) {
-                throw new Error( "parseExperimentIdFromResultFile: malformed id: " + id );
+                throw new Error( "parseExperimentIdFromResultFile: malformed id: " + ID );
             }
         } else {
-            throw new Error( "parseExperimentIdFromResultFile: separator not found in file name: " + fileName );
+            throw new Error( "parseExperimentIdFromResultFile: separator not found in file name: " + FILE_NAME );
         }
 
         return toret;
@@ -451,12 +451,12 @@ public final class Orm {
             ArrayList<File> resultFiles = this.resultsPerExperiment.get( p.getId() );
 
             if ( resultFiles != null ) {
-                for(final File resultFile: resultFiles) {
-                    if ( !resultFile.delete() ) {
-                        Log.e( LogTag, "unable to remove file: " + resultFile );
+                for(final File RESULT_FILE: resultFiles) {
+                    if ( !RESULT_FILE.delete() ) {
+                        Log.e(LOG_TAG, "unable to remove file: " + RESULT_FILE );
                     }
 
-                    this.filesResult.remove( resultFile );
+                    this.filesResult.remove( RESULT_FILE );
                 }
             }
 
@@ -470,10 +470,10 @@ public final class Orm {
         this.removeFromAllCaches( p, REMOVE_FILE );
 
         if ( !REMOVE_FILE.delete() ) {
-            Log.e( LogTag, "Error removing file: " + REMOVE_FILE );
+            Log.e(LOG_TAG, "Error removing file: " + REMOVE_FILE );
         }
 
-        Log.d( LogTag, "Object deleted: " + p.getId() );
+        Log.d(LOG_TAG, "Object deleted: " + p.getId() );
     }
 
     /** Builds the name of the experiment's media directory.
@@ -482,10 +482,10 @@ public final class Orm {
       */
     private static String buildMediaDirectoryNameFor(@NonNull Persistent p)
     {
-        final Experiment owner = p.getExperimentOwner();
-        final Id id = owner != null ? owner.getId() : p.getId();
+        final Experiment OWNER = p.getExperimentOwner();
+        final Id ID = OWNER != null ? OWNER.getId() : p.getId();
 
-        return DIR_MEDIA_PREFIX + FILE_NAME_PART_SEPARATOR + id.get();
+        return DIR_MEDIA_PREFIX + FILE_NAME_PART_SEPARATOR + ID.get();
     }
 
     /** @returns a File pointing to the settings file. */
@@ -522,18 +522,18 @@ public final class Orm {
         // Do not allow spaces in file names.
         fileName = buildMediaFileNameForDbFromMediaFileName( fileName );
 
-        final File experimentDirectory = this.buildMediaDirectoryFor( expr );
-        final File mediaFile = new File( experimentDirectory, fileName );
+        final File DIR_EXPERIMENTS = this.buildMediaDirectoryFor( expr );
+        final File MEDIA_FILE = new File( DIR_EXPERIMENTS, fileName );
 
-        experimentDirectory.mkdirs();
-        if ( experimentDirectory.exists() ) {
-            copy( inMedia, mediaFile );
+        DIR_EXPERIMENTS.mkdirs();
+        if ( DIR_EXPERIMENTS.exists() ) {
+            copy( inMedia, MEDIA_FILE );
         } else {
-            final String errorMsg = "unable to create directory: " + experimentDirectory;
-            throw new IOException( errorMsg );
+            final String MSG_ERROR = "unable to create directory: " + DIR_EXPERIMENTS;
+            throw new IOException( MSG_ERROR );
         }
 
-        return mediaFile;
+        return MEDIA_FILE;
     }
 
     /** Determines the existence of given media.
@@ -543,10 +543,10 @@ public final class Orm {
       */
     public boolean existsMedia(@NonNull Experiment expr, @NonNull String fileName)
     {
-        final File experimentDirectory = this.buildMediaDirectoryFor( expr );
-        final File mediaFile = new File( experimentDirectory, fileName );
+        final File DIR_EXPERIMENT = this.buildMediaDirectoryFor( expr );
+        final File MEDIA_FILE = new File( DIR_EXPERIMENT, fileName );
 
-        return mediaFile.exists() && ( expr.locateMediaActivity( fileName ) != null );
+        return MEDIA_FILE.exists() && ( expr.locateMediaActivity( fileName ) != null );
     }
 
     /** Deletes a media file in the app's file system.
@@ -556,12 +556,11 @@ public final class Orm {
      */
     public void deleteMedia(@NonNull Experiment expr, @NonNull String fileName) throws IOException
     {
-        final File experimentDirectory = this.buildMediaDirectoryFor( expr );
-        final File mediaFile = new File( experimentDirectory, fileName );
+        final File DIR_EXPERIMENT = this.buildMediaDirectoryFor( expr );
+        final File MEDIA_FILE = new File( DIR_EXPERIMENT, fileName );
 
-        if ( !mediaFile.delete() ) {
-            final String errorMsg = "unable to delete media file: " + fileName;
-            throw new IOException( errorMsg );
+        if ( !MEDIA_FILE.delete() ) {
+            throw new IOException( "unable to delete media file: " + fileName );
         }
 
         return;
@@ -573,16 +572,16 @@ public final class Orm {
      */
     private File[] collectMediaFilesFor(Experiment expr)
     {
-        final File mediaDir = this.buildMediaDirectoryFor( expr );
-        final File[] assocFiles = expr.enumerateMediaFiles();
-        final File[] toret = new File[ assocFiles.length ];
+        final File DIR_MEDIA = this.buildMediaDirectoryFor( expr );
+        final File[] ASSOC_FILES = expr.enumerateMediaFiles();
+        final File[] TORET = new File[ ASSOC_FILES.length ];
 
         // Build the complete path of the associated files
-        for(int i = 0; i < toret.length; ++i) {
-            toret[ i ] = new File( mediaDir, assocFiles[ i ].getName() );
+        for(int i = 0; i < TORET.length; ++i) {
+            TORET[ i ] = new File( DIR_MEDIA, ASSOC_FILES[ i ].getName() );
         }
 
-        return toret;
+        return TORET;
     }
 
     /** Checks the associated files (media files) to an experiment and discards
@@ -592,24 +591,24 @@ public final class Orm {
     public void purgeOrphanMediaFor(Experiment expr)
     {
         try {
-            final File mediaDir = this.buildMediaDirectoryFor( expr );
-            final File[] allFiles = mediaDir.listFiles();
+            final File DIR_MEDIA = this.buildMediaDirectoryFor( expr );
+            final File[] ALL_FILES = DIR_MEDIA.listFiles();
 
             // Look for each registered file in the actual file list
-            if ( allFiles != null ) {
-                final ArrayList<File> registeredMediaFiles = new ArrayList<>(
+            if ( ALL_FILES != null ) {
+                final ArrayList<File> REG_MEDIA_FILES = new ArrayList<>(
                         Arrays.asList( this.collectMediaFilesFor( expr ) ) );
 
-                for(File f: allFiles) {
-                    if ( !registeredMediaFiles.contains( f ) ) {
+                for(File f: ALL_FILES) {
+                    if ( !REG_MEDIA_FILES.contains( f ) ) {
                         if ( !f.delete() ) {
-                            Log.e( LogTag, "Error deleting file: " + f );
+                            Log.e(LOG_TAG, "Error deleting file: " + f );
                         }
                     }
                 }
             }
         } catch(Exception exc) {
-            Log.e( LogTag, "Error purging orphan media for '" + expr.getName()
+            Log.e(LOG_TAG, "Error purging orphan media for '" + expr.getName()
                             + "': " + exc.getMessage() );
         }
 
@@ -620,19 +619,19 @@ public final class Orm {
     public void purgeOrphanMedia()
     {
         try {
-            final File[] mediaDirs = this.dirRes.listFiles();
+            final File[] DIRS_MEDIA = this.dirRes.listFiles();
 
-            for(File mediaDir: mediaDirs) {
-                final Id id = new Id( parseIdFromFile( mediaDir ) );
+            for(File mediaDir: DIRS_MEDIA) {
+                final Id ID = new Id( parseIdFromFile( mediaDir ) );
                 File exprFile = new File( this.dirDb,
-                                          this.getFileNameFor( id, Persistent.TypeId.Experiment ) );
+                                          this.getFileNameFor( ID, Persistent.TypeId.Experiment ) );
 
                 if ( !this.existsInCache( exprFile ) ) {
                     removeTreeAt( mediaDir );
                 }
             }
         } catch(Exception exc) {
-            Log.e( LogTag, "Error purging orphan media: " + exc.getMessage() );
+            Log.e(LOG_TAG, "Error purging orphan media: " + exc.getMessage() );
         }
 
         return;
@@ -667,31 +666,31 @@ public final class Orm {
         Writer writer = null;
 
         try {
-            Log.i( LogTag, "Storing: " + p.toString() + " to: " + DATA_FILE.getAbsolutePath() );
+            Log.i(LOG_TAG, "Storing: " + p.toString() + " to: " + DATA_FILE.getAbsolutePath() );
             writer = openWriterFor( TEMP_FILE );
             p.toJSON( writer );
             close( writer );
             if ( !TEMP_FILE.renameTo( DATA_FILE ) ) {
-                Log.d( LogTag, "Unable to move: " + DATA_FILE );
-                Log.d( LogTag, "Trying to copy: " + TEMP_FILE + " to: " + DATA_FILE );
+                Log.d(LOG_TAG, "Unable to move: " + DATA_FILE );
+                Log.d(LOG_TAG, "Trying to copy: " + TEMP_FILE + " to: " + DATA_FILE );
                 copy( TEMP_FILE, DATA_FILE );
             }
             this.updateCaches( p, DATA_FILE );
-            Log.i( LogTag, "Finished storing." );
+            Log.i(LOG_TAG, "Finished storing." );
         } catch(IOException exc) {
-            final String msg = "I/O error writing: "
+            final String ERROR_MSG = "I/O error writing: "
                             + DATA_FILE.toString() + ": " + exc.getMessage();
-            Log.e( LogTag, msg );
-            throw new IOException( msg );
+            Log.e(LOG_TAG, ERROR_MSG );
+            throw new IOException( ERROR_MSG );
         } catch(JSONException exc) {
-            final String msg = "error creating JSON for: "
+            final String ERROR_MSG = "error creating JSON for: "
                             + DATA_FILE.toString() + ": " + exc.getMessage();
-            Log.e( LogTag, msg );
-            throw new IOException( msg );
+            Log.e(LOG_TAG, ERROR_MSG );
+            throw new IOException( ERROR_MSG );
         } finally {
           close( writer );
           if ( !TEMP_FILE.delete() ) {
-              Log.e( LogTag, "Error removing file: " + TEMP_FILE );
+              Log.e(LOG_TAG, "Error removing file: " + TEMP_FILE );
           }
         }
     }
@@ -703,17 +702,17 @@ public final class Orm {
     public void importResult(InputStream jsonFileIn) throws IOException
     {
         try {
-            final Reader fileReader = openReaderFor( jsonFileIn );
-            final Result toret = Result.fromJSON( fileReader );
-            close( fileReader );
+            final Reader FILE_READER = openReaderFor( jsonFileIn );
+            final Result TORET = Result.fromJSON( FILE_READER );
+            close( FILE_READER );
 
             // Store the result data set
-            toret.updateIds();
-            this.store( toret );
+            TORET.updateIds();
+            this.store( TORET );
         } catch(JSONException exc) {
             final String ERROR_MSG = "unable to import result file: " + exc.getMessage();
 
-            Log.e( LogTag, ERROR_MSG );
+            Log.e(LOG_TAG, ERROR_MSG );
             throw new IOException( ERROR_MSG );
         }
 
@@ -736,17 +735,17 @@ public final class Orm {
             TEMP_DIR.mkdir();
             ZipUtil.unzip( zipFileIn, TEMP_DIR );
 
-            final File[] allFiles = TEMP_DIR.listFiles();
+            final File[] ALL_FILES = TEMP_DIR.listFiles();
             File experimentFile = null;
-            final ArrayList<File> mediaFiles = new ArrayList<>( allFiles.length );
+            final ArrayList<File> MEDIA_FILES = new ArrayList<>( ALL_FILES.length );
             final String EXPERIMENT_EXTENSION = getFileExtFor( Persistent.TypeId.Experiment );
 
             // Classify files
-            for(File f: allFiles) {
+            for(File f: ALL_FILES) {
                 if ( extractFileExt( f ).equals( EXPERIMENT_EXTENSION ) ) {
                     experimentFile = f;
                 } else {
-                    mediaFiles.add( f );
+                    MEDIA_FILES.add( f );
                 }
             }
 
@@ -768,7 +767,7 @@ public final class Orm {
 
             // Store the experiment
             this.store( toret );
-            for(File f: mediaFiles) {
+            for(File f: MEDIA_FILES) {
                 this.storeMedia( toret,
                                     f.getName(),
                                     new FileInputStream( f ) );
@@ -787,15 +786,15 @@ public final class Orm {
       */
     private void chkIds(Experiment expr) throws JSONException
     {
-        final Id id = expr.getId();
+        final Id ID = expr.getId();
 
         try {
-            if ( this.lookForObjById( id, Persistent.TypeId.Experiment ) != null ) {
-                throw new JSONException( "already existing as experiment id:" + id );
+            if ( this.lookForObjById( ID, Persistent.TypeId.Experiment ) != null ) {
+                throw new JSONException( "already existing as experiment id:" + ID );
             }
 
-            if ( this.lookForObjById( id, Persistent.TypeId.Result ) != null ) {
-                throw new JSONException( "already existing as a result id:" + id );
+            if ( this.lookForObjById( ID, Persistent.TypeId.Result ) != null ) {
+                throw new JSONException( "already existing as a result id:" + ID );
             }
         } catch(IOException exc) {
             throw new JSONException( exc.getMessage() );
@@ -863,7 +862,7 @@ public final class Orm {
       */
     public void exportExperiment(File dir, Experiment expr) throws IOException
     {
-        final ArrayList<File> files = new ArrayList<>();
+        final ArrayList<File> FILES = new ArrayList<>();
         final File TEMP_FILE = this.createTempFile(
                 expr.getTypeId().toString(),
                 expr.getId().toString() );
@@ -874,11 +873,11 @@ public final class Orm {
 
         try {
             this.store( expr );
-            files.addAll( Arrays.asList( this.collectMediaFilesFor( expr ) ) );
-            files.add( new File( this.dirDb, this.getFileNameFor( expr ) ) );
+            FILES.addAll( Arrays.asList( this.collectMediaFilesFor( expr ) ) );
+            FILES.add( new File( this.dirDb, this.getFileNameFor( expr ) ) );
 
             ZipUtil.zip(
-                    files.toArray( new File[ 0 ] ),
+                    FILES.toArray( new File[ 0 ] ),
                     TEMP_FILE );
 
             dir.mkdirs();
@@ -891,7 +890,7 @@ public final class Orm {
                             + "': " + exc.getMessage() );
         } finally {
             if ( !TEMP_FILE.delete() ) {
-                Log.e( LogTag, "Error removing: " + TEMP_FILE );
+                Log.e(LOG_TAG, "Error removing: " + TEMP_FILE );
             }
         }
 
@@ -911,7 +910,7 @@ public final class Orm {
         try {
             toret = this.lookForUserByName( usrName );
         } catch(IOException exc)  {
-            Log.d( LogTag, "unable to find user: " + usrName + ", creating it." );
+            Log.d(LOG_TAG, "unable to find user: " + usrName + ", creating it." );
         }
 
         // Create it
@@ -931,7 +930,7 @@ public final class Orm {
             toret = (User) this.retrieve( userId, Persistent.TypeId.User );
         } catch(IOException exc)
         {
-            Log.d( LogTag, "unable to find user: " + userId + ", creating it." );
+            Log.d(LOG_TAG, "unable to find user: " + userId + ", creating it." );
         }
 
         // Create it
@@ -953,10 +952,10 @@ public final class Orm {
             name = FIELD_USER_ID + "-" + userId;
         }
 
-        final User usr = new User( userId, name );
+        final User USR = new User( userId, name );
 
-        this.store( usr );
-        return usr;
+        this.store( USR );
+        return USR;
     }
 
     public File getFileById(Id id, Persistent.TypeId typeId)
@@ -980,18 +979,18 @@ public final class Orm {
             reader = openReaderFor( DATA_FILE );
 
             toret = Persistent.fromJSON( typeId, reader );
-            Log.i( LogTag, "Retrieved: " + toret.toString() + " from: "
+            Log.i(LOG_TAG, "Retrieved: " + toret.toString() + " from: "
                             + DATA_FILE.getAbsolutePath()  );
         } catch(IOException exc) {
-            final String msg = "I/O error reading: "
+            final String ERROR_MSG = "I/O error reading: "
                             + DATA_FILE.toString() + ": " + exc.getMessage();
-            Log.e( LogTag, msg );
-            throw new IOException( msg );
+            Log.e(LOG_TAG, ERROR_MSG );
+            throw new IOException( ERROR_MSG );
         } catch(JSONException exc) {
-            final String msg = "error reading JSON for: "
+            final String ERROR_MSG = "error reading JSON for: "
                     + DATA_FILE.toString() + ": " + exc.getMessage();
-            Log.e( LogTag, msg );
-            throw new IOException( msg );
+            Log.e(LOG_TAG, ERROR_MSG );
+            throw new IOException( ERROR_MSG );
         } finally {
             close( reader );
         }
@@ -1072,13 +1071,13 @@ public final class Orm {
         }
 
         // Convert to partial objects
-        final ArrayList<PartialObject> toret = new ArrayList<>( fileList.size() );
+        final ArrayList<PartialObject> TORET = new ArrayList<>( fileList.size() );
 
         for(File f: fileList) {
-            toret.add( retrievePartialObject( f ) );
+            TORET.add( retrievePartialObject( f ) );
         }
 
-        return toret.toArray( new PartialObject[ toret.size() ] );
+        return TORET.toArray( new PartialObject[ TORET.size() ] );
     }
 
     /** @return A persistent object, provided its id and the type of object. */
@@ -1098,10 +1097,10 @@ public final class Orm {
         PartialObject toret = null;
 
         for(File f: fileList) {
-            final PartialObject obj = retrievePartialObject( f );
+            final PartialObject OBJ = retrievePartialObject( f );
 
-            if ( obj.getId().equals( id ) ) {
-                toret = obj;
+            if ( OBJ.getId().equals( id ) ) {
+                toret = OBJ;
                 break;
             }
         }
@@ -1126,10 +1125,10 @@ public final class Orm {
         PartialObject toret = null;
 
         for(File f: fileList) {
-            final PartialObject obj = retrievePartialObject( f );
+            final PartialObject OBJ = retrievePartialObject( f );
 
-            if ( obj.getName().equals( name ) ) {
-                toret = obj;
+            if ( OBJ.getName().equals( name ) ) {
+                toret = OBJ;
                 break;
             }
         }
@@ -1139,11 +1138,11 @@ public final class Orm {
 
     public User lookForUserByName(String name) throws IOException
     {
-        final PartialObject user = this.lookForObjByName( name, Persistent.TypeId.User );
+        final PartialObject USR = this.lookForObjByName( name, Persistent.TypeId.User );
         User toret = null;
 
-        if ( user != null ) {
-            toret = (User) this.retrieve( user.getId(), Persistent.TypeId.User );
+        if ( USR != null ) {
+            toret = (User) this.retrieve( USR.getId(), Persistent.TypeId.User );
         }
 
         return toret;
@@ -1151,11 +1150,11 @@ public final class Orm {
 
     public Experiment lookForExperimentByName(String name) throws IOException
     {
-        final PartialObject expr = this.lookForObjByName( name, Persistent.TypeId.Experiment );
+        final PartialObject EXPR = this.lookForObjByName( name, Persistent.TypeId.Experiment );
         Experiment toret = null;
 
-        if ( expr != null ) {
-            toret = (Experiment) this.retrieve( expr.getId(), Persistent.TypeId.Experiment );
+        if ( EXPR != null ) {
+            toret = (Experiment) this.retrieve( EXPR.getId(), Persistent.TypeId.Experiment );
         }
 
         return toret;
@@ -1182,13 +1181,13 @@ public final class Orm {
     /** Enumerates all object names, given an array of partial object. */
     public String[] enumerateObjNames(PartialObject[] objs)
     {
-        final String[] toret = new String[ objs.length ];
+        final String[] TORET = new String[ objs.length ];
 
         for(int i = 0; i < objs.length; ++i) {
-            toret[ i ] = objs[ i ].getName();
+            TORET[ i ] = objs[ i ].getName();
         }
 
-        return toret;
+        return TORET;
     }
 
     /** Enumerates all experiments, getting an array containing their names. */
@@ -1219,10 +1218,10 @@ public final class Orm {
             toret = PartialObject.fromJSON( reader );
         } catch(IOException|JSONException exc)
         {
-            final String msg = "retrievePartialObject(f) reading JSON: " + exc.getMessage();
-            Log.e( LogTag, msg );
+            final String MSG = "retrievePartialObject(f) reading JSON: " + exc.getMessage();
+            Log.e(LOG_TAG, MSG );
 
-            throw new IOException( msg );
+            throw new IOException( MSG );
         } finally {
             close( reader );
         }
@@ -1235,13 +1234,13 @@ public final class Orm {
         BufferedWriter toret;
 
         try {
-            final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
+            final OutputStreamWriter OUTPUT_STREAM_WRITER = new OutputStreamWriter(
                     new FileOutputStream( f ),
                     Charset.forName( "UTF-8" ).newEncoder() );
 
-            toret = new BufferedWriter( outputStreamWriter );
+            toret = new BufferedWriter( OUTPUT_STREAM_WRITER );
         } catch (IOException exc) {
-            Log.e( LogTag,"Error creating writer for file: " + f );
+            Log.e(LOG_TAG,"Error creating writer for file: " + f );
             throw exc;
         }
 
@@ -1255,7 +1254,7 @@ public final class Orm {
         try {
             toret = openReaderFor( new FileInputStream( f ) );
         } catch (IOException exc) {
-            Log.e( LogTag,"Error creating reader for file: " + f.getName() );
+            Log.e(LOG_TAG,"Error creating reader for file: " + f.getName() );
             throw exc;
         }
 
@@ -1264,11 +1263,11 @@ public final class Orm {
 
     private static BufferedReader openReaderFor(InputStream inStream)
     {
-        final InputStreamReader inputStreamReader = new InputStreamReader(
+        final InputStreamReader INPUT_STREAM_READER = new InputStreamReader(
                 inStream,
                 Charset.forName( "UTF-8" ).newDecoder() );
 
-        return new BufferedReader( inputStreamReader );
+        return new BufferedReader( INPUT_STREAM_READER );
     }
 
     /** Closes a writer stream. */
@@ -1280,7 +1279,7 @@ public final class Orm {
             }
         } catch(IOException exc)
         {
-            Log.e( LogTag, "closing writer: " + exc.getMessage() );
+            Log.e(LOG_TAG, "closing writer: " + exc.getMessage() );
         }
     }
 
@@ -1293,7 +1292,7 @@ public final class Orm {
             }
         } catch(IOException exc)
         {
-            Log.e( LogTag, "closing reader: " + exc.getMessage() );
+            Log.e(LOG_TAG, "closing reader: " + exc.getMessage() );
         }
     }
 
@@ -1306,7 +1305,7 @@ public final class Orm {
             }
         } catch(IOException exc)
         {
-            Log.e( LogTag, "closing json reader: " + exc.getMessage() );
+            Log.e(LOG_TAG, "closing json reader: " + exc.getMessage() );
         }
     }
 
@@ -1317,7 +1316,7 @@ public final class Orm {
       */
     private static void copy(File source, File dest) throws IOException
     {
-        final String errorMsg = "error copying: " + source + " to: " + dest + ": ";
+        final String MSG_ERROR = "error copying: " + source + " to: " + dest + ": ";
         InputStream is;
         OutputStream os;
 
@@ -1328,8 +1327,8 @@ public final class Orm {
             copy( is, os );
         } catch(IOException exc)
         {
-            Log.e( LogTag, errorMsg + exc.getMessage() );
-            throw new IOException( errorMsg );
+            Log.e(LOG_TAG, MSG_ERROR + exc.getMessage() );
+            throw new IOException( MSG_ERROR );
         }
 
         return;
@@ -1342,7 +1341,7 @@ public final class Orm {
      */
     private static void copy(InputStream is, File dest) throws IOException
     {
-        final String errorMsg = "error copying input stream -> " + dest + ": ";
+        final String MSG_ERROR = "error copying input stream -> " + dest + ": ";
         OutputStream os;
 
         try {
@@ -1351,8 +1350,8 @@ public final class Orm {
             copy( is, os );
         } catch(IOException exc)
         {
-            Log.e( LogTag, errorMsg + exc.getMessage() );
-            throw new IOException( errorMsg );
+            Log.e(LOG_TAG, MSG_ERROR + exc.getMessage() );
+            throw new IOException( MSG_ERROR );
         }
 
         return;
@@ -1365,12 +1364,12 @@ public final class Orm {
      */
     private static void copy(InputStream is, OutputStream os) throws IOException
     {
-        final byte[] buffer = new byte[1024];
+        final byte[] BUFFER = new byte[1024];
         int length;
 
         try {
-            while ( ( length = is.read( buffer ) ) > 0 ) {
-                os.write( buffer, 0, length );
+            while ( ( length = is.read( BUFFER ) ) > 0 ) {
+                os.write( BUFFER, 0, length );
             }
         } finally {
             try {
@@ -1382,7 +1381,7 @@ public final class Orm {
                     os.close();
                 }
             } catch(IOException exc) {
-                Log.e( LogTag, "Copying file: error closing streams: " + exc.getMessage() );
+                Log.e(LOG_TAG, "Copying file: error closing streams: " + exc.getMessage() );
             }
         }
 
@@ -1427,10 +1426,10 @@ public final class Orm {
         if ( dir != null
           && dir.isDirectory() )
         {
-            final String[] allFiles = dir.list();
+            final String[] ALL_FILES = dir.list();
 
-            if ( allFiles != null ) {
-                for(String fileName: allFiles) {
+            if ( ALL_FILES != null ) {
+                for(String fileName: ALL_FILES) {
                     File f = new File( dir, fileName );
 
                     if ( f.isDirectory() ) {
@@ -1438,16 +1437,16 @@ public final class Orm {
                     }
 
                     if ( !f.delete() ) {
-                        Log.e( LogTag, "Error deleting directory: " + f );
+                        Log.e(LOG_TAG, "Error deleting directory: " + f );
                     }
                 }
 
                 if ( !dir.delete() ) {
-                    Log.e( LogTag, "Error deleting directory: " + dir );
+                    Log.e(LOG_TAG, "Error deleting directory: " + dir );
                 }
             }
         } else {
-            Log.d( LogTag, "removeTreeAt: directory null or not a directory?" );
+            Log.d(LOG_TAG, "removeTreeAt: directory null or not a directory?" );
         }
 
         return;
@@ -1471,13 +1470,13 @@ public final class Orm {
         if ( fileName != null
           && !fileName.trim().isEmpty() )
         {
-            final int posDot = fileName.trim().lastIndexOf( "." );
+            final int POS_DOT = fileName.trim().lastIndexOf( "." );
 
 
-            if ( posDot >= 0
-              && posDot < ( fileName.length() - 1 ) )
+            if ( POS_DOT >= 0
+              && POS_DOT < ( fileName.length() - 1 ) )
             {
-                toret = fileName.substring( posDot + 1 );
+                toret = fileName.substring( POS_DOT + 1 );
             }
         }
 
@@ -1490,11 +1489,11 @@ public final class Orm {
       */
     public static String removeFileExt(String fileName)
     {
-        final int DOT_POS = fileName.lastIndexOf( '.' );
+        final int POS_DOT = fileName.lastIndexOf( '.' );
         String toret = fileName;
 
-        if ( DOT_POS > -1 ) {
-            toret = fileName.substring(0, DOT_POS);
+        if ( POS_DOT > -1 ) {
+            toret = fileName.substring(0, POS_DOT);
         }
 
         return toret;
@@ -1538,7 +1537,7 @@ public final class Orm {
         if ( instance == null ) {
             final String ERROR_MSG = "Orm database manager not created yet.";
 
-            Log.e( LogTag, ERROR_MSG );
+            Log.e(LOG_TAG, ERROR_MSG );
             throw new IllegalArgumentException( ERROR_MSG );
         }
 

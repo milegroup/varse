@@ -18,7 +18,7 @@ import java.util.Locale;
 
 /** Represents the results of a given experiment. */
 public class Result extends Persistent {
-    public static final String LogTag = Result.class.getSimpleName();
+    public static final String LOG_TAG = Result.class.getSimpleName();
 
     public static class Builder {
         public Builder(User usr, Experiment expr, long dateTime)
@@ -103,9 +103,9 @@ public class Result extends Persistent {
             boolean toret = false;
 
             if ( obj2 instanceof Event ) {
-                final Event evt = (Event) obj2;
+                final Event EVT = (Event) obj2;
 
-                toret = ( this.getMillis() == evt.getMillis() );
+                toret = ( this.getMillis() == EVT.getMillis() );
             }
 
             return toret;
@@ -134,21 +134,21 @@ public class Result extends Persistent {
             try {
                 jsonReader.beginObject();
                 while ( jsonReader.hasNext() ) {
-                    final String nextName = jsonReader.nextName();
+                    final String NEXT_NAME = jsonReader.nextName();
 
-                    if ( nextName.equals( Orm.FIELD_EVENT_TYPE ) ) {
+                    if ( NEXT_NAME.equals( Orm.FIELD_EVENT_TYPE ) ) {
                         eventType = jsonReader.nextString();
                     }
                     else
-                    if ( nextName.equals( Orm.FIELD_ELAPSED_TIME ) ) {
+                    if ( NEXT_NAME.equals( Orm.FIELD_ELAPSED_TIME ) ) {
                         millis = jsonReader.nextLong();
                     }
                     else
-                    if ( nextName.equals( Orm.FIELD_HEART_BEAT_AT ) ) {
+                    if ( NEXT_NAME.equals( Orm.FIELD_HEART_BEAT_AT ) ) {
                         heartbeat = jsonReader.nextLong();
                     }
                     else
-                    if ( nextName.equals( Orm.FIELD_TAG ) ) {
+                    if ( NEXT_NAME.equals( Orm.FIELD_TAG ) ) {
                         tag = jsonReader.nextString();
                     }
                 }
@@ -158,7 +158,7 @@ public class Result extends Persistent {
             {
                 final String ERROR_MSG = "Creating event from JSON: " + exc.getMessage();
 
-                Log.e( LogTag, ERROR_MSG );
+                Log.e(LOG_TAG, ERROR_MSG );
                 throw new JSONException( ERROR_MSG );
             }
 
@@ -166,17 +166,17 @@ public class Result extends Persistent {
             if ( eventType == null
               || millis < 0 )
             {
-                final String msg = "Creating event from JSON: invalid or missing data.";
+                final String MSG = "Creating event from JSON: invalid or missing data.";
 
-                Log.e( LogTag, msg );
-                throw new JSONException( msg );
+                Log.e(LOG_TAG, MSG );
+                throw new JSONException( MSG );
             } else {
                 if ( eventType.equals( Orm.FIELD_EVENT_ACTIVITY_CHANGE ) ) {
                     if ( tag == null ) {
-                        final String msg = "Creating change activity event from JSON: invalid or missing data.";
+                        final String MSG = "Creating change activity event from JSON: invalid or missing data.";
 
-                        Log.e( LogTag, msg );
-                        throw new JSONException( msg );
+                        Log.e(LOG_TAG, MSG );
+                        throw new JSONException( MSG );
                     } else {
                         toret = new ActivityChangeEvent( millis, tag );
                     }
@@ -184,18 +184,18 @@ public class Result extends Persistent {
                 else
                 if ( eventType.equals( Orm.FIELD_EVENT_HEART_BEAT ) ) {
                     if ( heartbeat < 0 ) {
-                        final String msg = "Creating new hear beat event from JSON: invalid or missing data.";
+                        final String MSG = "Creating new hear beat event from JSON: invalid or missing data.";
 
-                        Log.e( LogTag, msg );
-                        throw new JSONException( msg );
+                        Log.e(LOG_TAG, MSG );
+                        throw new JSONException( MSG );
                     } else {
                         toret = new BeatEvent( millis, heartbeat );
                     }
                 } else {
-                    final String msg = "Creating event from JSON: unknown event.";
+                    final String MSG = "Creating event from JSON: unknown event.";
 
-                    Log.e( LogTag, msg );
-                    throw new JSONException( msg );
+                    Log.e(LOG_TAG, MSG );
+                    throw new JSONException( MSG );
                 }
             }
 
@@ -226,9 +226,9 @@ public class Result extends Persistent {
             if ( super.equals( obj2 )
               && obj2 instanceof BeatEvent )
             {
-                final BeatEvent evt = (BeatEvent) obj2;
+                final BeatEvent EVT = (BeatEvent) obj2;
 
-                toret = this.getTimeOfNewHeartBeat() == evt.getTimeOfNewHeartBeat();
+                toret = this.getTimeOfNewHeartBeat() == EVT.getTimeOfNewHeartBeat();
             }
 
             return toret;
@@ -277,9 +277,9 @@ public class Result extends Persistent {
             if ( super.equals( obj2 )
               && obj2 instanceof ActivityChangeEvent )
             {
-                final ActivityChangeEvent evt = (ActivityChangeEvent) obj2;
+                final ActivityChangeEvent EVT = (ActivityChangeEvent) obj2;
 
-                toret = this.getTag().equals( evt.getTag() );
+                toret = this.getTag().equals( EVT.getTag() );
             }
 
             return toret;
@@ -411,24 +411,24 @@ public class Result extends Persistent {
     /** @return the heart beats time distance, as a long[]. */
     public long[] buildHeartBeatsList()
     {
-        final ArrayList<Long> beatDistanceTimes = new ArrayList<>( this.size() );
+        final ArrayList<Long> BEAT_DISTANCE_TIMES = new ArrayList<>( this.size() );
 
         // Create
         for(Event evt: this.events) {
             if ( evt instanceof BeatEvent ) {
-                beatDistanceTimes.add( ( (BeatEvent) evt ).getTimeOfNewHeartBeat() );
+                BEAT_DISTANCE_TIMES.add( ( (BeatEvent) evt ).getTimeOfNewHeartBeat() );
             }
         }
 
         // Convert to primitive (come on, Java...).
-        long[] toret = new long[ beatDistanceTimes.size() ];
+        long[] toret = new long[ BEAT_DISTANCE_TIMES.size() ];
         int pos = 0;
-        for(long l: beatDistanceTimes) {
+        for(long l: BEAT_DISTANCE_TIMES) {
             toret[ pos ] = l;
             ++pos;
         }
 
-        beatDistanceTimes.clear();
+        BEAT_DISTANCE_TIMES.clear();
         return toret;
     }
 
@@ -439,10 +439,10 @@ public class Result extends Persistent {
         final int NUM_EVENTS = this.events.length;
 
         for( ++i; i < NUM_EVENTS; ++i ) {
-            final Event evt = this.events[ i ];
+            final Event EVT = this.events[ i ];
 
-            if ( evt instanceof ActivityChangeEvent ) {
-                toret = (ActivityChangeEvent) evt;
+            if ( EVT instanceof ActivityChangeEvent ) {
+                toret = (ActivityChangeEvent) EVT;
                 break;
             }
         }
@@ -462,46 +462,46 @@ public class Result extends Persistent {
 
         // Run all over the events and scatter them on files
         for(int i = 0; i < NUM_EVENTS; ++i) {
-            final Event evt = this.events[ i ];
+            final Event EVT = this.events[ i ];
 
-            if ( evt instanceof BeatEvent ) {
-                beatsStream.write( Long.toString( ( (BeatEvent) evt ).getTimeOfNewHeartBeat() ) );
+            if ( EVT instanceof BeatEvent ) {
+                beatsStream.write( Long.toString( ( (BeatEvent) EVT ).getTimeOfNewHeartBeat() ) );
                 beatsStream.write( '\n' );
             } else {
-                final ActivityChangeEvent actEvt = ( (ActivityChangeEvent) evt );
-                final long millis = evt.getMillis();
+                final ActivityChangeEvent ACT_EVT = ( (ActivityChangeEvent) EVT );
+                final long millis = EVT.getMillis();
                 long timeActWillLast;
 
                 // Determine duration
-                final ActivityChangeEvent nextActivityChangeEvt =
+                final ActivityChangeEvent NEXT_ACTIVITY_CHANGE_EVT =
                         this.locateNextActivityChangeEvent( i );
 
-                if ( nextActivityChangeEvt != null ) {
-                    timeActWillLast = nextActivityChangeEvt.getMillis() - millis;
+                if ( NEXT_ACTIVITY_CHANGE_EVT != null ) {
+                    timeActWillLast = NEXT_ACTIVITY_CHANGE_EVT.getMillis() - millis;
                 } else {
                     timeActWillLast = this.getDurationInMillis() - millis;
                 }
 
                 // Experiment's elapsed time
-                final double totalSecs = ( (double) millis ) / 1000;
-                int hours = (int) ( totalSecs / 3600 );
-                double remaining = totalSecs % 3600;
+                final double TOTAL_SECS = ( (double) millis ) / 1000;
+                int hours = (int) ( TOTAL_SECS / 3600 );
+                double remaining = TOTAL_SECS % 3600;
                 int mins = (int) ( remaining / 60 );
                 double secs = remaining % 60;
-                final String timeStamp = String.format( Locale.US,
+                final String TIME_STAMP = String.format( Locale.US,
                                                         "%02d:%02d:%05.2f", hours, mins, secs );
-                final String timeDuration = String.format( Locale.US,
+                final String TIME_DURATION = String.format( Locale.US,
                                                         "%.2f", ( (double) timeActWillLast ) / 1000 );
 
-                tagsStream.write( timeStamp );
+                tagsStream.write( TIME_STAMP );
 
                 // Activity tag
                 tagsStream.write( '\t' );
-                tagsStream.write( actEvt.getTag() );
+                tagsStream.write( ACT_EVT.getTag() );
 
                 // Duration
                 tagsStream.write( '\t' );
-                tagsStream.write( timeDuration );
+                tagsStream.write( TIME_DURATION );
 
                 // Finish this entry
                 tagsStream.write( '\n' );
@@ -562,8 +562,8 @@ public class Result extends Persistent {
 
     public static Result fromJSON(Reader reader) throws JSONException
     {
-        final JsonReader jsonReader = new JsonReader( reader );
-        final ArrayList<Event> events = new ArrayList<>();
+        final JsonReader JSON_READER = new JsonReader( reader );
+        final ArrayList<Event> EVENTS = new ArrayList<>();
         Result toret;
         long durationInMillis = -1L;
         TypeId typeId = null;
@@ -574,52 +574,52 @@ public class Result extends Persistent {
 
         // Load data
         try {
-            jsonReader.beginObject();
-            while ( jsonReader.hasNext() ) {
-                final String nextName = jsonReader.nextName();
+            JSON_READER.beginObject();
+            while ( JSON_READER.hasNext() ) {
+                final String nextName = JSON_READER.nextName();
 
                 if ( nextName.equals( Orm.FIELD_DATE ) ) {
-                    dateTime = jsonReader.nextLong();
+                    dateTime = JSON_READER.nextLong();
                 }
                 else
                 if ( nextName.equals( Orm.FIELD_TIME ) ) {
-                    durationInMillis = jsonReader.nextLong();
+                    durationInMillis = JSON_READER.nextLong();
                 }
                 else
                 if ( nextName.equals( Orm.FIELD_NAME ) ) {
-                    jsonReader.nextString();
+                    JSON_READER.nextString();
                 }
                 else
                 if ( nextName.equals( Orm.FIELD_TYPE_ID ) ) {
-                    typeId = readTypeIdFromJson( jsonReader );
+                    typeId = readTypeIdFromJson( JSON_READER );
                 }
                 else
                 if ( nextName.equals( Id.FIELD ) ) {
-                    id = readIdFromJSON( jsonReader );
+                    id = readIdFromJSON( JSON_READER );
                 }
                 else
                 if ( nextName.equals( Orm.FIELD_USER_ID ) ) {
-                    userId = readIdFromJSON( jsonReader );
+                    userId = readIdFromJSON( JSON_READER );
                 }
                 else
                 if ( nextName.equals( Orm.FIELD_EXPERIMENT_ID ) ) {
-                    experimentId = readIdFromJSON( jsonReader );
+                    experimentId = readIdFromJSON( JSON_READER );
                 }
                 else
                 if ( nextName.equals( Orm.FIELD_EVENTS ) ) {
-                    jsonReader.beginArray();
-                    while( jsonReader.hasNext() ) {
-                        events.add( Event.fromJSON( jsonReader ) );
+                    JSON_READER.beginArray();
+                    while( JSON_READER.hasNext() ) {
+                        EVENTS.add( Event.fromJSON( JSON_READER ) );
                     }
 
-                    jsonReader.endArray();
+                    JSON_READER.endArray();
                 }
             }
         } catch(IOException exc)
         {
             final String ERROR_MSG = "Creating result from JSON: " + exc.getMessage();
 
-            Log.e( LogTag, ERROR_MSG );
+            Log.e(LOG_TAG, ERROR_MSG );
             throw new JSONException( ERROR_MSG );
         }
 
@@ -631,27 +631,27 @@ public class Result extends Persistent {
           || durationInMillis < 0
           || typeId != TypeId.Result )
         {
-            final String msg = "Creating result from JSON: invalid or missing data.";
+            final String MSG_ERROR = "Creating result from JSON: invalid or missing data.";
 
-            Log.e( LogTag, msg );
-            throw new JSONException( msg );
+            Log.e(LOG_TAG, MSG_ERROR );
+            throw new JSONException( MSG_ERROR );
         } else {
-            final Orm orm = Orm.get();
+            final Orm ORM = Orm.get();
 
             try {
-                final Experiment expr = (Experiment) orm.retrieve( experimentId, TypeId.Experiment );
-                final User usr = orm.createOrRetrieveUserById( userId );
+                final Experiment EXPR = (Experiment) ORM.retrieve( experimentId, TypeId.Experiment );
+                final User usr = ORM.createOrRetrieveUserById( userId );
 
                 toret = new Result( id,
                                     dateTime,
                                     durationInMillis,
                                     usr,
-                                    expr,
-                                    events.toArray( new Event[ 0 ] ) );
+                                    EXPR,
+                                    EVENTS.toArray( new Event[ 0 ] ) );
             } catch(IOException exc) {
                 final String ERROR_MSG = "Retrieving results' experiment or user data set: " + exc.getMessage();
 
-                Log.e( LogTag, ERROR_MSG );
+                Log.e(LOG_TAG, ERROR_MSG );
                 throw new JSONException( ERROR_MSG );
             }
         }
@@ -676,15 +676,15 @@ public class Result extends Persistent {
      */
     public static long parseIdFromName(String resName)
     {
-        final String strId = parseName( resName )[ 1 ];
+        final String STR_ID = parseName( resName )[ 1 ];
 
-        if ( strId.charAt( 0 ) != 'i' ) {
+        if ( STR_ID.charAt( 0 ) != 'i' ) {
             throw new Error( "malformed result name looking for id: "
-                    + strId
+                    + STR_ID
                     + "/" + resName );
         }
 
-        return Long.parseLong( strId.substring( 1 ) );
+        return Long.parseLong( STR_ID.substring( 1 ) );
     }
 
     /** @return the result's time - date, reading it from its name.
@@ -692,15 +692,15 @@ public class Result extends Persistent {
       */
     public static long parseTimeFromName(String resName)
     {
-        final String strTime = parseName( resName )[ 2 ];
+        final String STR_TIME = parseName( resName )[ 2 ];
 
-        if ( strTime.charAt( 0 ) != 't' ) {
+        if ( STR_TIME.charAt( 0 ) != 't' ) {
             throw new Error( "malformed result name looking for time: "
-                    + strTime
+                    + STR_TIME
                     + "/" + resName );
         }
 
-        return Long.parseLong( strTime.substring( 1 ) );
+        return Long.parseLong( STR_TIME.substring( 1 ) );
     }
 
     /** @return the user's id from this result, reading it from its name.
@@ -708,15 +708,15 @@ public class Result extends Persistent {
      */
     public static long parseUserIdFromName(String resName)
     {
-        final String strUserId = parseName( resName )[ 3 ];
+        final String STR_USR_ID = parseName( resName )[ 3 ];
 
-        if ( strUserId.charAt( 0 ) != 'u' ) {
+        if ( STR_USR_ID.charAt( 0 ) != 'u' ) {
             throw new Error( "malformed result name looking for user's id: "
-                    + strUserId
+                    + STR_USR_ID
                     + "/" + resName );
         }
 
-        return Long.parseLong( strUserId.substring( 1 ) );
+        return Long.parseLong( STR_USR_ID.substring( 1 ) );
     }
 
     /** @return the user's id from this result, reading it from its name.
@@ -724,15 +724,15 @@ public class Result extends Persistent {
      */
     public static long parseExperimentIdFromName(String resName)
     {
-        final String strExperimentId = parseName( resName )[ 4 ];
+        final String STR_EXPERIMENT_ID = parseName( resName )[ 4 ];
 
-        if ( strExperimentId.charAt( 0 ) != 'e' ) {
+        if ( STR_EXPERIMENT_ID.charAt( 0 ) != 'e' ) {
             throw new Error( "malformed result name looking for experiment's id: "
-                                + strExperimentId
+                                + STR_EXPERIMENT_ID
                                 + "/" + resName );
         }
 
-        return Long.parseLong( strExperimentId.substring( 1 ) );
+        return Long.parseLong( STR_EXPERIMENT_ID.substring( 1 ) );
     }
 
     private static String[] parseName(String resName)
@@ -744,13 +744,13 @@ public class Result extends Persistent {
         }
 
         resName = resName.trim();
-        final String[] toret = resName.split( "-" );
+        final String[] TORET = resName.split( "-" );
 
-        if ( toret.length != 5 ) {
+        if ( TORET.length != 5 ) {
             throw new Error( "dividing result name in parts" );
         }
 
-        return toret;
+        return TORET;
     }
 
     private long durationInMillis;

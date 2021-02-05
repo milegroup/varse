@@ -38,7 +38,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class ResultsActivity extends AppActivity {
-    private final static String LogTag = ResultsActivity.class.getSimpleName();
+    private final static String LOG_TAG = ResultsActivity.class.getSimpleName();
     private  static final int RQC_ASK_PERMISSION = 78;
 
     @Override
@@ -47,11 +47,11 @@ public class ResultsActivity extends AppActivity {
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_results );
 
-        final Toolbar toolbar = this.findViewById( R.id.toolbar );
-        this.setSupportActionBar( toolbar );
+        final Toolbar TOOLBAR = this.findViewById( R.id.toolbar );
+        this.setSupportActionBar( TOOLBAR );
 
-        final ImageButton btBack = this.findViewById( R.id.btCloseResults );
-        final Spinner cbExperiments = this.findViewById( R.id.cbExperiments );
+        final ImageButton BT_BACK = this.findViewById( R.id.btCloseResults );
+        final Spinner CB_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
 
         // Init
         this.backupFinished = true;
@@ -59,8 +59,8 @@ public class ResultsActivity extends AppActivity {
         this.dataStore.removeCache();
 
         // Event handlers
-        btBack.setOnClickListener( (v) -> this.finish() );
-        cbExperiments.setOnItemSelectedListener(
+        BT_BACK.setOnClickListener( (v) -> this.finish() );
+        CB_EXPERIMENTS.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
                     @Override
                     public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
@@ -79,7 +79,7 @@ public class ResultsActivity extends AppActivity {
     {
         super.onResume();
 
-        final Spinner spExperiments = this.findViewById( R.id.cbExperiments );
+        final Spinner SP_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
         Persistent expr = null;
 
         if ( experiment != null ) {
@@ -91,11 +91,11 @@ public class ResultsActivity extends AppActivity {
         if ( expr != null ) {
             experiment = expr;
 
-            for(int i = 0; i < spExperiments.getAdapter().getCount(); ++i) {
-                expr = (Persistent) spExperiments.getAdapter().getItem( i );
+            for(int i = 0; i < SP_EXPERIMENTS.getAdapter().getCount(); ++i) {
+                expr = (Persistent) SP_EXPERIMENTS.getAdapter().getItem( i );
 
                 if ( expr.getId().equals( experiment.getId() ) ) {
-                    spExperiments.setSelection( i, false );
+                    SP_EXPERIMENTS.setSelection( i, false );
                     break;
                 }
             }
@@ -138,10 +138,10 @@ public class ResultsActivity extends AppActivity {
             result = (Result) this.dataStore.retrieve( result.getId(), Persistent.TypeId.Result );
 
             ResultViewerActivity.result = result;
-            final Intent graphViewerIntent = new Intent( this, ResultViewerActivity.class );
-            this.startActivity( graphViewerIntent );
+            final Intent GRPH_VIEWER_INTENT = new Intent( this, ResultViewerActivity.class );
+            this.startActivity( GRPH_VIEWER_INTENT );
         } catch(IOException exc) {
-            this.showStatus( LogTag, "unable to generate result data set" );
+            this.showStatus(LOG_TAG, "unable to generate result data set" );
         }
     }
 
@@ -151,17 +151,17 @@ public class ResultsActivity extends AppActivity {
         final int RESULT_REQUEST = ContextCompat.checkSelfPermission( this, PERMISSION );
 
         try {
-            final Result result = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
+            final Result RESULT = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
 
             if ( RESULT_REQUEST != PackageManager.PERMISSION_GRANTED ) {
                 ActivityCompat.requestPermissions( this,
                         new String[]{ PERMISSION },
                         RQC_ASK_PERMISSION );
             } else {
-                this.doExportResult( result );
+                this.doExportResult( RESULT );
             }
         } catch(IOException exc) {
-            this.showStatus( LogTag, this.getString( R.string.errExport) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errExport) );
         }
 
         return;
@@ -197,10 +197,10 @@ public class ResultsActivity extends AppActivity {
                         DBOX_SERVICE.uploadDataFile( f );
                     }
 
-                    SELF.runOnUiThread( () -> SELF.showStatus( LogTag, SELF.getString( R.string.msgFinishedBackup ) ) );
+                    SELF.runOnUiThread( () -> SELF.showStatus(LOG_TAG, SELF.getString( R.string.msgFinishedBackup ) ) );
                 } catch (IOException | DbxException exc)
                 {
-                    SELF.runOnUiThread( () -> SELF.showStatus( LogTag, SELF.getString( R.string.errIO ) ) );
+                    SELF.runOnUiThread( () -> SELF.showStatus(LOG_TAG, SELF.getString( R.string.errIO ) ) );
                 } finally {
                     SELF.runOnUiThread( () -> {
                         PB_PROGRESS.setVisibility( View.GONE );
@@ -224,13 +224,13 @@ public class ResultsActivity extends AppActivity {
         dlg.setMessage( this.getString( R.string.msgAreYouSure ) );
         dlg.setPositiveButton( R.string.lblDelete, (dlgIntf, i) -> {
             try {
-                final Result result = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
+                final Result RESULT = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
 
-                this.dataStore.remove( result );
+                this.dataStore.remove( RESULT );
                 this.loadResults();
             } catch(IOException exc) {
-                Log.e( LogTag, this.getString( R.string.errDeleting) + ": " + exc.getMessage() );
-                this.showStatus( LogTag, this.getString( R.string.errDeleting) );
+                Log.e(LOG_TAG, this.getString( R.string.errDeleting) + ": " + exc.getMessage() );
+                this.showStatus(LOG_TAG, this.getString( R.string.errDeleting) );
             }
         });
         dlg.setNegativeButton( R.string.lblNo, null );
@@ -239,14 +239,14 @@ public class ResultsActivity extends AppActivity {
 
     private void doExportResult(Result result)
     {
-        final String lblResult = this.getString( R.string.lblResult );
+        final String LBL_RESULT = this.getString( R.string.lblResult );
 
         try {
             this.dataStore.exportResult( null, result );
-            this.showStatus( LogTag, this.getString( R.string.msgExported ) + ": " + lblResult );
+            this.showStatus(LOG_TAG, this.getString( R.string.msgExported ) + ": " + LBL_RESULT );
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.errExport) + ": " + lblResult );
+            this.showStatus(LOG_TAG, this.getString( R.string.errExport) + ": " + LBL_RESULT );
         }
 
         return;
@@ -255,7 +255,7 @@ public class ResultsActivity extends AppActivity {
     /** Reads the experiments' names from the ORM. */
     private void loadExperimentsSpinner()
     {
-        final Spinner cbExperiments = this.findViewById( R.id.cbExperiments );
+        final Spinner CB_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
 
         // Read experiments' names
         try {
@@ -263,19 +263,19 @@ public class ResultsActivity extends AppActivity {
             experimentsList = this.dataStore.enumerateExperiments();
 
             // Spinner experiments
-            final ArrayAdapter<Persistent> adapterExperiments =
+            final ArrayAdapter<Persistent> ADAPTER_EXPERIMENTS =
                     new ArrayAdapter<>( this,
                                         android.R.layout.simple_spinner_item,
                                         experimentsList );
-            adapterExperiments.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
-            cbExperiments.setAdapter( adapterExperiments );
-            cbExperiments.setSelection( 0, false );
+            ADAPTER_EXPERIMENTS.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
+            CB_EXPERIMENTS.setAdapter( ADAPTER_EXPERIMENTS );
+            CB_EXPERIMENTS.setSelection( 0, false );
 
             if ( experimentsList.length > 0 ) {
                 experiment = experimentsList[ 0 ];
             }
         } catch(IOException exc) {
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
 
         return;
@@ -289,39 +289,39 @@ public class ResultsActivity extends AppActivity {
         }
 
         try {
-            final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
-            final ListView lvResults = this.findViewById( R.id.lvResultItems );
-            final PartialObject[] poEntries = dataStore.enumerateResultsForExperiment( experiment.getId() );
+            final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
+            final ListView LV_RESULTS = this.findViewById( R.id.lvResultItems );
+            final PartialObject[] PO_ENTRIES = dataStore.enumerateResultsForExperiment( experiment.getId() );
 
             // Prepare the list of experiments
-            final Result[] resultEntries = new Result[ poEntries.length ];
+            final Result[] RESULT_ENTRIES = new Result[ PO_ENTRIES.length ];
 
-            for(int i = 0; i < poEntries.length; ++i) {
-                final PartialObject po = poEntries[ i ];
-                final Id userId = new Id( Result.parseUserIdFromName( po.getName() ) );
-                final User user = this.dataStore.createOrRetrieveUserById( userId );
+            for(int i = 0; i < PO_ENTRIES.length; ++i) {
+                final PartialObject PO = PO_ENTRIES[ i ];
+                final Id USR_ID = new Id( Result.parseUserIdFromName( PO.getName() ) );
+                final User USR = this.dataStore.createOrRetrieveUserById( USR_ID );
 
-                resultEntries[ i ] =
-                            new Result( po.getId(),
-                                        Result.parseTimeFromName( po.getName() ),
+                RESULT_ENTRIES[ i ] =
+                            new Result( PO.getId(),
+                                        Result.parseTimeFromName( PO.getName() ),
                                         0,
-                                        user, null, new Result.Event[ 0 ] );
+                                        USR, null, new Result.Event[ 0 ] );
             }
 
             // Prepare the list view
-            lvResults.setAdapter( new ListViewResultArrayAdapter(this, resultEntries ) );
+            LV_RESULTS.setAdapter( new ListViewResultArrayAdapter(this, RESULT_ENTRIES ) );
 
             // Show the experiments list (or maybe not).
-            if ( poEntries.length > 0 ) {
-                lblNoEntries.setVisibility( View.GONE );
-                lvResults.setVisibility( View.VISIBLE );
+            if ( PO_ENTRIES.length > 0 ) {
+                LBL_NO_ENTRIES.setVisibility( View.GONE );
+                LV_RESULTS.setVisibility( View.VISIBLE );
             } else {
-                lblNoEntries.setVisibility( View.VISIBLE );
-                lvResults.setVisibility( View.GONE );
+                LBL_NO_ENTRIES.setVisibility( View.VISIBLE );
+                LV_RESULTS.setVisibility( View.GONE );
             }
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
 
         return;

@@ -14,13 +14,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -29,7 +27,7 @@ import static android.content.Context.BIND_AUTO_CREATE;
 
 
 public class BluetoothUtils {
-    private static final String LogTag = BluetoothUtils.class.getSimpleName();
+    private static final String LOG_TAG = BluetoothUtils.class.getSimpleName();
     public static final UUID UUID_HR_MEASUREMENT_CHR = UUID.fromString( "00002a37-0000-1000-8000-00805f9b34fb" );
     public static final UUID UUID_HR_MEASUREMENT_SRV = UUID.fromString( "0000180D-0000-1000-8000-00805f9b34fb" );
     public static final UUID UUID_CLIENT_CHAR_CONFIG = UUID.fromString( "00002902-0000-1000-8000-00805f9b34fb" );
@@ -71,12 +69,12 @@ public class BluetoothUtils {
 
     public static BluetoothAdapter getBluetoothAdapter(Context cntxt)
     {
-        final BluetoothManager bluetoothManager =
+        final BluetoothManager BT_MANAGER =
                 (BluetoothManager) cntxt.getSystemService( Context.BLUETOOTH_SERVICE );
         BluetoothAdapter toret = null;
 
-        if ( bluetoothManager != null ) {
-            toret = bluetoothManager.getAdapter();
+        if ( BT_MANAGER != null ) {
+            toret = BT_MANAGER.getAdapter();
         }
 
         return toret;
@@ -85,7 +83,7 @@ public class BluetoothUtils {
     /** @return the HR characteristic from a GATT connection to a device. */
     public static BluetoothGattCharacteristic getHeartRateChar(BluetoothGatt gatt)
     {
-        final String deviceName = gatt.getDevice().getName();
+        final String DEVICE_NAME = gatt.getDevice().getName();
         BluetoothGattCharacteristic toret = null;
         BluetoothGattService hrService = gatt.getService( UUID_HR_MEASUREMENT_SRV );
 
@@ -93,36 +91,36 @@ public class BluetoothUtils {
             toret = hrService.getCharacteristic( UUID_HR_MEASUREMENT_CHR );
 
             if ( toret != null ) {
-                Log.d( LogTag, "Building HR characteristic ("
+                Log.d(LOG_TAG, "Building HR characteristic ("
                                         + toret.getUuid().toString()
-                                        + ") in: " + deviceName );
+                                        + ") in: " + DEVICE_NAME );
 
                 // Enabling notifications for HR
                 gatt.setCharacteristicNotification( toret, true );
 
-                Log.d( LogTag, "HR enabled notifications ("
-                        + toret.getUuid().toString() + ") in: " + deviceName );
+                Log.d(LOG_TAG, "HR enabled notifications ("
+                        + toret.getUuid().toString() + ") in: " + DEVICE_NAME );
 
                 final BluetoothGattDescriptor DESCRIPTOR = toret.getDescriptor( UUID_CLIENT_CHAR_CONFIG );
 
                 if ( !DESCRIPTOR.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE ) )
                 {
-                    Log.e( LogTag, "    Cannot create descriptor for HR in: " + deviceName );
+                    Log.e(LOG_TAG, "    Cannot create descriptor for HR in: " + DEVICE_NAME );
                 }
 
                 if ( !gatt.writeDescriptor( DESCRIPTOR ) ) {
-                    Log.e( LogTag, "    Cannot enable notifications for HR in: " + deviceName );
+                    Log.e(LOG_TAG, "    Cannot enable notifications for HR in: " + DEVICE_NAME );
                     toret = null;
                 }
             } else {
-                Log.d( LogTag, "No HR characteristic found in: " + deviceName );
+                Log.d(LOG_TAG, "No HR characteristic found in: " + DEVICE_NAME );
             }
         } else {
-            Log.d( LogTag, "No HR service in: " + deviceName );
+            Log.d(LOG_TAG, "No HR service in: " + DEVICE_NAME );
         }
 
         if ( toret != null ) {
-            Log.d( LogTag, "    Returning built HR char: " + toret.getUuid().toString() );
+            Log.d(LOG_TAG, "    Returning built HR char: " + toret.getUuid().toString() );
         }
 
         return toret;
@@ -132,8 +130,8 @@ public class BluetoothUtils {
     // device.connectGatt(context,false,bluetoothGattCallback);
     public static BluetoothGattCallback createGattServiceFilteringCallback(
                                                     Context cntxt,
-                                                    final GattServiceConsumer hrServiceDiscovered,
-                                                    final GattServiceConsumer hrServiceNotAvailable)
+                                                    final GattServiceConsumer HR_SERV_DISCOVERED,
+                                                    final GattServiceConsumer HR_SERVICE_NOT_AVAIL)
     {
         return new BluetoothGattCallback() {
             @Override
@@ -153,12 +151,12 @@ public class BluetoothUtils {
             {
                 super.onServicesDiscovered( gatt, status );
 
-                final BluetoothGattCharacteristic hrChr = BluetoothUtils.getHeartRateChar( gatt );
+                final BluetoothGattCharacteristic HR_CHR = BluetoothUtils.getHeartRateChar( gatt );
 
-                if ( hrChr != null ) {
-                    hrServiceDiscovered.consum( gatt.getDevice(), hrChr );
+                if ( HR_CHR != null ) {
+                    HR_SERV_DISCOVERED.consum( gatt.getDevice(), HR_CHR );
                 } else {
-                    hrServiceNotAvailable.consum( gatt.getDevice(), null );
+                    HR_SERVICE_NOT_AVAIL.consum( gatt.getDevice(), null );
                 }
 
                 return;
@@ -207,7 +205,7 @@ public class BluetoothUtils {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                final BluetoothAdapter btAdapter = getBluetoothAdapter( context );
+                final BluetoothAdapter BT_ADAPTER = getBluetoothAdapter( context );
                 String action = intent.getAction();
 
                 if ( BluetoothDevice.ACTION_FOUND.equals( action ) ) {
@@ -256,9 +254,9 @@ public class BluetoothUtils {
 
                     if ( this.hrGattCharacteristic != null ) {
                         SERVICE.readCharacteristic( this.hrGattCharacteristic );
-                        Log.d( LogTag, "Reading hr..." );
+                        Log.d(LOG_TAG, "Reading hr..." );
                     } else {
-                        Log.e( LogTag, "Won't read hr since was not found..." );
+                        Log.e(LOG_TAG, "Won't read hr since was not found..." );
                     }
                 }
                 else
@@ -276,25 +274,25 @@ public class BluetoothUtils {
     /** @return An intent filter suitable for HR measurement. */
     public static IntentFilter createBroadcastReceiverIntentFilter()
     {
-        final IntentFilter intentFilter = new IntentFilter();
+        final IntentFilter INTENT_FILTER = new IntentFilter();
 
-        intentFilter.addAction( BleService.ACTION_GATT_CONNECTED );
-        intentFilter.addAction( BleService.ACTION_GATT_DISCONNECTED );
-        intentFilter.addAction( BleService.ACTION_GATT_SERVICES_DISCOVERED );
-        intentFilter.addAction( BleService.ACTION_DATA_AVAILABLE );
+        INTENT_FILTER.addAction( BleService.ACTION_GATT_CONNECTED );
+        INTENT_FILTER.addAction( BleService.ACTION_GATT_DISCONNECTED );
+        INTENT_FILTER.addAction( BleService.ACTION_GATT_SERVICES_DISCOVERED );
+        INTENT_FILTER.addAction( BleService.ACTION_DATA_AVAILABLE );
 
-        return intentFilter;
+        return INTENT_FILTER;
     }
 
     /** @return A suitable BleService. */
     public static void createBleService(final HRListenerActivity ACTIVITY, IBinder service)
     {
-        Log.d( LogTag, "Binding service..." );
+        Log.d(LOG_TAG, "Binding service..." );
 
         ACTIVITY.setService( ( (BleService.LocalBinder) service ).getService() );
         ACTIVITY.getService().initialize( ACTIVITY.getBtDevice() );
 
-        Log.d( LogTag, "Service bound." );
+        Log.d(LOG_TAG, "Service bound." );
     }
 
     public static ServiceConnectionWithStatus createServiceConnectionCallBack(final HRListenerActivity ACTIVITY)
@@ -305,15 +303,15 @@ public class BluetoothUtils {
     /** Turns down all services and callbacks needed to connect to the band. */
     public static void closeBluetoothConnections(HRListenerActivity activity)
     {
-        final Activity context = (Activity) activity;
+        final Activity CONTEXT = (Activity) activity;
 
-        Log.d( LogTag, "Closing connections." );
+        Log.d(LOG_TAG, "Closing connections." );
 
         // Unregister receiver
         try {
-            context.unregisterReceiver( activity.getBroadcastReceiver() );
+            CONTEXT.unregisterReceiver( activity.getBroadcastReceiver() );
         } catch(IllegalArgumentException exc) {
-            Log.e( LogTag, "closing: not registered yet: " + exc.getMessage() );
+            Log.e(LOG_TAG, "closing: not registered yet: " + exc.getMessage() );
         }
 
         // Disconnect the service
@@ -324,9 +322,9 @@ public class BluetoothUtils {
         // Unbind the service
         if ( activity.getServiceConnection() != null ) {
             try {
-                context.unbindService( activity.getServiceConnection() );
+                CONTEXT.unbindService( activity.getServiceConnection() );
             } catch(IllegalArgumentException exc) {
-                Log.e( LogTag, "closing: service not bound yet: " + exc.getMessage() );
+                Log.e(LOG_TAG, "closing: service not bound yet: " + exc.getMessage() );
             }
         }
 
@@ -335,20 +333,20 @@ public class BluetoothUtils {
             activity.getBtDevice().getDemoDevice().disconnect();
         }
 
-        Log.d( LogTag, "Connections closed." );
+        Log.d(LOG_TAG, "Connections closed." );
     }
 
     /** Turns on all services and callbacks needed to connect to the band. */
-    public static void openBluetoothConnections(HRListenerActivity activity, final String conn, final String disconn)
+    public static void openBluetoothConnections(HRListenerActivity activity, final String CONN, final String DISCONN)
     {
-        final Activity context = (Activity) activity;
-        final Intent gattServiceIntent = new Intent( context, BleService.class );
+        final Activity CONTEXT = (Activity) activity;
+        final Intent GATT_SERV_INTENT = new Intent( CONTEXT, BleService.class );
 
         activity.setServiceConnection( BluetoothUtils.createServiceConnectionCallBack( activity ) );
-        activity.setBroadcastReceiver( BluetoothUtils.createBroadcastReceiverCallBack( conn, disconn ) );
-        context.bindService( gattServiceIntent, activity.getServiceConnection(), BIND_AUTO_CREATE );
+        activity.setBroadcastReceiver( BluetoothUtils.createBroadcastReceiverCallBack( CONN, DISCONN ) );
+        CONTEXT.bindService( GATT_SERV_INTENT, activity.getServiceConnection(), BIND_AUTO_CREATE );
 
-        Log.d( LogTag, "Binding service for: " + activity.getBtDevice().getName() );
+        Log.d(LOG_TAG, "Binding service for: " + activity.getBtDevice().getName() );
         // Follow up, once the service is bound, in createServiceConnectionCallback()
     }
 }

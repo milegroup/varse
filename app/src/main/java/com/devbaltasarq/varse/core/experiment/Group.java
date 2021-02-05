@@ -19,7 +19,7 @@ import java.util.Arrays;
 
 /** Groups of activities, many times related to media files. */
 public abstract class Group<T extends Group.Activity> extends Persistent {
-    private final static String LogTag = "Group";
+    private final static String LOG_TAG = "Group";
     protected final static Duration DEFAULT_TIME_FOR_ACTIVITY = new Duration( 5 );
     protected final static Tag DEFAULT_TAG_FOR_ACTIVITY = new Tag( "tag" );
 
@@ -92,13 +92,13 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                        || typeId == null )
                      && jsonReader.hasNext() )
                 {
-                    final String nextName = jsonReader.nextName();
+                    final String NEXT_NAME = jsonReader.nextName();
 
-                    if ( nextName.equals( Id.FIELD) ) {
+                    if ( NEXT_NAME.equals( Id.FIELD) ) {
                         id = readIdFromJSON( jsonReader );
                     }
                     else
-                    if ( nextName.equals( Orm.FIELD_TYPE_ID ) ) {
+                    if ( NEXT_NAME.equals( Orm.FIELD_TYPE_ID ) ) {
                         typeId = readTypeIdFromJson( jsonReader );
                     }
                 }
@@ -268,13 +268,13 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     /** Swaps a given media file with the previous one. */
     public void sortActivityUp(T act)
     {
-        final int pos = this.activities.indexOf( act );
+        final int POS = this.activities.indexOf( act );
 
         // Nothing to do if not found or is the first one.
-        if ( pos >= 1 ) {
-            Activity backUp = this.activities.get( pos - 1 );
-            this.activities.set( pos - 1, this.activities.get( pos ) );
-            this.activities.set( pos, backUp );
+        if ( POS >= 1 ) {
+            Activity backUp = this.activities.get( POS - 1 );
+            this.activities.set( POS - 1, this.activities.get( POS ) );
+            this.activities.set( POS, backUp );
         }
 
         return;
@@ -283,14 +283,14 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     /** Swaps a given media file with the previous one. */
     public void sortActivityDown(T act)
     {
-        final int length = this.activities.size();
-        final int pos = this.activities.indexOf( act );
+        final int LENGTH = this.activities.size();
+        final int POS = this.activities.indexOf( act );
 
         // Nothing to do if not found or is the last one.
-        if ( pos < ( length - 1 ) ) {
-            Activity backUp = this.activities.get( pos + 1 );
-            this.activities.set( pos + 1, this.activities.get( pos ) );
-            this.activities.set( pos, backUp );
+        if ( POS < ( LENGTH - 1 ) ) {
+            Activity backUp = this.activities.get( POS + 1 );
+            this.activities.set( POS + 1, this.activities.get( POS ) );
+            this.activities.set( POS, backUp );
         }
 
         return;
@@ -315,18 +315,18 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         boolean toret = false;
 
         if ( o instanceof Group ) {
-            final Group go = (Group) o;
-            final Activity[] oacts = go.get();
+            final Group GROUP_OBJ = (Group) o;
+            final Activity[] ACTIVITIES_OBJ = GROUP_OBJ.get();
 
-            if ( this.activities.size() == oacts.length ) {
+            if ( this.activities.size() == ACTIVITIES_OBJ.length ) {
                 int i = 0;
                 for(; i < this.activities.size(); ++i) {
-                    if ( !this.activities.get( i ).equals( oacts[ i ] ) ) {
+                    if ( !this.activities.get( i ).equals( ACTIVITIES_OBJ[ i ] ) ) {
                         break;
                     }
                 }
 
-                toret = ( i >= oacts.length ) && ( this.isRandom() == go.isRandom() );
+                toret = ( i >= ACTIVITIES_OBJ.length ) && ( this.isRandom() == GROUP_OBJ.isRandom() );
             }
         }
 
@@ -393,14 +393,14 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
 
     public static Group fromJSON(Reader rd) throws JSONException
     {
-        final JsonReader jsonReader = new JsonReader( rd );
+        final JsonReader JSON_READER = new JsonReader( rd );
 
-        return fromJSON( jsonReader );
+        return fromJSON( JSON_READER );
     }
 
     public static Group fromJSON(JsonReader jsonReader) throws JSONException
     {
-        final ArrayList<Activity> acts = new ArrayList<>();
+        final ArrayList<Activity> ACTS = new ArrayList<>();
         Group toret;
         TypeId typeId = null;
         Tag tag = null;
@@ -412,32 +412,32 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         try {
             jsonReader.beginObject();
             while ( jsonReader.hasNext() ) {
-                final String nextName = jsonReader.nextName();
+                final String NEXT_NAME = jsonReader.nextName();
 
-                if ( nextName.equals( Orm.FIELD_RANDOM ) ) {
+                if ( NEXT_NAME.equals( Orm.FIELD_RANDOM ) ) {
                     rnd = jsonReader.nextBoolean();
                 }
                 else
-                if ( nextName.equals( Orm.FIELD_TYPE_ID ) ) {
+                if ( NEXT_NAME.equals( Orm.FIELD_TYPE_ID ) ) {
                     typeId = readTypeIdFromJson( jsonReader );
                 }
                 else
-                if ( nextName.equals( Orm.FIELD_TAG ) ) {
+                if ( NEXT_NAME.equals( Orm.FIELD_TAG ) ) {
                     tag = new Tag( jsonReader.nextString() );
                 }
                 else
-                if ( nextName.equals( Orm.FIELD_TIME ) ) {
+                if ( NEXT_NAME.equals( Orm.FIELD_TIME ) ) {
                     duration = new Duration( jsonReader.nextInt() );
                 }
                 else
-                if ( nextName.equals( Id.FIELD) ) {
+                if ( NEXT_NAME.equals( Id.FIELD) ) {
                     id = readIdFromJSON( jsonReader );
                 }
                 else
-                if ( nextName.equals( Orm.FIELD_ACTIVITIES ) ) {
+                if ( NEXT_NAME.equals( Orm.FIELD_ACTIVITIES ) ) {
                     jsonReader.beginArray();
                     while ( jsonReader.hasNext() ) {
-                        acts.add( Activity.fromJSON( jsonReader ) );
+                        ACTS.add( Activity.fromJSON( jsonReader ) );
                     }
                     jsonReader.endArray();
                 }
@@ -446,27 +446,27 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
             jsonReader.endObject();
         } catch(IOException exc)
         {
-            Log.e( LogTag, "Creating group from JSON: " + exc.getMessage() );
+            Log.e(LOG_TAG, "Creating group from JSON: " + exc.getMessage() );
         }
 
         // Chk
         if ( typeId == null
           || id == null )
         {
-            final String msg = "Creating user from JSON: invalid or missing data.";
+            final String MSG_ERROR = "Creating user from JSON: invalid or missing data.";
 
-            Log.e( LogTag, msg );
-            throw new JSONException( msg );
+            Log.e(LOG_TAG, MSG_ERROR );
+            throw new JSONException( MSG_ERROR );
         }
 
-        final Group.Activity[] activities = acts.toArray( new Group.Activity[ acts.size() ] );
+        final Group.Activity[] ACTIVITIES = ACTS.toArray( new Group.Activity[ ACTS.size() ] );
 
         try {
             if ( typeId == TypeId.PictureGroup
               || typeId == TypeId.VideoGroup )
             {
-                final MediaGroup.MediaActivity[] mediaActs = Arrays.copyOf(
-                                                            activities, activities.length,
+                final MediaGroup.MediaActivity[] MEDIA_ACTS = Arrays.copyOf(
+                                                            ACTIVITIES, ACTIVITIES.length,
                                                             MediaGroup.MediaActivity[].class );
 
                 if ( typeId == TypeId.PictureGroup ) {
@@ -478,7 +478,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                         throw new JSONException( "Group.fromJSON: picture group missing time" );
                     }
 
-                    toret = new PictureGroup( id, tag, duration, rnd, null, mediaActs );
+                    toret = new PictureGroup( id, tag, duration, rnd, null, MEDIA_ACTS );
                 }
                 else
                 if ( typeId == TypeId.VideoGroup ) {
@@ -487,18 +487,18 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                     }
 
 
-                    toret = new VideoGroup( id, tag, rnd, null, mediaActs );
+                    toret = new VideoGroup( id, tag, rnd, null, MEDIA_ACTS );
                 } else {
                     throw new JSONException( "unknown media group typeId: " + typeId.toString() );
                 }
             }
             else
             if ( typeId == TypeId.ManualGroup ) {
-                final ManualGroup.ManualActivity[] manualActs = Arrays.copyOf(
-                                                        activities, activities.length,
+                final ManualGroup.ManualActivity[] MANUAL_ACTS = Arrays.copyOf(
+                                                        ACTIVITIES, ACTIVITIES.length,
                                                         ManualGroup.ManualActivity[].class );
 
-                toret = new ManualGroup( id, rnd, null, manualActs );
+                toret = new ManualGroup( id, rnd, null, MANUAL_ACTS );
             } else {
                 throw new JSONException( "unable to create appropriate group for: " + typeId.toString() );
             }

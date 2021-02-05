@@ -33,7 +33,7 @@ import java.io.InputStream;
 
 
 public class EditMediaGroupActivity extends EditGroupActivity {
-    private static final String LogTag = EditMediaGroupActivity.class.getSimpleName();
+    private static final String LOG_TAG = EditMediaGroupActivity.class.getSimpleName();
     private final int RQC_PICK_MEDIA = 111;
 
     @Override
@@ -41,45 +41,45 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_edit_media_group );
 
-        final EditText edTag = this.findViewById( R.id.edTag );
-        final EditText edTime = this.findViewById( R.id.edDuration );
-        final Spinner cbTimeUnit = this.findViewById( R.id.cbTimeUnit );
-        final LinearLayout llDurationGrp = this.findViewById( R.id.llDurationGroup );
-        final FloatingActionButton fbAddMedia = this.findViewById( R.id.fbAddMedia );
-        final FloatingActionButton fbSave = this.findViewById( R.id.fbSaveMediaGroup );
-        final ImageButton btCloseEditMediaGroup = this.findViewById( R.id.btCloseEditMediaGroup );
+        final EditText ED_TAG = this.findViewById( R.id.edTag );
+        final EditText ED_TIME = this.findViewById( R.id.edDuration );
+        final Spinner CB_TIME_UNIT = this.findViewById( R.id.cbTimeUnit );
+        final LinearLayout LL_DURATION_GRP = this.findViewById( R.id.llDurationGroup );
+        final FloatingActionButton FB_ADD_MEDIA = this.findViewById( R.id.fbAddMedia );
+        final FloatingActionButton FB_SAVE = this.findViewById( R.id.fbSaveMediaGroup );
+        final ImageButton BT_CLOSE_EDIT_MEDIA_GRP = this.findViewById( R.id.btCloseEditMediaGroup );
 
         // Spinner for time units
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource( this,
                 R.array.vTimeUnitChoices, android.R.layout.simple_spinner_item );
         adapter.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
-        cbTimeUnit.setAdapter( adapter );
+        CB_TIME_UNIT.setAdapter( adapter );
 
         // Buttons
-        fbSave.setOnClickListener( (v) -> this.finishWithResultCode( RSC_SAVE_DATA ) );
-        btCloseEditMediaGroup.setOnClickListener( (v) -> this.finishWithResultCode( RSC_DISMISS_DATA ) );
-        fbAddMedia.setOnClickListener( (v) -> this.openMedia() );
+        FB_SAVE.setOnClickListener( (v) -> this.finishWithResultCode( RSC_SAVE_DATA ) );
+        BT_CLOSE_EDIT_MEDIA_GRP.setOnClickListener( (v) -> this.finishWithResultCode( RSC_DISMISS_DATA ) );
+        FB_ADD_MEDIA.setOnClickListener( (v) -> this.openMedia() );
 
         // Show the appropriate image
         int resId = R.drawable.ic_picture;
-        final ImageView ivGroupFormat = this.findViewById( R.id.ivMediaGroupFormat );
+        final ImageView IV_GRP_FMT = this.findViewById( R.id.ivMediaGroupFormat );
 
         if ( group instanceof VideoGroup) {
             resId = R.drawable.ic_video;
-            llDurationGrp.setVisibility( View.GONE );
+            LL_DURATION_GRP.setVisibility( View.GONE );
         }
         else
         if ( group instanceof PictureGroup) {
             resId = R.drawable.ic_picture;
-            llDurationGrp.setVisibility( View.VISIBLE );
+            LL_DURATION_GRP.setVisibility( View.VISIBLE );
         } else {
             assert false: "EditMediaGroup: not a media group?";
         }
 
-        ivGroupFormat.setImageDrawable(ContextCompat.getDrawable( this, resId ) );
+        IV_GRP_FMT.setImageDrawable(ContextCompat.getDrawable( this, resId ) );
 
         // Answer to events
-        cbTimeUnit.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener() {
+        CB_TIME_UNIT.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l)
             {
@@ -89,11 +89,11 @@ public class EditMediaGroupActivity extends EditGroupActivity {
             @Override
             public void onNothingSelected(AdapterView<?> adapterView)
             {
-                cbTimeUnit.setSelection( 0 );
+                CB_TIME_UNIT.setSelection( 0 );
             }
         });
 
-        edTime.addTextChangedListener( new TextWatcher() {
+        ED_TIME.addTextChangedListener( new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2)
             {
@@ -111,7 +111,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
             }
         });
 
-        edTag.addTextChangedListener(new TextWatcher() {
+        ED_TAG.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2)
             {
@@ -137,22 +137,22 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     {
         super.onResume();
 
-        final EditText edTime = this.findViewById( R.id.edDuration );
-        final Spinner cbTimeUnit = this.findViewById( R.id.cbTimeUnit );
-        final CheckBox cbRandom = this.findViewById( R.id.cbRandom );
-        final EditText edTag = this.findViewById( R.id.edTag );
+        final EditText ED_TIME = this.findViewById( R.id.edDuration );
+        final Spinner CB_TIME_UNIT = this.findViewById( R.id.cbTimeUnit );
+        final CheckBox CB_RANDOM = this.findViewById( R.id.cbRandom );
+        final EditText ED_TAG = this.findViewById( R.id.edTag );
 
         assert group != null: "Group cannot be null in EditMediaGroupActivity";
 
-        final MediaGroup mediaGroup = (MediaGroup) group;
+        final MediaGroup MEDIA_GRP = (MediaGroup) group;
 
-        edTag.setText( mediaGroup.getTag().toString() );
-        cbRandom.setChecked( mediaGroup.isRandom() );
+        ED_TAG.setText( MEDIA_GRP.getTag().toString() );
+        CB_RANDOM.setChecked( MEDIA_GRP.isRandom() );
 
         if ( group instanceof PictureGroup ) {
-            final PictureGroup pictureGroup = (PictureGroup) group;
+            final PictureGroup PICTURE_GRP = (PictureGroup) group;
 
-            fillInDurationInUI( pictureGroup.getTimeForEachActivity(), cbTimeUnit, edTime );
+            fillInDurationInUI( PICTURE_GRP.getTimeForEachActivity(), CB_TIME_UNIT, ED_TIME );
         }
 
         this.showActivities();
@@ -166,12 +166,12 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         if ( requestCode == RQC_PICK_MEDIA
           && resultCode == RESULT_OK )
         {
-            final Uri uri = data.getData();
+            final Uri URI = data.getData();
 
-            if ( uri != null ) {
-                this.storeMedia( uri );
+            if ( URI != null ) {
+                this.storeMedia( URI );
             } else {
-                this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
+                this.showStatus(LOG_TAG, this.getString( R.string.msgFileNotFound ) );
             }
         }
 
@@ -181,13 +181,13 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     /** Writes the duration time into the object. */
     private void writeDurationToPictureGroup()
     {
-        final EditText edDuration = this.findViewById( R.id.edDuration );
-        final Spinner cbTimeUnit = this.findViewById( R.id.cbTimeUnit );
+        final EditText ED_DURATION = this.findViewById( R.id.edDuration );
+        final Spinner CB_TIME_UNIT = this.findViewById( R.id.cbTimeUnit );
 
         if ( group instanceof PictureGroup ) {
-            final PictureGroup pictureGroup = (PictureGroup) group;
+            final PictureGroup PICTURE_GRP = (PictureGroup) group;
 
-            fillInDurationInObj( pictureGroup.getTimeForEachActivity(), cbTimeUnit, edDuration );
+            fillInDurationInObj( PICTURE_GRP.getTimeForEachActivity(), CB_TIME_UNIT, ED_DURATION );
         }
 
         return;
@@ -196,7 +196,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     /** Launch file browser. */
     private void openMedia()
     {
-        final Intent intent = new Intent();
+        final Intent INTENT_OPEN = new Intent();
 
         // Choose the intent type, video or image
         String intentTypeStr = "image/*";
@@ -206,11 +206,11 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         }
 
         // Launch
-        intent.setType( intentTypeStr );
-        intent.setAction( Intent.ACTION_GET_CONTENT );
+        INTENT_OPEN.setType( intentTypeStr );
+        INTENT_OPEN.setAction( Intent.ACTION_GET_CONTENT );
 
         this.startActivityForResult(
-                Intent.createChooser( intent, this.getString( R.string.lblMediaSelection ) ),
+                Intent.createChooser( INTENT_OPEN, this.getString( R.string.lblMediaSelection ) ),
                 RQC_PICK_MEDIA);
     }
 
@@ -229,29 +229,29 @@ public class EditMediaGroupActivity extends EditGroupActivity {
             {
                 throw new IllegalArgumentException( "empty file name" );
             } else {
-                final InputStream in = this.getContentResolver().openInputStream( uri );
+                final InputStream IN = this.getContentResolver().openInputStream( uri );
 
                 mediaFileName = new File( mediaFileName.trim() ).getName();
 
-                if ( in != null ) {
-                    final Experiment experiment = mediaGroup.getExperimentOwner();
+                if ( IN != null ) {
+                    final Experiment EXPERIMENT = mediaGroup.getExperimentOwner();
 
                     mediaFileName = Orm.buildMediaFileNameForDbFromMediaFileName( mediaFileName );
 
-                    if ( !db.existsMedia( experiment, mediaFileName ) ) {
-                        final File f = db.storeMedia( experiment, mediaFileName, in );
-                        mediaGroup.add( new MediaGroup.MediaActivity( Id.create(), f ) );
+                    if ( !db.existsMedia( EXPERIMENT, mediaFileName ) ) {
+                        final File F = db.storeMedia( EXPERIMENT, mediaFileName, IN );
+                        mediaGroup.add( new MediaGroup.MediaActivity( Id.create(), F ) );
                     } else {
-                        this.showStatus( LogTag, this.getString( R.string.msgMediaAlreadyAdded ) );
+                        this.showStatus(LOG_TAG, this.getString( R.string.msgMediaAlreadyAdded ) );
                     }
                 } else {
-                    this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
+                    this.showStatus(LOG_TAG, this.getString( R.string.msgFileNotFound ) );
                 }
             }
         } catch(IOException exc) {
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         } catch(IllegalArgumentException exc) {
-            this.showStatus( LogTag, this.getString( R.string.errUnsupportedFileType) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
         }
 
         return;
@@ -260,21 +260,21 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     /** Stores the media resource in the app's filesystem. */
     private void storeMedia(Uri uri)
     {
-        final Orm db = Orm.get();
-        final MediaGroup mediaGroup = (MediaGroup) group;
+        final Orm DB = Orm.get();
+        final MediaGroup MEDIA_GRP = (MediaGroup) group;
 
         if ( uri == null
           || uri.getScheme() == null )
         {
-            this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
+            this.showStatus(LOG_TAG, this.getString( R.string.msgFileNotFound ) );
         }
         else
         if ( uri.getScheme().equals( ContentResolver.SCHEME_CONTENT )
           || uri.getScheme().equals( ContentResolver.SCHEME_FILE ) )
         {
-            this.storeMediaFor( db, uri, mediaGroup );
+            this.storeMediaFor( DB, uri, MEDIA_GRP );
         } else {
-            this.showStatus( LogTag, this.getString( R.string.errUnsupportedFileType) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
         }
 
         return;
@@ -289,16 +289,16 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     @Override
     public void deleteActivity(Group.Activity act)
     {
-        final Orm db = Orm.get();
-        final MediaGroup.MediaActivity mediaActivity = (MediaGroup.MediaActivity) act;
-        final String fileName = mediaActivity.getFile().getName();
-        final Experiment owner = group.getExperimentOwner();
+        final Orm DB = Orm.get();
+        final MediaGroup.MediaActivity MEDIA_ACTIVITY = (MediaGroup.MediaActivity) act;
+        final String FILE_NAME = MEDIA_ACTIVITY.getFile().getName();
+        final Experiment OWNER = group.getExperimentOwner();
 
-        if ( db.existsMedia( owner, fileName ) ) {
+        if ( DB.existsMedia( OWNER, FILE_NAME ) ) {
             try {
-                db.deleteMedia( owner, fileName );
+                DB.deleteMedia( OWNER, FILE_NAME );
             } catch(IOException exc) {
-                this.showStatus( LogTag, exc.getMessage() );
+                this.showStatus(LOG_TAG, exc.getMessage() );
             }
         }
 

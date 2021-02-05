@@ -67,18 +67,18 @@ public class TestJsonConversionTests {
     @Test
     public void testBeatEventJsonDump()
     {
-        final StringWriter strOut = new StringWriter();
-        final String beatEvent1DescFmt = "{\""
+        final StringWriter STR_OUT = new StringWriter();
+        final String BEAT_EVENT_DESC_FMT = "{\""
                 + Orm.FIELD_ELAPSED_TIME + "\":$1012,\""
                 + Orm.FIELD_EVENT_TYPE + "\":\"$1011\",\""
                 + Orm.FIELD_HEART_BEAT_AT + "\":\"$1013\"}";
 
         try {
-            event2.writeToJSON( new JsonWriter( strOut ) );
-            assertEquals( beatEvent1DescFmt.replace( "$1011", Orm.FIELD_EVENT_HEART_BEAT )
+            event2.writeToJSON( new JsonWriter( STR_OUT ) );
+            assertEquals( BEAT_EVENT_DESC_FMT.replace( "$1011", Orm.FIELD_EVENT_HEART_BEAT )
                             .replace( "$1012", Long.toString( event2.getMillis() ) )
                             .replace( "$1013", Long.toString( event2.getTimeOfNewHeartBeat() ) ),
-                    strOut.toString() );
+                    STR_OUT.toString() );
         } catch(IOException exc)
         {
             assertFalse( false );
@@ -90,16 +90,16 @@ public class TestJsonConversionTests {
     @Test
     public void testBeatEventJsonLoad()
     {
-        final String eventDesc = "{\"" + Orm.FIELD_ELAPSED_TIME + "\":" + event2.getMillis()
+        final String EVENT_DESC = "{\"" + Orm.FIELD_ELAPSED_TIME + "\":" + event2.getMillis()
                 + ",\"" + Orm.FIELD_EVENT_TYPE + "\":\"" + Orm.FIELD_EVENT_HEART_BEAT + "\""
                 + ",\"" + Orm.FIELD_HEART_BEAT_AT + "\":" + Long.toString( event2.getTimeOfNewHeartBeat() ) + "}";
-        final StringReader strIn = new StringReader( eventDesc );
+        final StringReader STR_IN = new StringReader( EVENT_DESC );
 
         try {
-            final Result.BeatEvent retrievedEvent = (Result.BeatEvent)
-                                            Result.Event.fromJSON( new JsonReader( strIn ) );
+            final Result.BeatEvent RETRIEVED_EVENT = (Result.BeatEvent)
+                                            Result.Event.fromJSON( new JsonReader( STR_IN ) );
 
-            assertEquals( event2, retrievedEvent );
+            assertEquals( event2, RETRIEVED_EVENT );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -109,18 +109,18 @@ public class TestJsonConversionTests {
     @Test
     public void testActivityChangeEvent1JsonDump()
     {
-        final StringWriter strOut = new StringWriter();
-        final String actChangeEvent1DescFmt = "{\""
+        final StringWriter STR_OUT = new StringWriter();
+        final String ACT_CHANGE_EVENT_DESC_FMT = "{\""
                 + Orm.FIELD_ELAPSED_TIME + "\":$1022,\""
                 + Orm.FIELD_EVENT_TYPE + "\":\"$1021\",\""
                 + Orm.FIELD_TAG + "\":\"$1023\"}";
 
         try {
-            event1.writeToJSON( new JsonWriter( strOut ) );
-            assertEquals( actChangeEvent1DescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+            event1.writeToJSON( new JsonWriter( STR_OUT ) );
+            assertEquals( ACT_CHANGE_EVENT_DESC_FMT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                             .replace( "$1022", Long.toString( event1.getMillis() ) )
                             .replace( "$1023", event1.getTag() ),
-                    strOut.toString() );
+                    STR_OUT.toString() );
         } catch(IOException exc)
         {
             assertFalse( false );
@@ -132,16 +132,16 @@ public class TestJsonConversionTests {
     @Test
     public void testActivityChangeEvent1JsonLoad()
     {
-        final String eventDesc = "{\"" + Orm.FIELD_ELAPSED_TIME + "\":" + event1.getMillis()
+        final String EVENT_DESC = "{\"" + Orm.FIELD_ELAPSED_TIME + "\":" + event1.getMillis()
                 + ",\"" + Orm.FIELD_EVENT_TYPE + "\":\"" + Orm.FIELD_EVENT_ACTIVITY_CHANGE + "\""
                 + ",\"" + Orm.FIELD_TAG + "\":\"" + event1.getTag() + "\"}";
-        final StringReader strIn = new StringReader( eventDesc );
+        final StringReader STR_IN = new StringReader( EVENT_DESC );
 
         try {
-            final Result.ActivityChangeEvent retrievedEvent = (Result.ActivityChangeEvent)
-                    Result.Event.fromJSON( new JsonReader( strIn ) );
+            final Result.ActivityChangeEvent RETRIEVED_EVENT = (Result.ActivityChangeEvent)
+                    Result.Event.fromJSON( new JsonReader( STR_IN ) );
 
-            assertEquals( event1, retrievedEvent );
+            assertEquals( event1, RETRIEVED_EVENT );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -151,18 +151,18 @@ public class TestJsonConversionTests {
     @Test
     public void testActivityChange2EventJsonDump()
     {
-        final StringWriter strOut = new StringWriter();
-        final String actChangeEvent1DescFmt = "{\""
+        final StringWriter STR_OUT = new StringWriter();
+        final String ACT_CHANGE_EVENT_DESC_FMT = "{\""
                 + Orm.FIELD_ELAPSED_TIME + "\":$1022,\""
                 + Orm.FIELD_EVENT_TYPE + "\":\"$1021\",\""
                 + Orm.FIELD_TAG + "\":\"$1023\"}";
 
         try {
-            event3.writeToJSON( new JsonWriter( strOut ) );
-            assertEquals( actChangeEvent1DescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+            event3.writeToJSON( new JsonWriter( STR_OUT ) );
+            assertEquals( ACT_CHANGE_EVENT_DESC_FMT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                             .replace( "$1022", Long.toString( event3.getMillis() ) )
                             .replace( "$1023", event3.getTag() ),
-                    strOut.toString() );
+                    STR_OUT.toString() );
         } catch(IOException exc)
         {
             assertFalse( false );
@@ -174,16 +174,16 @@ public class TestJsonConversionTests {
     @Test
     public void testActivityChangeEvent2JsonLoad()
     {
-        final String eventDesc = "{\"" + Orm.FIELD_ELAPSED_TIME + "\":" + event3.getMillis()
+        final String EVENT_DESC = "{\"" + Orm.FIELD_ELAPSED_TIME + "\":" + event3.getMillis()
                 + ",\"" + Orm.FIELD_EVENT_TYPE + "\":\"" + Orm.FIELD_EVENT_ACTIVITY_CHANGE + "\""
                 + ",\"" + Orm.FIELD_TAG + "\":\"" + event3.getTag() + "\"}";
-        final StringReader strIn = new StringReader( eventDesc );
+        final StringReader STR_IN = new StringReader( EVENT_DESC );
 
         try {
-            final Result.ActivityChangeEvent retrievedEvent = (Result.ActivityChangeEvent)
-                    Result.Event.fromJSON( new JsonReader( strIn ) );
+            final Result.ActivityChangeEvent RETRIEVED_EVENT = (Result.ActivityChangeEvent)
+                    Result.Event.fromJSON( new JsonReader( STR_IN ) );
 
-            assertEquals( event3, retrievedEvent );
+            assertEquals( event3, RETRIEVED_EVENT );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -193,18 +193,18 @@ public class TestJsonConversionTests {
     @Test
     public void testActivityChange3EventJsonDump()
     {
-        final StringWriter strOut = new StringWriter();
-        final String actChangeEvent1DescFmt = "{\""
+        final StringWriter STR_OUT = new StringWriter();
+        final String ACT_CHANGE_EVENT_DESC_FORMAT = "{\""
                 + Orm.FIELD_ELAPSED_TIME + "\":$1022,\""
                 + Orm.FIELD_EVENT_TYPE + "\":\"$1021\",\""
                 + Orm.FIELD_TAG + "\":\"$1023\"}";
 
         try {
-            event4.writeToJSON( new JsonWriter( strOut ) );
-            assertEquals( actChangeEvent1DescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+            event4.writeToJSON( new JsonWriter( STR_OUT ) );
+            assertEquals( ACT_CHANGE_EVENT_DESC_FORMAT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                             .replace( "$1022", Long.toString( event4.getMillis() ) )
                             .replace( "$1023", event4.getTag() ),
-                    strOut.toString() );
+                    STR_OUT.toString() );
         } catch(IOException exc)
         {
             assertFalse( false );
@@ -216,16 +216,16 @@ public class TestJsonConversionTests {
     @Test
     public void testActivityChangeEvent3JsonLoad()
     {
-        final String eventDesc = "{\"" + Orm.FIELD_ELAPSED_TIME + "\":" + event4.getMillis()
+        final String EVENT_DESC = "{\"" + Orm.FIELD_ELAPSED_TIME + "\":" + event4.getMillis()
                 + ",\"" + Orm.FIELD_EVENT_TYPE + "\":\"" + Orm.FIELD_EVENT_ACTIVITY_CHANGE + "\""
                 + ",\"" + Orm.FIELD_TAG + "\":\"" + event4.getTag() + "\"}";
-        final StringReader strIn = new StringReader( eventDesc );
+        final StringReader STR_IN = new StringReader( EVENT_DESC );
 
         try {
-            final Result.ActivityChangeEvent retrievedEvent = (Result.ActivityChangeEvent)
-                    Result.Event.fromJSON( new JsonReader( strIn ) );
+            final Result.ActivityChangeEvent RETRIEVED_EVENT = (Result.ActivityChangeEvent)
+                    Result.Event.fromJSON( new JsonReader( STR_IN ) );
 
-            assertEquals( event4, retrievedEvent );
+            assertEquals( event4, RETRIEVED_EVENT );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -235,46 +235,46 @@ public class TestJsonConversionTests {
     @Test
     public void testResultJsonDump()
     {
-        final StringWriter strOut = new StringWriter();
-        final String resultDescFmt = "{\"" + Id.FIELD + "\":$29871,\""
+        final StringWriter STR_OUT = new StringWriter();
+        final String RESULT_DESC_FMT = "{\"" + Id.FIELD + "\":$29871,\""
                 + Orm.FIELD_TYPE_ID + "\":\"" + res1.getTypeId().toString() + "\","
                 + "\"" + Orm.FIELD_EXPERIMENT_ID + "\":$29874,"
                 + "\"" + Orm.FIELD_USER_ID + "\":$29875,\""
                 + Orm.FIELD_DATE + "\":$29872,"
                 + "\"" + Orm.FIELD_EVENTS + "\":[$29873]}";
 
-        final String beatEventDescFmt = "{\""
+        final String BEAT_EVENT_DESC_FMT = "{\""
                 + Orm.FIELD_ELAPSED_TIME + "\":$1012,\""
                 + Orm.FIELD_EVENT_TYPE + "\":\"$1011\",\""
                 + Orm.FIELD_HEART_BEAT_AT + "\":\"$1013\"}";
 
-        final String actChangeEventDescFmt = "{\""
+        final String ACT_CHANGE_EVENT_DESC_FMT = "{\""
                 + Orm.FIELD_ELAPSED_TIME + "\":$1022,\""
                 + Orm.FIELD_EVENT_TYPE + "\":\"$1021\",\""
                 + Orm.FIELD_TAG + "\":\"$1023\"}";
 
-        final String eventsDescFmt =
-                actChangeEventDescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+        final String EVENTS_DESC_FMT =
+                ACT_CHANGE_EVENT_DESC_FMT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                         .replace( "$1022", Long.toString( event1.getMillis() ) )
                         .replace( "$1023", event1.getTag() )
-                + "," + beatEventDescFmt.replace( "$1011", Orm.FIELD_EVENT_HEART_BEAT )
+                + "," + BEAT_EVENT_DESC_FMT.replace( "$1011", Orm.FIELD_EVENT_HEART_BEAT )
                         .replace( "$1012", Long.toString( event2.getMillis() ) )
                         .replace( "$1013", Long.toString( event2.getTimeOfNewHeartBeat() ) )
-                + "," + actChangeEventDescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+                + "," + ACT_CHANGE_EVENT_DESC_FMT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                         .replace( "$1022", Long.toString( event3.getMillis() ) )
                         .replace( "$1023", event3.getTag() )
-                + "," + actChangeEventDescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+                + "," + ACT_CHANGE_EVENT_DESC_FMT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                         .replace( "$1022", Long.toString( event4.getMillis() ) )
                         .replace( "$1023", event4.getTag() );
 
         try {
-            res1.toJSON( strOut );
-            assertEquals( resultDescFmt.replace( "$29871", res1.getId().toString() )
+            res1.toJSON( STR_OUT );
+            assertEquals( RESULT_DESC_FMT.replace( "$29871", res1.getId().toString() )
                             .replace( "$29872", Long.toString( res1.getTime() ) )
-                            .replace( "$29873", eventsDescFmt )
+                            .replace( "$29873", EVENTS_DESC_FMT )
                             .replace( "$29874", res1.getExperiment().getId().toString() )
                             .replace( "$29875", res1.getUser().getId().toString() ),
-                    strOut.toString() );
+                    STR_OUT.toString() );
         } catch(JSONException exc)
         {
             assertFalse( false );
@@ -286,49 +286,49 @@ public class TestJsonConversionTests {
     @Test
     public void testResultJsonLoad()
     {
-        final String resultDescFmt = "{\"" + Id.FIELD + "\":$29871,\""
+        final String RESULT_DESC_FMT = "{\"" + Id.FIELD + "\":$29871,\""
                 + Orm.FIELD_TYPE_ID + "\":\"" + res1.getTypeId().toString() + "\","
                 + "\"" + Orm.FIELD_EXPERIMENT_ID + "\":$29874,"
                 + "\"" + Orm.FIELD_USER_ID + "\":$29875,\""
                 + Orm.FIELD_DATE + "\":$29872,"
                 + "\"" + Orm.FIELD_EVENTS + "\":[$29873]}";
 
-        final String beatEventDescFmt = "{\""
+        final String BEAT_EVENTS_DESC_FMT = "{\""
                 + Orm.FIELD_ELAPSED_TIME + "\":$1012,\""
                 + Orm.FIELD_EVENT_TYPE + "\":\"$1011\",\""
                 + Orm.FIELD_HEART_BEAT_AT + "\":\"$1013\"}";
 
-        final String actChangeEventDescFmt = "{\""
+        final String ACT_CHANGE_EVENT_DESC_FMT = "{\""
                 + Orm.FIELD_ELAPSED_TIME + "\":$1022,\""
                 + Orm.FIELD_EVENT_TYPE + "\":\"$1021\",\""
                 + Orm.FIELD_TAG + "\":\"$1023\"}";
 
-        final String eventsDescFmt =
-                actChangeEventDescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+        final String EVENTS_DESC_FMT =
+                ACT_CHANGE_EVENT_DESC_FMT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                         .replace( "$1022", Long.toString( event1.getMillis() ) )
                         .replace( "$1023", event1.getTag() )
-                        + "," + beatEventDescFmt.replace( "$1011", Orm.FIELD_EVENT_HEART_BEAT )
+                        + "," + BEAT_EVENTS_DESC_FMT.replace( "$1011", Orm.FIELD_EVENT_HEART_BEAT )
                         .replace( "$1012", Long.toString( event2.getMillis() ) )
                         .replace( "$1013", Long.toString( event2.getTimeOfNewHeartBeat() ) )
-                        + "," + actChangeEventDescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+                        + "," + ACT_CHANGE_EVENT_DESC_FMT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                         .replace( "$1022", Long.toString( event3.getMillis() ) )
                         .replace( "$1023", event3.getTag() )
-                        + "," + actChangeEventDescFmt.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
+                        + "," + ACT_CHANGE_EVENT_DESC_FMT.replace( "$1021", Orm.FIELD_EVENT_ACTIVITY_CHANGE )
                         .replace( "$1022", Long.toString( event4.getMillis() ) )
                         .replace( "$1023", event4.getTag() );
 
-        final String resDesc = resultDescFmt.replace( "$29871", res1.getId().toString() )
+        final String RES_DESC = RESULT_DESC_FMT.replace( "$29871", res1.getId().toString() )
                 .replace( "$29872", Long.toString( res1.getTime() ) )
-                .replace( "$29873", eventsDescFmt )
+                .replace( "$29873", EVENTS_DESC_FMT )
                 .replace( "$29874", res1.getExperiment().getId().toString() )
                 .replace( "$29875", res1.getUser().getId().toString() );
 
-        final StringReader strIn = new StringReader( resDesc );
+        final StringReader STR_IN = new StringReader( RES_DESC );
 
         try {
-            final Result retrievedUsr = Result.fromJSON( strIn );
+            final Result RETRIEVED_USR = Result.fromJSON( STR_IN );
 
-            assertEquals( res1, retrievedUsr );
+            assertEquals( res1, RETRIEVED_USR );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -338,17 +338,17 @@ public class TestJsonConversionTests {
     @Test
     public void testUserJsonDump()
     {
-        final StringWriter strOut = new StringWriter();
-        final String usrDescFmt = "{\"" + Id.FIELD + "\":$1,\""
+        final StringWriter STR_OUT = new StringWriter();
+        final String USR_DESC_FMT = "{\"" + Id.FIELD + "\":$1,\""
                                     + Orm.FIELD_TYPE_ID + "\":\"$87\",\""
                                     + Orm.FIELD_NAME + "\":\"$2\"}";
 
         try {
-            usr1.toJSON( strOut );
-            assertEquals( usrDescFmt.replace( "$1", usr1.getId().toString() )
+            usr1.toJSON( STR_OUT );
+            assertEquals( USR_DESC_FMT.replace( "$1", usr1.getId().toString() )
                                 .replace( "$87", usr1.getTypeId().toString() )
                                 .replace( "$2", usr1.getName() ),
-                          strOut.toString() );
+                          STR_OUT.toString() );
         } catch(JSONException exc)
         {
             assertFalse( false );
@@ -360,15 +360,15 @@ public class TestJsonConversionTests {
     @Test
     public void testUserJsonLoad()
     {
-        final String usrDesc = "{\"" + Id.FIELD + "\":" + usr1.getId().get()
+        final String USR_DESC = "{\"" + Id.FIELD + "\":" + usr1.getId().get()
                 + ",\"" + Orm.FIELD_TYPE_ID + "\":\"" + usr1.getTypeId().toString() + "\""
                 + ",\"" + Orm.FIELD_NAME + "\":\"" + usr1.getName() + "\"}";
-        final StringReader strIn = new StringReader( usrDesc );
+        final StringReader STR_IN = new StringReader( USR_DESC );
 
         try {
-            final User retrievedUsr = User.fromJSON( strIn );
+            final User RETRIEVED_USR = User.fromJSON( STR_IN );
 
-            assertEquals( usr1, retrievedUsr );
+            assertEquals( usr1, RETRIEVED_USR );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -378,8 +378,8 @@ public class TestJsonConversionTests {
     @Test
     public void testExperiment1JsonDump()
     {
-        final StringWriter strOut = new StringWriter();
-        final String expr1DescFmt = "{\"" + Id.FIELD + "\":$1,\""
+        final StringWriter STR_OUT = new StringWriter();
+        final String EXPR_DESC_FMT = "{\"" + Id.FIELD + "\":$1,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\",\""
                 + Orm.FIELD_NAME + "\":\"$2\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$3,"
@@ -387,12 +387,12 @@ public class TestJsonConversionTests {
                 + "}";
 
         try {
-            expr1.toJSON( strOut );
-            assertEquals( expr1DescFmt.replace( "$1", expr1.getId().toString() )
+            expr1.toJSON( STR_OUT );
+            assertEquals( EXPR_DESC_FMT.replace( "$1", expr1.getId().toString() )
                             .replace( "$2", expr1.getName() )
                             .replace( "$87", expr1.getTypeId().toString() )
                             .replace( "$3", Boolean.toString( expr1.isRandom() ) ),
-                    strOut.toString() );
+                    STR_OUT.toString() );
         } catch(JSONException exc)
         {
             assertFalse( false );
@@ -404,18 +404,18 @@ public class TestJsonConversionTests {
     @Test
     public void testExperiment1JsonLoad()
     {
-        final String expr1Desc = "{\"" + Id.FIELD + "\":" + expr1.getId().get()
+        final String EXPR_DESC = "{\"" + Id.FIELD + "\":" + expr1.getId().get()
                 + ",\"" + Orm.FIELD_TYPE_ID + "\":\"" + expr1.getTypeId().toString() + "\""
                 + ",\"" + Orm.FIELD_NAME + "\":\"" + expr1.getName() + "\""
                 + ",\"" + Orm.FIELD_RANDOM + "\":" + expr1.isRandom()
                 + ",\"" + Orm.FIELD_GROUPS + "\":[]}";
 
-        final StringReader strIn = new StringReader( expr1Desc );
+        final StringReader STR_IN = new StringReader( EXPR_DESC );
 
         try {
-            final Experiment retrievedExperiment = Experiment.fromJSON( strIn );
+            final Experiment RETRIEVED_EXPERIMENT = Experiment.fromJSON( STR_IN );
 
-            assertEquals( expr1, retrievedExperiment );
+            assertEquals( expr1, RETRIEVED_EXPERIMENT );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -426,68 +426,68 @@ public class TestJsonConversionTests {
     public void textExperiment2JsonLoad()
     {
         // Activity 1
-        final String act1DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String ACT1_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_TAG + "\":\"$9\","
                 + "\"" + Orm.FIELD_TIME + "\":$10}";
-        final String act1Desc = act1DescFmt.replace( "$5", Long.toString( act1.getId().get() ) )
+        final String ACT1_DESC = ACT1_DESC_FMT.replace( "$5", Long.toString( act1.getId().get() ) )
                 .replace( "$87", act1.getTypeId().toString() )
                 .replace( "$9", act1.getTag().toString() )
                 .replace( "$10", Integer.toString( act1.getTime().getTimeInSeconds() ) );
-        final StringReader strInAct1 = new StringReader( act1Desc );
+        final StringReader STR_IN_ACT1 = new StringReader( ACT1_DESC );
 
         try {
-            assertEquals( act1, Group.Activity.fromJSON( new JsonReader( strInAct1 ) ) );
+            assertEquals( act1, Group.Activity.fromJSON( new JsonReader( STR_IN_ACT1 ) ) );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
         }
 
         // Activity 2
-        final String act2DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String ACT2_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_FILE + "\":\"$9\"}";
-        final String act2Desc = act2DescFmt.replace( "$5", Long.toString( act2.getId().get() ) )
+        final String ACT2_DESC = ACT2_DESC_FMT.replace( "$5", Long.toString( act2.getId().get() ) )
                 .replace( "$87", act2.getTypeId().toString() )
                 .replace( "$9", act2.getFile().getName() );
-        final StringReader strInAct2 = new StringReader( act2Desc );
+        final StringReader STR_IN_ACT2 = new StringReader( ACT2_DESC );
 
         try {
-            assertEquals( act2, Group.Activity.fromJSON( new JsonReader( strInAct2 ) ) );
+            assertEquals( act2, Group.Activity.fromJSON( new JsonReader( STR_IN_ACT2 ) ) );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
         }
 
         // Activity 3
-        final String act3DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String ACT3_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_FILE + "\":\"$9\"}";
-        final String act3Desc = act3DescFmt.replace( "$5", Long.toString( act3.getId().get() ) )
+        final String ACT3_DESC = ACT3_DESC_FMT.replace( "$5", Long.toString( act3.getId().get() ) )
                 .replace( "$87", act3.getTypeId().toString() )
                 .replace( "$9", act3.getFile().getName() );
-        final StringReader strInAct3 = new StringReader( act3Desc );
+        final StringReader STR_IN_ACT3 = new StringReader( ACT3_DESC );
 
         try {
-            assertEquals( act3, Group.Activity.fromJSON( new JsonReader( strInAct3 ) ) );
+            assertEquals( act3, Group.Activity.fromJSON( new JsonReader( STR_IN_ACT3 ) ) );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
         }
 
         // Group 1
-        final String grp1DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String GRP1_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$6,"
                 + "\"" + Orm.FIELD_ACTIVITIES + "\"" + ":[$7]}";
-        final String grp1Desc = grp1DescFmt.replace( "$5", Long.toString( grp1.getId().get() ) )
+        final String GRP1_DESC = GRP1_DESC_FMT.replace( "$5", Long.toString( grp1.getId().get() ) )
                 .replace( "$87", grp1.getTypeId().toString() )
                 .replace( "$6", Boolean.toString( grp1.isRandom() ) )
-                .replace( "$7", act1Desc );
-        final StringReader strInGrp1 = new StringReader( grp1Desc );
+                .replace( "$7", ACT1_DESC );
+        final StringReader STR_IN_GRP1 = new StringReader( GRP1_DESC );
 
         try {
-            assertEquals( grp1, Group.fromJSON( strInGrp1 ) );
+            assertEquals( grp1, Group.fromJSON( STR_IN_GRP1 ) );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -495,62 +495,62 @@ public class TestJsonConversionTests {
 
 
         // Group 2
-        final String grp2DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String GRP2_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$6,"
                 + "\"" + Orm.FIELD_ACTIVITIES + "\"" + ":[$7],"
                 + "\"" + Orm.FIELD_TAG + "\"" + ":\"" + grp2.getTag() + "\","
                 + "\"" + Orm.FIELD_TIME + "\"" + ":" + Integer.toString( grp2.getTimeForEachActivity().getTimeInSeconds() )
                 + "}";
-        final String grp2Desc = grp2DescFmt.replace( "$5", Long.toString( grp2.getId().get() ) )
+        final String GRP2_DESC = GRP2_DESC_FMT.replace( "$5", Long.toString( grp2.getId().get() ) )
                 .replace( "$87", grp2.getTypeId().toString() )
                 .replace( "$6", Boolean.toString( grp2.isRandom() ) )
-                .replace( "$7", act2Desc );
-        final StringReader strInGrp2 = new StringReader( grp2Desc );
+                .replace( "$7", ACT2_DESC );
+        final StringReader STR_IN_GRP2 = new StringReader( GRP2_DESC );
 
         try {
-            assertEquals( grp2, Group.fromJSON( strInGrp2 ) );
+            assertEquals( grp2, Group.fromJSON( STR_IN_GRP2 ) );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
         }
 
         // Group 3
-        final String grp3DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String GRP3_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$6,"
                 + "\"" + Orm.FIELD_ACTIVITIES + "\"" + ":[$7],"
                 + "\"" + Orm.FIELD_TAG + "\"" + ":\"" + grp3.getTag() + "\"}";
-        final String grp3Desc = grp3DescFmt.replace( "$5", Long.toString( grp3.getId().get() ) )
+        final String GRP3_DESC = GRP3_DESC_FMT.replace( "$5", Long.toString( grp3.getId().get() ) )
                 .replace( "$87", grp3.getTypeId().toString() )
                 .replace( "$6", Boolean.toString( grp3.isRandom() ) )
-                .replace( "$7", act3Desc );
-        final StringReader strInGrp3 = new StringReader( grp3Desc );
+                .replace( "$7", ACT3_DESC );
+        final StringReader STR_IN_GRP3 = new StringReader( GRP3_DESC );
 
         try {
-            assertEquals( grp3, Group.fromJSON( strInGrp3 ) );
+            assertEquals( grp3, Group.fromJSON( STR_IN_GRP3 ) );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
         }
 
 
-        final String expr2DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String EXPR2_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\",\""
                 + Orm.FIELD_NAME + "\":\"$2\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$3,"
                 + "\"" + Orm.FIELD_GROUPS + "\":[$41,$42,$43]}";
-        final String expr2Desc = expr2DescFmt.replace( "$5", Long.toString( expr2.getId().get() ) )
+        final String EXPR2_DESC = EXPR2_DESC_FMT.replace( "$5", Long.toString( expr2.getId().get() ) )
                 .replace( "$87", expr2.getTypeId().toString() )
                 .replace( "$2", expr2.getName() )
                 .replace( "$3", Boolean.toString( expr2.isRandom() ) )
-                .replace( "$41", grp1Desc )
-                .replace( "$42", grp2Desc )
-                .replace( "$43", grp3Desc );
-        final StringReader strInExpr2 = new StringReader( expr2Desc );
+                .replace( "$41", GRP1_DESC )
+                .replace( "$42", GRP2_DESC )
+                .replace( "$43", GRP3_DESC );
+        final StringReader STR_IN_EXPR2 = new StringReader( EXPR2_DESC );
 
         try {
-            assertEquals( expr2, Experiment.fromJSON( strInExpr2 ) );
+            assertEquals( expr2, Experiment.fromJSON( STR_IN_EXPR2 ) );
         } catch(JSONException exc)
         {
             assertFalse( exc.getMessage(), true );
@@ -560,107 +560,107 @@ public class TestJsonConversionTests {
     @Test
     public void testExperiment2JsonDump()
     {
-        final StringWriter strOut = new StringWriter();
-        final String expr2DescFmt = "{\"" + Id.FIELD + "\":$1,\""
+        final StringWriter STR_OUT = new StringWriter();
+        final String EXPR2_DESC_FMT = "{\"" + Id.FIELD + "\":$1,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\",\""
                 + Orm.FIELD_NAME + "\":\"$2\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$3,"
                 + "\"" + Orm.FIELD_GROUPS + "\":[$41,$42,$43]}";
-        final String grp1DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String GRP1_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$6,"
                 + "\"" + Orm.FIELD_ACTIVITIES + "\"" + ":[$7]}";
-        final String grp2DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String GRP2_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$6,"
                 + "\"" + Orm.FIELD_ACTIVITIES + "\"" + ":[$7],"
                 + "\"" + Orm.FIELD_TAG + "\":\"$TAG\","
                 + "\"" + Orm.FIELD_TIME + "\":$TIME}";
-        final String grp3DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String GRP3_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_RANDOM + "\":$6,"
                 + "\"" + Orm.FIELD_ACTIVITIES + "\"" + ":[$7],"
                 + "\"" + Orm.FIELD_TAG + "\":\"$TAG\"}";
-        final String act1DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String ACT1_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_TAG + "\":\"$9\","
                 + "\"" + Orm.FIELD_TIME + "\":$10}";
-        final String act2DescFmt = "{\"" + Id.FIELD + "\":$5,\""
+        final String ACT2_DESC_FMT = "{\"" + Id.FIELD + "\":$5,\""
                 + Orm.FIELD_TYPE_ID + "\":\"$87\","
                 + "\"" + Orm.FIELD_FILE + "\":\"$9\"}";
 
         try {
-            String expectedJSON = expr2DescFmt.replace( "$1", expr2.getId().toString() )
+            String expectedJSON = EXPR2_DESC_FMT.replace( "$1", expr2.getId().toString() )
                     .replace( "$87", expr2.getTypeId().toString() )
                     .replace( "$2", expr2.getName() )
                     .replace( "$3", Boolean.toString( expr2.isRandom() ) );
 
             // Activity 1
-            String act1Desc = act1DescFmt.replace( "$5", Long.toString( act1.getId().get() ) )
+            String act1Desc = ACT1_DESC_FMT.replace( "$5", Long.toString( act1.getId().get() ) )
                     .replace( "$87", act1.getTypeId().toString() )
                     .replace( "$9", act1.getTag().toString() )
                     .replace( "$10", Integer.toString( act1.getTime().getTimeInSeconds() ) );
-            strOut.getBuffer().delete( 0, strOut.getBuffer().length() );
-            act1.toJSON( strOut );
-            assertEquals( act1Desc, strOut.toString() );
+            STR_OUT.getBuffer().delete( 0, STR_OUT.getBuffer().length() );
+            act1.toJSON( STR_OUT );
+            assertEquals( act1Desc, STR_OUT.toString() );
 
             // Group 1
-            String grp1Desc = grp1DescFmt.replace( "$5", Long.toString( grp1.getId().get() ) )
+            String grp1Desc = GRP1_DESC_FMT.replace( "$5", Long.toString( grp1.getId().get() ) )
                     .replace( "$87", grp1.getTypeId().toString() )
                     .replace( "$6", Boolean.toString( grp1.isRandom() ) )
                     .replace( "$7", act1Desc );
-            strOut.getBuffer().delete( 0, strOut.getBuffer().length() );
-            grp1.toJSON( strOut );
-            assertEquals( grp1Desc, strOut.toString() );
+            STR_OUT.getBuffer().delete( 0, STR_OUT.getBuffer().length() );
+            grp1.toJSON( STR_OUT );
+            assertEquals( grp1Desc, STR_OUT.toString() );
 
             // Activity 2
-            String act2Desc = act2DescFmt.replace( "$5", Long.toString( act2.getId().get() ) )
+            String act2Desc = ACT2_DESC_FMT.replace( "$5", Long.toString( act2.getId().get() ) )
                     .replace( "$87", act2.getTypeId().toString() )
                     .replace( "$9", act2.getFile().getName() );
 
-            strOut.getBuffer().delete( 0, strOut.getBuffer().length() );
-            act2.toJSON( strOut );
-            assertEquals( act2Desc, strOut.toString() );
+            STR_OUT.getBuffer().delete( 0, STR_OUT.getBuffer().length() );
+            act2.toJSON( STR_OUT );
+            assertEquals( act2Desc, STR_OUT.toString() );
 
             // Activity 3
-            String act3Desc = act2DescFmt.replace( "$5", Long.toString( act3.getId().get() ) )
+            String act3Desc = ACT2_DESC_FMT.replace( "$5", Long.toString( act3.getId().get() ) )
                     .replace( "$87", act3.getTypeId().toString() )
                     .replace( "$9", act3.getFile().getName() );
 
-            strOut.getBuffer().delete( 0, strOut.getBuffer().length() );
-            act3.toJSON( strOut );
-            assertEquals( act3Desc, strOut.toString() );
+            STR_OUT.getBuffer().delete( 0, STR_OUT.getBuffer().length() );
+            act3.toJSON( STR_OUT );
+            assertEquals( act3Desc, STR_OUT.toString() );
 
             // Group 2
-            String grp2Desc = grp2DescFmt.replace( "$5", Long.toString( grp2.getId().get() ) )
+            String grp2Desc = GRP2_DESC_FMT.replace( "$5", Long.toString( grp2.getId().get() ) )
                     .replace( "$87", grp2.getTypeId().toString() )
                     .replace( "$6", Boolean.toString( grp2.isRandom() ) )
                     .replace( "$7", act2Desc )
                     .replace( "$TAG", grp2.getTag().toString() )
                     .replace( "$TIME", Integer.toString( grp2.getTimeForEachActivity().getTimeInSeconds() ) );
 
-            strOut.getBuffer().delete( 0, strOut.getBuffer().length() );
-            grp2.toJSON( strOut );
-            assertEquals( grp2Desc, strOut.toString() );
+            STR_OUT.getBuffer().delete( 0, STR_OUT.getBuffer().length() );
+            grp2.toJSON( STR_OUT );
+            assertEquals( grp2Desc, STR_OUT.toString() );
 
             // Group 3
-            String grp3Desc = grp3DescFmt.replace( "$5", Long.toString( grp3.getId().get() ) )
+            String grp3Desc = GRP3_DESC_FMT.replace( "$5", Long.toString( grp3.getId().get() ) )
                     .replace( "$87", grp3.getTypeId().toString() )
                     .replace( "$6", Boolean.toString( grp3.isRandom() ) )
                     .replace( "$7", act3Desc )
                     .replace( "$TAG", grp3.getTag().toString() );
 
-            strOut.getBuffer().delete( 0, strOut.getBuffer().length() );
-            grp3.toJSON( strOut );
-            assertEquals( grp3Desc, strOut.toString() );
+            STR_OUT.getBuffer().delete( 0, STR_OUT.getBuffer().length() );
+            grp3.toJSON( STR_OUT );
+            assertEquals( grp3Desc, STR_OUT.toString() );
 
             expectedJSON = expectedJSON.replace( "$41", grp1Desc )
                     .replace( "$42", grp2Desc )
                     .replace( "$43", grp3Desc );
 
-            strOut.getBuffer().delete( 0, strOut.getBuffer().length() );
-            expr2.toJSON( strOut );
-            assertEquals( expectedJSON, strOut.toString() );
+            STR_OUT.getBuffer().delete( 0, STR_OUT.getBuffer().length() );
+            expr2.toJSON( STR_OUT );
+            assertEquals( expectedJSON, STR_OUT.toString() );
         } catch(JSONException exc)
         {
             assertFalse( false );

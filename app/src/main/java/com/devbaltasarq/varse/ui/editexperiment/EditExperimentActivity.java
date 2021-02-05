@@ -34,17 +34,17 @@ public class EditExperimentActivity extends AppActivity {
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_edit_experiment );
 
-        final FloatingActionButton fabAddGroup = this.findViewById( R.id.fbAddGroup );
-        final FloatingActionButton fabSaveExperiment = this.findViewById( R.id.fbSaveExperiment );
-        final ImageButton btCloseEditExperiment = this.findViewById( R.id.btCloseEditExperiment );
-        final TextView edExperimentName = this.findViewById( R.id.edExperimentName );
-        final CheckBox chkRandom = this.findViewById( R.id.chkRandom );
+        final FloatingActionButton FB_ADD_GROUP = this.findViewById( R.id.fbAddGroup );
+        final FloatingActionButton FB_SAVE_EXPERIMENT = this.findViewById( R.id.fbSaveExperiment );
+        final ImageButton BT_CLOSE_EDIT_EXPERIMENT = this.findViewById( R.id.btCloseEditExperiment );
+        final TextView ED_EXPERIMENT_NAME = this.findViewById( R.id.edExperimentName );
+        final CheckBox CHK_RANDOM = this.findViewById( R.id.chkRandom );
 
-        fabAddGroup.setOnClickListener( (v) -> this.addNewGroup() );
-        fabSaveExperiment.setOnClickListener( (v) -> this.finishWithResultCode( RSC_SAVE_DATA ) );
-        btCloseEditExperiment.setOnClickListener( (v) -> this.finishWithResultCode( RSC_DISMISS_DATA ) );
-        chkRandom.setOnCheckedChangeListener( (button, booleanValue) -> this.onRandomChanged() );
-        edExperimentName.addTextChangedListener( new TextWatcher() {
+        FB_ADD_GROUP.setOnClickListener( (v) -> this.addNewGroup() );
+        FB_SAVE_EXPERIMENT.setOnClickListener( (v) -> this.finishWithResultCode( RSC_SAVE_DATA ) );
+        BT_CLOSE_EDIT_EXPERIMENT.setOnClickListener( (v) -> this.finishWithResultCode( RSC_DISMISS_DATA ) );
+        CHK_RANDOM.setOnCheckedChangeListener( (button, booleanValue) -> this.onRandomChanged() );
+        ED_EXPERIMENT_NAME.addTextChangedListener( new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2)
             {
@@ -60,7 +60,7 @@ public class EditExperimentActivity extends AppActivity {
             @Override
             public void afterTextChanged(Editable editable)
             {
-                EditExperimentActivity.this.onNameChanged( edExperimentName.getText().toString() );
+                EditExperimentActivity.this.onNameChanged( ED_EXPERIMENT_NAME.getText().toString() );
             }
         });
 
@@ -100,30 +100,30 @@ public class EditExperimentActivity extends AppActivity {
     /** Fills the data in the fields. */
     private void fillInData()
     {
-        final TextView edExperimentName = this.findViewById( R.id.edExperimentName );
-        final CheckBox chkRandom = this.findViewById( R.id.chkRandom );
+        final TextView ED_EXPERIMENT_NAME = this.findViewById( R.id.edExperimentName );
+        final CheckBox CHK_RANDOM = this.findViewById( R.id.chkRandom );
 
-        edExperimentName.setText( experiment.getName() );
-        chkRandom.setChecked( experiment.isRandom() );
+        ED_EXPERIMENT_NAME.setText( experiment.getName() );
+        CHK_RANDOM.setChecked( experiment.isRandom() );
     }
 
     private void showGroups()
     {
-        final Group[] groups = experiment.getGroups();
-        final int NUM_ENTRIES = groups.length;
-        final ListView lvExperimentMedia = this.findViewById( R.id.lvExperimentMedia );
-        final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
+        final Group[] GROUPS = experiment.getGroups();
+        final int NUM_ENTRIES = GROUPS.length;
+        final ListView LV_EXPERIMENT_MEDIA = this.findViewById( R.id.lvExperimentMedia );
+        final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
 
         if ( NUM_ENTRIES > 0 ) {
             // Create adapter
-            lvExperimentMedia.setAdapter(
-                    new ListViewGroupArrayAdapter( this, groups ) );
+            LV_EXPERIMENT_MEDIA.setAdapter(
+                    new ListViewGroupArrayAdapter( this, GROUPS ) );
 
-            lblNoEntries.setVisibility( View.GONE );
-            lvExperimentMedia.setVisibility( View.VISIBLE );
+            LBL_NO_ENTRIES.setVisibility( View.GONE );
+            LV_EXPERIMENT_MEDIA.setVisibility( View.VISIBLE );
         } else {
-            lblNoEntries.setVisibility( View.VISIBLE );
-            lvExperimentMedia.setVisibility( View.GONE );
+            LBL_NO_ENTRIES.setVisibility( View.VISIBLE );
+            LV_EXPERIMENT_MEDIA.setVisibility( View.GONE );
         }
 
         return;
@@ -138,7 +138,7 @@ public class EditExperimentActivity extends AppActivity {
 
     protected void addNewGroup()
     {
-        final IconListAlertDialog newGroupDlg = new IconListAlertDialog( this,
+        final IconListAlertDialog NEW_GROUP_DLG = new IconListAlertDialog( this,
                 R.drawable.ic_group_button,
                 R.string.lblAddGroup,
                 new int[] {
@@ -152,7 +152,7 @@ public class EditExperimentActivity extends AppActivity {
                         R.string.lblGroupVideos,
                 });
 
-        newGroupDlg.setItemClickListener( (adpt, v, op, l) -> {
+        NEW_GROUP_DLG.setItemClickListener( (adpt, v, op, l) -> {
                     Intent launchData = new Intent( EditExperimentActivity.this,
                                                             EditMediaGroupActivity.class );
 
@@ -176,11 +176,11 @@ public class EditExperimentActivity extends AppActivity {
                                         new VideoGroup( Id.createFake(), this.experiment );
                     }
 
-                    newGroupDlg.dismiss();
+                    NEW_GROUP_DLG.dismiss();
                     EditExperimentActivity.this.startActivityForResult( launchData, RQC_ADD_GROUP) ;
         });
 
-        newGroupDlg.show();
+        NEW_GROUP_DLG.show();
     }
 
     public void editGroup(Group group)

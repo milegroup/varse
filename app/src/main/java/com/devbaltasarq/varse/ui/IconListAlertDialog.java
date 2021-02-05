@@ -124,43 +124,43 @@ public class IconListAlertDialog extends AlertDialog {
         @Override
         public View getView(int position, View convertView, ViewGroup parent)
         {
-            final Context cntxt = this.getContext();
-            final IconListAlertDialogEntry entry = this.getItem( position );
+            final Context CONTEXT = this.getContext();
+            final IconListAlertDialogEntry ENTRY = this.getItem( position );
 
             // Create view
-            LinearLayout hrzLayout = new LinearLayout( cntxt );
+            LinearLayout hrzLayout = new LinearLayout( CONTEXT );
             hrzLayout.setPadding( 5, 5, 5, 5 );
             hrzLayout.setOrientation( LinearLayout.HORIZONTAL );
             hrzLayout.setLayoutParams( new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT ) );
 
-            final TextView lblChoice = new TextView( cntxt );
-            final ImageView ivIcon = new ImageView( cntxt );
+            final TextView LBL_CHOICE = new TextView( CONTEXT );
+            final ImageView IV_ICON = new ImageView( CONTEXT );
 
-            lblChoice.setLayoutParams( new LinearLayout.LayoutParams(
+            LBL_CHOICE.setLayoutParams( new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     0.2f
             ));
 
-            lblChoice.setPadding( 5, 5, 5, 5 );
+            LBL_CHOICE.setPadding( 5, 5, 5, 5 );
 
-            ivIcon.setLayoutParams( new LinearLayout.LayoutParams(
+            IV_ICON.setLayoutParams( new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     0.8f
             ));
-            ivIcon.setPadding( 5, 5, 5, 5 );
+            IV_ICON.setPadding( 5, 5, 5, 5 );
 
-            hrzLayout.addView( ivIcon );
-            hrzLayout.addView( lblChoice );
+            hrzLayout.addView( IV_ICON );
+            hrzLayout.addView( LBL_CHOICE );
             convertView = hrzLayout;
 
             // Assign values
-            if ( entry != null ) {
-                lblChoice.setText( entry.getChoice() );
-                ivIcon.setImageDrawable( entry.getIcon() );
+            if ( ENTRY != null ) {
+                LBL_CHOICE.setText( ENTRY.getChoice() );
+                IV_ICON.setImageDrawable( ENTRY.getIcon() );
             }
 
             return convertView;

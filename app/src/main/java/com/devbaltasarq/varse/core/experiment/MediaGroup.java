@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 /** Represents a group of various media files. */
 public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
-    final static String LogTag = "MediaGroup";
+    final static String LOG_TAG = "MediaGroup";
     public enum Format { Picture, Video }
 
     public static class MediaActivity extends Group.Activity {
@@ -44,9 +44,9 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
             boolean toret = false;
 
             if ( o instanceof MediaActivity ) {
-                final MediaActivity mao = (MediaActivity) o;
+                final MediaActivity MA_OBJ = (MediaActivity) o;
 
-                toret = this.getTag().equals( mao.getTag() );
+                toret = this.getTag().equals( MA_OBJ.getTag() );
             }
 
             return toret;
@@ -115,23 +115,23 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
             // Load data
             try {
                 while ( jsonReader.hasNext() ) {
-                    final String token = jsonReader.nextName();
+                    final String TOKEN = jsonReader.nextName();
 
-                    if ( token.equals( Orm.FIELD_FILE ) ) {
+                    if ( TOKEN.equals( Orm.FIELD_FILE ) ) {
                         file = new File( jsonReader.nextString() );
                     }
                 }
             } catch(IOException exc)
             {
-                Log.e( LogTag, "ManualActivity.fromJSON(): " + exc.getMessage() );
+                Log.e(LOG_TAG, "ManualActivity.fromJSON(): " + exc.getMessage() );
             }
 
             // Chk
             if ( file == null ) {
-                final String msg = "ManualActivity.fromJSON(): invalid or missing file.";
+                final String MSG_ERROR = "ManualActivity.fromJSON(): invalid or missing file.";
 
-                Log.e( LogTag, msg );
-                throw new JSONException( msg );
+                Log.e(LOG_TAG, MSG_ERROR );
+                throw new JSONException( MSG_ERROR );
             }
 
             return new MediaActivity( id, file );
@@ -154,23 +154,23 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
           */
         public static int calculateVideoDuration(Orm orm, MediaActivity mact)
         {
-            final MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-            final File mediaFile = new File(
+            final MediaMetadataRetriever RETRIEVER = new MediaMetadataRetriever();
+            final File MEDIA_FILE = new File(
                     orm.buildMediaDirectoryFor( mact.getExperimentOwner() ),
                     mact.getFile().getName() );
             int toret = 5;
 
             try {
-                retriever.setDataSource( mediaFile.getPath() );
-                String strTime = retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_DURATION );
+                RETRIEVER.setDataSource( MEDIA_FILE.getPath() );
+                String strTime = RETRIEVER.extractMetadata( MediaMetadataRetriever.METADATA_KEY_DURATION );
                 toret = Integer.parseInt(strTime) / 1000;
             } catch(IllegalArgumentException exc) {
-                Log.e( LogTag, "unable to calculate video length for' "
-                                + mediaFile.getPath()
+                Log.e(LOG_TAG, "unable to calculate video length for' "
+                                + MEDIA_FILE.getPath()
                                 + "' invalid path: " + exc.getMessage() );
             }
 
-            retriever.release();
+            RETRIEVER.release();
             return toret;
         }
 
@@ -232,11 +232,11 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         boolean toret = false;
 
         if ( o instanceof MediaGroup ) {
-            final MediaGroup mgo = (MediaGroup) o;
+            final MediaGroup MG_OBJ = (MediaGroup) o;
 
             toret = super.equals( o )
-                 && this.getTag().equals( mgo.getTag() )
-                 && this.getFormat().equals( mgo.getFormat() );
+                 && this.getTag().equals( MG_OBJ.getTag() )
+                 && this.getFormat().equals( MG_OBJ.getFormat() );
         }
 
         return toret;
@@ -247,27 +247,27 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
      */
     public MediaActivity[] copyActivities()
     {
-        final Activity[] acts = super.copyActivities();
+        final Activity[] ACTS = super.copyActivities();
 
-        return Arrays.copyOf( acts, acts.length, MediaActivity[].class );
+        return Arrays.copyOf( ACTS, ACTS.length, MediaActivity[].class );
     }
 
     @Override
     public MediaActivity[] get()
     {
-        final Activity[] toret = super.get();
+        final Activity[] TORET = super.get();
 
-        return Arrays.copyOf( toret, toret.length, MediaActivity[].class );
+        return Arrays.copyOf( TORET, TORET.length, MediaActivity[].class );
     }
 
     @Override
     public String toString()
     {
-        final Object[] acts = this.get();
+        final Object[] ACTS = this.get();
         String toret = this.getTag().toString() + " - ";
 
-        if ( acts.length == 1 ) {
-            toret += acts[ 0 ].toString();
+        if ( ACTS.length == 1 ) {
+            toret += ACTS[ 0 ].toString();
         } else {
             toret += super.toString();
         }
@@ -278,15 +278,15 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     @Override
     public File[] enumerateMediaFiles()
     {
-        final MediaActivity[] activities = this.get();
-        final int size = activities.length;
-        final ArrayList<File> toret = new ArrayList<>( size );
+        final MediaActivity[] ACTIVITIES = this.get();
+        final int SIZE = ACTIVITIES.length;
+        final ArrayList<File> TORET = new ArrayList<>( SIZE );
 
-        for(int i = 0; i < size; ++i) {
-            toret.addAll( Arrays.asList( activities[ i ].enumerateMediaFiles() ) );
+        for(int i = 0; i < SIZE; ++i) {
+            TORET.addAll( Arrays.asList( ACTIVITIES[ i ].enumerateMediaFiles() ) );
         }
 
-        return toret.toArray( new File[ 0 ] );
+        return TORET.toArray( new File[ 0 ] );
     }
 
     @Override

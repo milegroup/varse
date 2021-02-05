@@ -1,8 +1,5 @@
 package com.devbaltasarq.varse.core.experiment;
 
-import android.media.MediaMetadataRetriever;
-import android.net.Uri;
-import android.util.JsonWriter;
 import android.util.Log;
 
 import com.devbaltasarq.varse.core.Duration;
@@ -11,11 +8,10 @@ import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Orm;
 
 import java.io.File;
-import java.io.IOException;
 
 /** Represents a group of various videos. */
 public class VideoGroup extends MediaGroup {
-    public static final String LogTag = VideoGroup.class.getSimpleName();
+    public static final String LOG_TAG = VideoGroup.class.getSimpleName();
 
     /** Creates a new, empty video group. */
     public VideoGroup(Id id, Experiment expr)
@@ -56,9 +52,9 @@ public class VideoGroup extends MediaGroup {
     @Override
     public void add(MediaActivity act)
     {
-        final File f = act.getFile();
+        final File F = act.getFile();
 
-        if ( !Orm.extractFileExt( f ).isEmpty() ) {
+        if ( !Orm.extractFileExt( F ).isEmpty() ) {
             if ( !MimeTools.isVideo( act.getFile() ) ) {
                 throw new Error( act.getFile() + " not a video." );
             }
@@ -70,19 +66,19 @@ public class VideoGroup extends MediaGroup {
     @Override
     public void setTimeForEachActivity(Duration time) throws NoSuchMethodError
     {
-        final String msg = "video group cannot change its time as a whole";
+        final String MSG_ERROR = "video group cannot change its time as a whole";
 
-        Log.e( LogTag, msg );
-        throw new NoSuchMethodError( msg );
+        Log.e(LOG_TAG, MSG_ERROR );
+        throw new NoSuchMethodError( MSG_ERROR );
     }
 
     @Override
     public Duration getTimeForEachActivity() throws NoSuchMethodError
     {
-        final String msg = "video group holds activities with individual times";
+        final String MSG_ERROR = "video group holds activities with individual times";
 
-        Log.e( LogTag, msg );
-        throw new NoSuchMethodError( msg );
+        Log.e(LOG_TAG, MSG_ERROR );
+        throw new NoSuchMethodError( MSG_ERROR );
     }
 
     @Override

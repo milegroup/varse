@@ -6,13 +6,12 @@ import android.util.Log;
 
 import org.json.JSONException;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 
 /** Represents a user, recipient of experiments. */
 public class User extends Persistent {
-    private static final String LogTag = User.class.getSimpleName();
+    private static final String LOG_TAG = User.class.getSimpleName();
 
     /** Creates a new user, with a given name.
       * @param name The name of the user.
@@ -47,9 +46,9 @@ public class User extends Persistent {
         boolean toret = false;
 
         if ( o instanceof User ) {
-            final User uo = (User) o;
+            final User OBJ_USR = (User) o;
 
-            toret = this.getName().equals( uo.getName() );
+            toret = this.getName().equals( OBJ_USR.getName() );
         }
 
         return toret;
@@ -83,23 +82,23 @@ public class User extends Persistent {
         try {
             jsonReader.beginObject();
             while ( jsonReader.hasNext() ) {
-                final String nextName = jsonReader.nextName();
+                final String NEXT_NAME = jsonReader.nextName();
 
-                if ( nextName.equals( Orm.FIELD_NAME ) ) {
+                if ( NEXT_NAME.equals( Orm.FIELD_NAME ) ) {
                     name = jsonReader.nextString();
                 }
                 else
-                if ( nextName.equals( Orm.FIELD_TYPE_ID ) ) {
+                if ( NEXT_NAME.equals( Orm.FIELD_TYPE_ID ) ) {
                     typeId = readTypeIdFromJson( jsonReader );
                 }
                 else
-                if ( nextName.equals( Id.FIELD) ) {
+                if ( NEXT_NAME.equals( Id.FIELD) ) {
                     id = readIdFromJSON( jsonReader );
                 }
             }
         } catch(IOException exc)
         {
-            Log.e( LogTag, "Creating user from JSON: " + exc.getMessage() );
+            Log.e(LOG_TAG, "Creating user from JSON: " + exc.getMessage() );
             throw new JSONException( exc.getMessage() );
         }
 
@@ -108,10 +107,10 @@ public class User extends Persistent {
           || name == null
           || typeId != TypeId.User )
         {
-            final String msg = "Creating user from JSON: invalid or missing data.";
+            final String MSG_ERROR = "Creating user from JSON: invalid or missing data.";
 
-            Log.e( LogTag, msg );
-            throw new JSONException( msg );
+            Log.e(LOG_TAG, MSG_ERROR );
+            throw new JSONException( MSG_ERROR );
         }
 
         return new User( id, name );

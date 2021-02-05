@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class BluetoothHRFiltering {
-    private static final String LogTag = BluetoothHRFiltering.class.getSimpleName();
+    private static final String LOG_TAG = BluetoothHRFiltering.class.getSimpleName();
     private static int MAX_FILTERING_PERIOD = 25000;
 
     public BluetoothHRFiltering(ScannerUI ui)
@@ -41,7 +41,7 @@ public class BluetoothHRFiltering {
             this.clearLists();
             this.filtering = true;
 
-            Log.d( LogTag, "Start filtering for " + NUM_DEVICES + " devices." );
+            Log.d(LOG_TAG, "Start filtering for " + NUM_DEVICES + " devices." );
 
             if ( NUM_DEVICES > 0 ) {
                 this.handler.postDelayed( this::finishedFiltering, MAX_FILTERING_PERIOD );
@@ -65,7 +65,7 @@ public class BluetoothHRFiltering {
     private void finishedFiltering()
     {
         if ( this.filtering ) {
-            Log.d( LogTag, "Filtering forced finish." );
+            Log.d(LOG_TAG, "Filtering forced finish." );
         }
 
         this.filtering = false;
@@ -144,20 +144,20 @@ public class BluetoothHRFiltering {
      */
     private void closeGattConnection(BluetoothDevice btDevice, boolean removeIt)
     {
-        final BluetoothGatt btGatt = this.openConnections.get( btDevice );
+        final BluetoothGatt BT_GATT = this.openConnections.get( btDevice );
 
         if ( btDevice != null ) {
-            if ( btGatt != null ) {
-                btGatt.disconnect();
-                btGatt.close();
+            if ( BT_GATT != null ) {
+                BT_GATT.disconnect();
+                BT_GATT.close();
             }
 
             if ( removeIt ) {
                 this.openConnections.remove( btDevice );
             }
 
-            Log.d( LogTag, "Closed Gatt connection for: " + btDevice.getName() );
-            Log.d( LogTag, "Remaining connections: " + this.openConnections.size() );
+            Log.d(LOG_TAG, "Closed Gatt connection for: " + btDevice.getName() );
+            Log.d(LOG_TAG, "Remaining connections: " + this.openConnections.size() );
         }
 
         return;
@@ -165,26 +165,26 @@ public class BluetoothHRFiltering {
 
     private void removeClosedGattConnections()
     {
-        final ArrayList<BluetoothDevice> btDevicesToRemove = new ArrayList<>();
-        final Set<Map.Entry<BluetoothDevice, BluetoothGatt>> entries = this.openConnections.entrySet();
+        final ArrayList<BluetoothDevice> BT_DEVICES_TO_REMOVE = new ArrayList<>();
+        final Set<Map.Entry<BluetoothDevice, BluetoothGatt>> ENTRIES = this.openConnections.entrySet();
 
         // Find those devices to remove
-        for(Map.Entry<BluetoothDevice, BluetoothGatt> entry: entries)
+        for(Map.Entry<BluetoothDevice, BluetoothGatt> entry: ENTRIES)
         {
-            final Context cntxt = this.ui.getContext();
-            final BluetoothDevice btDevice = entry.getKey();
-            final BluetoothManager btManager = (BluetoothManager) cntxt.getSystemService( Context.BLUETOOTH_SERVICE );
-            final int connectionStatus = btManager.getConnectionState( btDevice, BluetoothGatt.GATT );
+            final Context CONTEXT = this.ui.getContext();
+            final BluetoothDevice BT_DEVICE = entry.getKey();
+            final BluetoothManager BT_MANAGER = (BluetoothManager) CONTEXT.getSystemService( Context.BLUETOOTH_SERVICE );
+            final int connectionStatus = BT_MANAGER.getConnectionState( BT_DEVICE, BluetoothGatt.GATT );
 
             if ( connectionStatus == BluetoothGatt.STATE_DISCONNECTED
               || connectionStatus == BluetoothGatt.STATE_DISCONNECTING )
             {
-                btDevicesToRemove.add( btDevice );
+                BT_DEVICES_TO_REMOVE.add( BT_DEVICE );
             }
         }
 
         // Remove them
-        for(BluetoothDevice btDevice: btDevicesToRemove) {
+        for(BluetoothDevice btDevice: BT_DEVICES_TO_REMOVE) {
             this.openConnections.remove( btDevice );
         }
 
@@ -197,7 +197,7 @@ public class BluetoothHRFiltering {
         this.removeClosedGattConnections();
 
         if ( this.openConnections.size() == 0 ) {
-            Log.d( LogTag, "Finished filtering, signaling UI..." );
+            Log.d(LOG_TAG, "Finished filtering, signaling UI..." );
             this.filtering = false;
             this.finishedFiltering();
         }
@@ -210,7 +210,7 @@ public class BluetoothHRFiltering {
       */
     private void filterInDevice(BluetoothDevice btDevice)
     {
-        Log.d( LogTag, "Device accepted: " + btDevice.getName() );
+        Log.d(LOG_TAG, "Device accepted: " + btDevice.getName() );
 
         this.acceptedDevices.add( btDevice );
         this.ui.addDeviceToListView( btDevice );
@@ -222,7 +222,7 @@ public class BluetoothHRFiltering {
       */
     private void filterOutDevice(BluetoothDevice btDevice)
     {
-        Log.d( LogTag, "Device rejected: " + btDevice.getName() );
+        Log.d(LOG_TAG, "Device rejected: " + btDevice.getName() );
 
         this.rejectedDevices.add( btDevice );
         this.ui.denyAdditionToList( btDevice );
@@ -235,9 +235,9 @@ public class BluetoothHRFiltering {
     private void filterByHRService(BluetoothDevice btDevice)
     {
         if ( this.openConnections.get( btDevice ) == null ) {
-            Log.d( LogTag, "Opening connection for: " + btDevice.getName() );
+            Log.d(LOG_TAG, "Opening connection for: " + btDevice.getName() );
 
-            final BluetoothGatt btGatt = btDevice.connectGatt(
+            final BluetoothGatt BT_GATT = btDevice.connectGatt(
                     this.ui.getContext(),false,
                     BluetoothUtils.createGattServiceFilteringCallback(
                             this.ui.getContext(),
@@ -245,7 +245,7 @@ public class BluetoothHRFiltering {
                             ( device, gattChr ) -> this.filterOutDevice( btDevice )
                     ));
 
-            this.openConnections.put( btDevice, btGatt );
+            this.openConnections.put( btDevice, BT_GATT );
         }
 
         return;

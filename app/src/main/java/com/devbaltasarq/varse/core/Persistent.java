@@ -13,7 +13,7 @@ import java.io.Writer;
 
 /** Represents classes that can be stored and retrieved using JSON. */
 public abstract class Persistent implements Identifiable {
-    private static final String LogTag = Persistent.class.getSimpleName();
+    private static final String LOG_TAG = Persistent.class.getSimpleName();
 
     public enum TypeId {
             User, Result, Experiment,
@@ -31,12 +31,12 @@ public abstract class Persistent implements Identifiable {
         public static TypeId parse(String strTypeId) throws IllegalArgumentException
         {
             TypeId toret = null;
-            final TypeId[] typeIds = TypeId.values();
+            final TypeId[] TYPE_IDS = TypeId.values();
 
             strTypeId = strTypeId.trim().toLowerCase();
 
             // Look for type id
-            for (final TypeId typeId : typeIds) {
+            for (final TypeId typeId : TYPE_IDS) {
                 if ( strTypeId.equals( typeId.toString() ) ) {
                     toret = typeId;
                     break;
@@ -88,13 +88,13 @@ public abstract class Persistent implements Identifiable {
             jsonWriter.endObject();
         } catch(IOException exc)
         {
-            Log.e( LogTag, ErrorMessage + exc.getMessage() );
+            Log.e(LOG_TAG, ErrorMessage + exc.getMessage() );
             throw new JSONException( exc.getMessage() );
         } finally {
             try {
                 jsonWriter.close();
             } catch(IOException exc) {
-                Log.e( LogTag, ErrorMessage + exc.getMessage() );
+                Log.e(LOG_TAG, ErrorMessage + exc.getMessage() );
             }
         }
 

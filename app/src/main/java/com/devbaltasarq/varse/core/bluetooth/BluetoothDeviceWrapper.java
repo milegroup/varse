@@ -100,10 +100,10 @@ public class BluetoothDeviceWrapper {
         if ( isDemo() ) {
             this.demoDevice.connect( callBack );
         } else {
-            final BluetoothGatt btGatt = this.btDevice.connectGatt( cntxt, false, callBack );
+            final BluetoothGatt BT_GATT = this.btDevice.connectGatt( cntxt, false, callBack );
 
-            if ( btGatt != null ) {
-                toret = btGatt;
+            if ( BT_GATT != null ) {
+                toret = BT_GATT;
                 Log.d( LogTag, "Connected to device." );
             } else {
                 Log.e( LogTag, "Could not connect to device." );

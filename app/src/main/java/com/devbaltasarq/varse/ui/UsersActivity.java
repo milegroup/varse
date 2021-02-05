@@ -19,7 +19,7 @@ import com.devbaltasarq.varse.ui.adapters.ListViewUserArrayAdapter;
 import java.io.IOException;
 
 public class UsersActivity extends AppActivity {
-    private static final String LogTag = UsersActivity.class.getSimpleName();
+    private static final String LOG_TAG = UsersActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,11 +28,11 @@ public class UsersActivity extends AppActivity {
         Toolbar toolbar = this.findViewById( R.id.toolbar );
         setSupportActionBar(toolbar);
 
-        final FloatingActionButton fbAdd = this.findViewById( R.id.fbAddUser);
-        final ImageButton btCloseUsers = this.findViewById( R.id.btCloseUsers);
+        final FloatingActionButton FB_ADD = this.findViewById( R.id.fbAddUser);
+        final ImageButton BT_CLOSE_USERS = this.findViewById( R.id.btCloseUsers);
 
-        fbAdd.setOnClickListener( (v) -> this.addUser() );
-        btCloseUsers.setOnClickListener( (v) -> this.finish() );
+        FB_ADD.setOnClickListener( (v) -> this.addUser() );
+        BT_CLOSE_USERS.setOnClickListener( (v) -> this.finish() );
         this.setTitle( "" );
     }
 
@@ -47,23 +47,23 @@ public class UsersActivity extends AppActivity {
     private void showUsers()
     {
         try {
-            final PartialObject[] userList = Orm.get().enumerateUsers();
-            final ListView lvUsers = this.findViewById( R.id.lvUsers);
-            final User[] entries = new User[ userList.length ];
+            final PartialObject[] USR_LIST = Orm.get().enumerateUsers();
+            final ListView LV_USRS = this.findViewById( R.id.lvUsers);
+            final User[] ENTRIES = new User[ USR_LIST.length ];
 
             // Create a fake list of users
-            for(int i = 0; i < entries.length; ++i) {
-                final PartialObject po = userList[ i ];
+            for(int i = 0; i < ENTRIES.length; ++i) {
+                final PartialObject PO = USR_LIST[ i ];
 
-                entries[ i ] = new User( po.getId(), po.getName() );
+                ENTRIES[ i ] = new User( PO.getId(), PO.getName() );
             }
 
             ListViewUserArrayAdapter adapter = new ListViewUserArrayAdapter( this,
-                                            entries );
-            lvUsers.setAdapter( adapter );
+                                            ENTRIES );
+            LV_USRS.setAdapter( adapter );
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
     }
 
@@ -83,7 +83,7 @@ public class UsersActivity extends AppActivity {
                     Orm.get().store( new User( Id.createFake(), edId.getText().toString() ) );
                     UsersActivity.this.showUsers();
                 } catch(IOException exc) {
-                    activity.showStatus( LogTag, activity.getString( R.string.errIO) );
+                    activity.showStatus(LOG_TAG, activity.getString( R.string.errIO) );
                 }
             }
         });

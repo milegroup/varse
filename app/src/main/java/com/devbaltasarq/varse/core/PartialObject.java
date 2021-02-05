@@ -7,7 +7,6 @@ import android.util.Log;
 
 import org.json.JSONException;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 
@@ -15,7 +14,7 @@ import java.io.Reader;
  *  This is used to partially retrieve only id's and names of complex objects.
  */
 public class PartialObject extends Persistent {
-    private static final String LogTag = PartialObject.class.getSimpleName();
+    private static final String LOG_TAG = PartialObject.class.getSimpleName();
 
     public PartialObject(Id id, TypeId typeId, String name)
     {
@@ -107,7 +106,7 @@ public class PartialObject extends Persistent {
             }
         } catch(IOException exc) {
             final String msg = "PartialObject.fromJSON(): " + exc.getMessage();
-            Log.e( LogTag, msg );
+            Log.e(LOG_TAG, msg );
 
             throw new JSONException( msg );
         }

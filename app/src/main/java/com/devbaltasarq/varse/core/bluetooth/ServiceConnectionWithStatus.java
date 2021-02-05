@@ -8,7 +8,7 @@ import android.util.Log;
 
 /** A service connection that easily makes it possible to query connection status. */
 public class ServiceConnectionWithStatus implements ServiceConnection {
-    private static final String LogTag = ServiceConnectionWithStatus.class.getSimpleName();
+    private static final String LOG_TAG = ServiceConnectionWithStatus.class.getSimpleName();
 
     /** Creates a service connection associated to an activity designed for listening.
      * @param activity An activity that implements the HRListenerActivity interface.
@@ -24,10 +24,10 @@ public class ServiceConnectionWithStatus implements ServiceConnection {
     {
         BluetoothUtils.createBleService( activity, service );
 
-        Log.d( LogTag, "Connecting to service..." );
+        Log.d(LOG_TAG, "Connecting to service..." );
         final boolean result = activity.getService().connect();
 
-        Log.d( LogTag, "Connect request result: " + result );
+        Log.d(LOG_TAG, "Connect request result: " + result );
 
         if ( result ) {
             Activity context = (Activity) activity;

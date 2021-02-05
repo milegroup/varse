@@ -27,43 +27,43 @@ public class ListViewGroupArrayAdapter extends ArrayAdapter<Group> {
     @Override
     public @NonNull View getView(int position, View convertView, @NonNull ViewGroup parent)
     {
-        final EditExperimentActivity cntxt = (EditExperimentActivity) this.getContext();
-        final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
-        final Group group = this.getItem( position );
+        final EditExperimentActivity CONTEXT = (EditExperimentActivity) this.getContext();
+        final LayoutInflater LAYOUT_INFLATER = LayoutInflater.from( this.getContext() );
+        final Group GROUP = this.getItem( position );
 
-        if ( group == null ) {
+        if ( GROUP == null ) {
             throw new Error( "Group adapter: group is null" );
         }
 
         if ( convertView == null ) {
-            convertView = layoutInflater.inflate( R.layout.listview_media_group_entry, null );
+            convertView = LAYOUT_INFLATER.inflate( R.layout.listview_media_group_entry, null );
         }
 
-        final ImageButton btSortUp = convertView.findViewById( R.id.btSortMediaGroupUp );
-        final ImageButton btSortDown = convertView.findViewById( R.id.btSortMediaGroupDown );
-        final ImageButton btEditMediaGroup = convertView.findViewById( R.id.btEditMediaGroup );
-        final ImageButton btDeleteMediaGroup = convertView.findViewById( R.id.btDeleteMediaGroup );
-        final TextView lblMediaGroupDesc = convertView.findViewById( R.id.lblMediaGroupDesc );
-        final ImageView ivMediaGroupDesc = convertView.findViewById( R.id.ivMediaGroupDesc);
+        final ImageButton BT_SORT_UP = convertView.findViewById( R.id.btSortMediaGroupUp );
+        final ImageButton BT_SORT_DOWN = convertView.findViewById( R.id.btSortMediaGroupDown );
+        final ImageButton BT_EDIT_MEDIA_GRP = convertView.findViewById( R.id.btEditMediaGroup );
+        final ImageButton BT_DELETE_MEDIA_GRP = convertView.findViewById( R.id.btDeleteMediaGroup );
+        final TextView LBL_MEDIA_GROUP_DESC = convertView.findViewById( R.id.lblMediaGroupDesc );
+        final ImageView IV_MEDIA_GROUP_DESC = convertView.findViewById( R.id.ivMediaGroupDesc);
 
         // Set image and file name
         int groupDescImgId = R.drawable.ic_picture_group_button;
 
-        if ( group instanceof VideoGroup ) {
+        if ( GROUP instanceof VideoGroup ) {
             groupDescImgId = R.drawable.ic_video_group_button;
         }
         else
-        if ( group instanceof ManualGroup) {
+        if ( GROUP instanceof ManualGroup) {
             groupDescImgId = R.drawable.ic_manual_button;
         }
 
-        ivMediaGroupDesc.setImageDrawable( AppCompatResources.getDrawable( cntxt, groupDescImgId ) );
-        lblMediaGroupDesc.setText( group.toString() );
+        IV_MEDIA_GROUP_DESC.setImageDrawable( AppCompatResources.getDrawable( CONTEXT, groupDescImgId ) );
+        LBL_MEDIA_GROUP_DESC.setText( GROUP.toString() );
 
-        btSortUp.setOnClickListener( (v) -> cntxt.sortGroupUp( group ) );
-        btSortDown.setOnClickListener( (v) -> cntxt.sortGroupDown( group ) );
-        btEditMediaGroup.setOnClickListener( (v) -> cntxt.editGroup( group ) );
-        btDeleteMediaGroup.setOnClickListener( (v) -> cntxt.deleteGroup( group ) );
+        BT_SORT_UP.setOnClickListener( (v) -> CONTEXT.sortGroupUp( GROUP ) );
+        BT_SORT_DOWN.setOnClickListener( (v) -> CONTEXT.sortGroupDown( GROUP ) );
+        BT_EDIT_MEDIA_GRP.setOnClickListener( (v) -> CONTEXT.editGroup( GROUP ) );
+        BT_DELETE_MEDIA_GRP.setOnClickListener( (v) -> CONTEXT.deleteGroup( GROUP ) );
 
         return convertView;
     }

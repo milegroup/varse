@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class ExperimentsActivity extends AppActivity {
-    public static final String LogTag = ExperimentsActivity.class.getSimpleName();
+    public static final String LOG_TAG = ExperimentsActivity.class.getSimpleName();
     public static final int RQC_ADD_EXPERIMENT = 76;
     public static final int RQC_EDIT_EXPERIMENT = 77;
     public static final int RQC_ASK_PERMISSION = 78;
@@ -40,14 +40,14 @@ public class ExperimentsActivity extends AppActivity {
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_experiments );
 
-        final Toolbar toolbar = this.findViewById( R.id.toolbar );
-        this.setSupportActionBar( toolbar );
+        final Toolbar TOOLBAR = this.findViewById( R.id.toolbar );
+        this.setSupportActionBar( TOOLBAR );
 
-        final FloatingActionButton fab = this.findViewById(R.id.fbAddExperiment);
-        final ImageButton btCloseExperiments = this.findViewById( R.id.btCloseExperiments );
+        final FloatingActionButton FAB = this.findViewById(R.id.fbAddExperiment);
+        final ImageButton BT_CLOSE_EXPERIMENTS = this.findViewById( R.id.btCloseExperiments );
 
-        fab.setOnClickListener( (v) -> this.addExperiment() );
-        btCloseExperiments.setOnClickListener( (v) -> this.finish() );
+        FAB.setOnClickListener( (v) -> this.addExperiment() );
+        BT_CLOSE_EXPERIMENTS.setOnClickListener( (v) -> this.finish() );
 
         this.setTitle( "" );
     }
@@ -87,7 +87,7 @@ public class ExperimentsActivity extends AppActivity {
                 Orm.get().purgeOrphanMedia();
             }
         } catch(IOException exc) {
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
 
         return;
@@ -96,33 +96,33 @@ public class ExperimentsActivity extends AppActivity {
     private void showExperiments()
     {
         try {
-            final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
-            final ListView lvExperiments = this.findViewById( R.id.lvExperiments );
-            final PartialObject[] poEntries = Orm.get().enumerateExperiments();
+            final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
+            final ListView LV_EXPERIMENTS = this.findViewById( R.id.lvExperiments );
+            final PartialObject[] PO_ENTRIES = Orm.get().enumerateExperiments();
 
             // Prepare the list of experiments
-            this.experimentEntries = new ArrayList<>( poEntries.length );
+            this.experimentEntries = new ArrayList<>( PO_ENTRIES.length );
 
-            for(PartialObject po: poEntries) {
+            for(PartialObject po: PO_ENTRIES) {
                 experimentEntries.add( new Experiment( po.getId(), po.getName() ) );
             }
 
             // Prepare the list view
             this.experimentsListAdapter =
                     new ListViewExperimentArrayAdapter(this, experimentEntries );
-            lvExperiments.setAdapter( this.experimentsListAdapter );
+            LV_EXPERIMENTS.setAdapter( this.experimentsListAdapter );
 
             // Show the experiments list (or maybe not).
-            if ( poEntries.length > 0 ) {
-                lblNoEntries.setVisibility( View.GONE );
-                lvExperiments.setVisibility( View.VISIBLE );
+            if ( PO_ENTRIES.length > 0 ) {
+                LBL_NO_ENTRIES.setVisibility( View.GONE );
+                LV_EXPERIMENTS.setVisibility( View.VISIBLE );
             } else {
-                lblNoEntries.setVisibility( View.VISIBLE );
-                lvExperiments.setVisibility( View.GONE );
+                LBL_NO_ENTRIES.setVisibility( View.VISIBLE );
+                LV_EXPERIMENTS.setVisibility( View.GONE );
             }
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
 
         return;
@@ -130,17 +130,17 @@ public class ExperimentsActivity extends AppActivity {
 
     private void updateExperimentsList()
     {
-        final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
-        final ListView lvExperiments = this.findViewById( R.id.lvExperiments );
+        final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
+        final ListView LV_EXPERIMENTS = this.findViewById( R.id.lvExperiments );
 
         this.experimentsListAdapter.notifyDataSetChanged();
 
         if ( this.experimentEntries.size() == 0 ) {
-            lblNoEntries.setVisibility( View.VISIBLE );
-            lvExperiments.setVisibility( View.GONE );
+            LBL_NO_ENTRIES.setVisibility( View.VISIBLE );
+            LV_EXPERIMENTS.setVisibility( View.GONE );
         } else {
-            lblNoEntries.setVisibility( View.GONE );
-            lvExperiments.setVisibility( View.VISIBLE );
+            LBL_NO_ENTRIES.setVisibility( View.GONE );
+            LV_EXPERIMENTS.setVisibility( View.VISIBLE );
         }
 
         return;
@@ -158,8 +158,8 @@ public class ExperimentsActivity extends AppActivity {
                             (Experiment) Orm.get().retrieve( id, Persistent.TypeId.Experiment );
         } catch(IOException exc)
         {
-            Log.e( LogTag, "error retrieving experiment: " + exc.getMessage() );
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
+            Log.e(LOG_TAG, "error retrieving experiment: " + exc.getMessage() );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
     }
 
@@ -167,9 +167,9 @@ public class ExperimentsActivity extends AppActivity {
     {
         // Solve the entries issue
         for(int i = 0; i < this.experimentEntries.size(); ++i) {
-            final Experiment exprItem = this.experimentEntries.get( i );
+            final Experiment EXPR_ITEM = this.experimentEntries.get( i );
 
-            if ( exprItem.getId().equals( expr.getId() ) ) {
+            if ( EXPR_ITEM.getId().equals( expr.getId() ) ) {
                 this.experimentEntries.set( i, expr );
             }
         }
@@ -192,7 +192,7 @@ public class ExperimentsActivity extends AppActivity {
                 this.experimentEntries.remove( position );
                 this.updateExperimentsList();
             } else {
-                this.showStatus( LogTag, this.getString( R.string.errDeleting)
+                this.showStatus(LOG_TAG, this.getString( R.string.errDeleting)
                                             + ": " + e.toString() );
             }
         });
@@ -202,19 +202,19 @@ public class ExperimentsActivity extends AppActivity {
 
     public void launchExperimentResults(Experiment e)
     {
-        final Intent showResultsIntent = new Intent( this, ResultsActivity.class );
+        final Intent SHOW_RESULTS_INTENT = new Intent( this, ResultsActivity.class );
 
         try {
              selectedExperiment = (Experiment)
                                   Orm.get().retrieve( e.getId(), Persistent.TypeId.Experiment );
         } catch(IOException exc) {
-            this.showStatus( LogTag,
+            this.showStatus(LOG_TAG,
                              this.getString( R.string.msgFileNotFound )
                              + ": " + this.getString(R.string.lblExperiment ) );
         }
 
         ResultsActivity.experiment = selectedExperiment;
-        this.startActivity( showResultsIntent );
+        this.startActivity( SHOW_RESULTS_INTENT );
     }
 
     public void launchExperiment(Experiment e)
@@ -275,20 +275,20 @@ public class ExperimentsActivity extends AppActivity {
 
     private void doExportExperiment(Experiment e)
     {
-        final String lblExperiment = this.getString( R.string.lblExperiment );
-        final Orm db = Orm.get();
+        final String LBL_EXPERIMENT = this.getString( R.string.lblExperiment );
+        final Orm DB = Orm.get();
 
         try {
-            db.exportExperiment( null, e );
-            this.showStatus( LogTag,
+            DB.exportExperiment( null, e );
+            this.showStatus(LOG_TAG,
                     this.getString( R.string.msgExported )
-                            + ": " + lblExperiment
+                            + ": " + LBL_EXPERIMENT
                             + ": '" + e.getName() + '\'' );
         } catch(IOException exc)
         {
-            this.showStatus( LogTag,
+            this.showStatus(LOG_TAG,
                     this.getString( R.string.errExport)
-                            + ": " + lblExperiment
+                            + ": " + LBL_EXPERIMENT
                             + ": '" + e.getName() + '\'' );
         }
 
@@ -313,7 +313,7 @@ public class ExperimentsActivity extends AppActivity {
                   && grantResults[ 0 ] == PackageManager.PERMISSION_GRANTED ) {
                     doExportExperiment( selectedExperiment );
                 } else {
-                    this.showStatus( LogTag, this.getString( R.string.errPermissionDenied) );
+                    this.showStatus(LOG_TAG, this.getString( R.string.errPermissionDenied) );
                 }
                 return;
             }

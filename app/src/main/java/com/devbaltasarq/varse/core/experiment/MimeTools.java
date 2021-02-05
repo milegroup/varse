@@ -93,25 +93,25 @@ public final class MimeTools {
         init();
 
         final String FILE_EXT = Orm.extractFileExt( f ).trim().toLowerCase();
-        final String toret = mimeForExtension.get( FILE_EXT );
+        final String TORET = mimeForExtension.get( FILE_EXT );
 
-        if ( toret == null ) {
+        if ( TORET == null ) {
             throw new IllegalArgumentException( "unknown mime type for: " + f.toString() );
         }
 
-        return toret;
+        return TORET;
     }
 
     public static String getExtFor(String mime)
     {
         init();
-        final String toret = extensionForMime.get( mime );
+        final String TORET = extensionForMime.get( mime );
 
-        if ( toret == null ) {
+        if ( TORET == null ) {
             throw new IllegalArgumentException( "unknown mime: " + mime );
         }
 
-        return toret;
+        return TORET;
     }
 
     public static boolean isPicture(File f)

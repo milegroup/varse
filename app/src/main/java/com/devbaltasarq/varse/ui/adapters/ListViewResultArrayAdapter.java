@@ -26,30 +26,30 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
     @Override
     public @NonNull View getView(int position, View rowView, @NonNull ViewGroup parent)
     {
-        final ResultsActivity cntxt = (ResultsActivity) this.getContext();
-        final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
-        final Result res = this.getItem( position );
+        final ResultsActivity CONTEXT = (ResultsActivity) this.getContext();
+        final LayoutInflater LAYOUT_INFLATER = LayoutInflater.from( this.getContext() );
+        final Result RES = this.getItem( position );
 
-        if ( res == null ) {
+        if ( RES == null ) {
             throw new Error( "Result adapter: result is null" );
         }
 
         if ( rowView == null ) {
-            rowView = layoutInflater.inflate( R.layout.listview_result_entry, null );
+            rowView = LAYOUT_INFLATER.inflate( R.layout.listview_result_entry, null );
         }
 
-        final ImageButton btExportResult = rowView.findViewById( R.id.btExportResult );
-        final ImageButton btDeleteResult = rowView.findViewById( R.id.btDeleteResult );
-        final ImageButton btUploadResult = rowView.findViewById( R.id.btUploadResult );
-        final ImageButton btShowResults = rowView.findViewById( R.id.btShowResult );
-        final TextView lblExperimentDesc = rowView.findViewById( R.id.lblResultDesc );
+        final ImageButton BT_EXPORT_RESULT = rowView.findViewById( R.id.btExportResult );
+        final ImageButton BT_DELETE_RESULT = rowView.findViewById( R.id.btDeleteResult );
+        final ImageButton BT_UPLOAD_RESULT = rowView.findViewById( R.id.btUploadResult );
+        final ImageButton BT_SHOW_RESULTS = rowView.findViewById( R.id.btShowResult );
+        final TextView LBL_EXPERIMENT_DESC = rowView.findViewById( R.id.lblResultDesc );
 
-        lblExperimentDesc.setText( this.getResultDesc( cntxt, res ) );
+        LBL_EXPERIMENT_DESC.setText( this.getResultDesc( CONTEXT, RES ) );
 
-        btDeleteResult.setOnClickListener( (v) -> cntxt.deleteResult( res ) );
-        btExportResult.setOnClickListener( (v) -> cntxt.exportResult( res ) );
-        btUploadResult.setOnClickListener( (v) -> cntxt.uploadResult( res ) );
-        btShowResults.setOnClickListener( (v) -> cntxt.showResults( res ) );
+        BT_DELETE_RESULT.setOnClickListener( (v) -> CONTEXT.deleteResult( RES ) );
+        BT_EXPORT_RESULT.setOnClickListener( (v) -> CONTEXT.exportResult( RES ) );
+        BT_UPLOAD_RESULT.setOnClickListener( (v) -> CONTEXT.uploadResult( RES ) );
+        BT_SHOW_RESULTS.setOnClickListener( (v) -> CONTEXT.showResults( RES ) );
 
         return rowView;
     }
@@ -57,19 +57,19 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
     /** @return a shortcut to the result description. */
     private String getResultDesc(Context context, Result result)
     {
-        final Calendar localDate = Calendar.getInstance();
+        final Calendar LOCAL_DATE = Calendar.getInstance();
 
-        localDate.setTimeInMillis( result.getTime() );
+        LOCAL_DATE.setTimeInMillis( result.getTime() );
         return String.format( Locale.getDefault(),
                         "%04d-%02d-%02d %02d:%02d:%02d "
                         + " " + context.getString( R.string.lblRecord )
                         + ": " + result.getUser().getName(),
-                        localDate.get( Calendar.YEAR ),
-                        localDate.get( Calendar.MONTH ) + 1,
-                        localDate.get( Calendar.DAY_OF_MONTH ),
-                        localDate.get( Calendar.HOUR_OF_DAY ),
-                        localDate.get( Calendar.MINUTE ),
-                        localDate.get( Calendar.SECOND )
+                        LOCAL_DATE.get( Calendar.YEAR ),
+                        LOCAL_DATE.get( Calendar.MONTH ) + 1,
+                        LOCAL_DATE.get( Calendar.DAY_OF_MONTH ),
+                        LOCAL_DATE.get( Calendar.HOUR_OF_DAY ),
+                        LOCAL_DATE.get( Calendar.MINUTE ),
+                        LOCAL_DATE.get( Calendar.SECOND )
         );
     }
 }

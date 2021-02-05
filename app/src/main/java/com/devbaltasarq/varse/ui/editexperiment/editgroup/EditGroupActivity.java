@@ -14,7 +14,7 @@ import com.devbaltasarq.varse.ui.adapters.ListViewActivityArrayAdapter;
 
 /** Parent class for group editor activities (i.e., EditMediaGroupActivity...) .*/
 public abstract class EditGroupActivity extends AppActivity {
-    private static final String LogTag = EditGroupActivity.class.getSimpleName();
+    private static final String LOG_TAG = EditGroupActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,30 +23,30 @@ public abstract class EditGroupActivity extends AppActivity {
 
     public void showActivities()
     {
-        final ListView lvActs = this.findViewById( R.id.lvActs );
-        final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
+        final ListView LV_ACTS = this.findViewById( R.id.lvActs );
+        final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
         final int NUM_ENTRIES = group.size();
 
-        Log.i( LogTag, "starting showActivities()..." );
-        Log.i( LogTag, "entries: " + NUM_ENTRIES );
+        Log.i(LOG_TAG, "starting showActivities()..." );
+        Log.i(LOG_TAG, "entries: " + NUM_ENTRIES );
 
         if ( NUM_ENTRIES > 0 ) {
-            final Group.Activity[] acts = group.get();
-            final ListViewActivityArrayAdapter actsAdapter;
+            final Group.Activity[] ACTS = group.get();
+            final ListViewActivityArrayAdapter ACTS_ADAPTER;
 
             // Create adapter
-            actsAdapter = new ListViewActivityArrayAdapter( this, acts );
+            ACTS_ADAPTER = new ListViewActivityArrayAdapter( this, ACTS );
 
-            lblNoEntries.setVisibility( View.GONE );
-            lvActs.setVisibility( View.VISIBLE );
-            lvActs.setAdapter( actsAdapter );
+            LBL_NO_ENTRIES.setVisibility( View.GONE );
+            LV_ACTS.setVisibility( View.VISIBLE );
+            LV_ACTS.setAdapter( ACTS_ADAPTER );
         } else {
-            lblNoEntries.setVisibility( View.VISIBLE );
-            lvActs.setVisibility( View.GONE );
-            Log.i( LogTag, "    no entries" );
+            LBL_NO_ENTRIES.setVisibility( View.VISIBLE );
+            LV_ACTS.setVisibility( View.GONE );
+            Log.i(LOG_TAG, "    no entries" );
         }
 
-        Log.i( LogTag, "finished showActivities()" );
+        Log.i(LOG_TAG, "finished showActivities()" );
     }
 
     public abstract void addActivity();

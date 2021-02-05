@@ -30,15 +30,15 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         this.setContentView( R.layout.activity_test_hrdevice );
         this.setTitle( "" );
 
-        final ImageButton btCloseTestDevice = this.findViewById( R.id.btCloseTestDevice );
-        final TextView lblDeviceName = this.findViewById( R.id.lblDeviceName );
+        final ImageButton BT_CLOSE_TEST_DEVICE = this.findViewById( R.id.btCloseTestDevice );
+        final TextView LBL_DEVICE_NAME = this.findViewById( R.id.lblDeviceName );
 
         // Events
-        btCloseTestDevice.setOnClickListener( (view) -> this.finish() );
+        BT_CLOSE_TEST_DEVICE.setOnClickListener( (view) -> this.finish() );
 
         // Set device
         this.btDevice = PerformExperimentActivity.chosenBtDevice;
-        lblDeviceName.setText( this.btDevice.getName() );
+        LBL_DEVICE_NAME.setText( this.btDevice.getName() );
     }
 
     public void showStatus(String msg)
@@ -110,19 +110,19 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
     /** Shows the info in the appropriate labels. */
     private void showBpm(String bpm, String rr)
     {
-        final TextView lblBpm = this.findViewById( R.id.lblBpm );
-        final TextView lblRR = this.findViewById( R.id.lblRR );
+        final TextView LBL_BPM = this.findViewById( R.id.lblBpm );
+        final TextView LBL_RR = this.findViewById( R.id.lblRR );
 
 
         if ( bpm != null
           && !bpm.isEmpty()  )
         {
-            TestHRDevice.this.runOnUiThread( () -> lblBpm.setText( bpm ) );
+            TestHRDevice.this.runOnUiThread( () -> LBL_BPM.setText( bpm ) );
 
             if ( rr != null
               && !rr.isEmpty()  )
             {
-                TestHRDevice.this.runOnUiThread( () -> lblRR.setText( rr ) );
+                TestHRDevice.this.runOnUiThread( () -> LBL_RR.setText( rr ) );
             } else {
                 this.showRRInactive();
             }
@@ -137,9 +137,9 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
     private void showHRInactive()
     {
         TestHRDevice.this.runOnUiThread( () -> {
-            final TextView lblBpm = this.findViewById( R.id.lblBpm );
+            final TextView LBL_BPM = this.findViewById( R.id.lblBpm );
 
-            lblBpm.setText( "--" );
+            LBL_BPM.setText( "--" );
         });
     }
 
@@ -147,9 +147,9 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
     private void showRRInactive()
     {
         TestHRDevice.this.runOnUiThread( () -> {
-            final TextView lblRR = this.findViewById( R.id.lblRR );
+            final TextView LBL_RR = this.findViewById( R.id.lblRR );
 
-            lblRR.setText( "--" );
+            LBL_RR.setText( "--" );
         });
     }
 

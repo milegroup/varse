@@ -55,7 +55,7 @@ import java.util.Set;
 
 
 public class ExperimentDirector extends AppActivity implements HRListenerActivity {
-    public static final String LogTag = ExperimentDirector.class.getSimpleName();
+    public static final String LOG_TAG = ExperimentDirector.class.getSimpleName();
 
     /** Interface for listeners. */
     private interface Listener<T> {
@@ -133,16 +133,16 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_experiment_director );
 
-        final ImageButton btClose = this.findViewById( R.id.btCloseExperimentDirector );
-        final TextView lblExperiment = this.findViewById( R.id.lblExperimentName );
-        final FloatingActionButton fbLaunchNow = this.findViewById( R.id.fbLaunchNow );
-        final FloatingActionButton fbSkip = this.findViewById( R.id.fbSkip );
-        final Toolbar toolbar = this.findViewById( R.id.toolbar );
-        final TextView lblRecord = this.findViewById( R.id.lblRecord );
-        final TextView lblDeviceName = this.findViewById( R.id.lblDeviceName );
-        final FrameLayout flContainer = this.findViewById( R.id.flContainer );
+        final ImageButton BT_CLOSE = this.findViewById( R.id.btCloseExperimentDirector );
+        final TextView LBL_EXPERIMENT = this.findViewById( R.id.lblExperimentName );
+        final FloatingActionButton FB_LAUNCH_NOW = this.findViewById( R.id.fbLaunchNow );
+        final FloatingActionButton FB_SKIP = this.findViewById( R.id.fbSkip );
+        final Toolbar TOOLBAR = this.findViewById( R.id.toolbar );
+        final TextView LBL_RECORD = this.findViewById( R.id.lblRecord );
+        final TextView LBL_DEVICE_NAME = this.findViewById( R.id.lblDeviceName );
+        final FrameLayout FL_CONTAINER = this.findViewById( R.id.flContainer );
 
-        this.setSupportActionBar( toolbar );
+        this.setSupportActionBar( TOOLBAR );
 
         // Assign values
         this.orm = Orm.get();
@@ -166,14 +166,14 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.showActivities();
 
         // Events
-        btClose.setOnClickListener( (v) -> this.finish() );
+        BT_CLOSE.setOnClickListener( (v) -> this.finish() );
         this.chrono = new Chronometer( this::onCronoUpdate );
-        fbLaunchNow.setOnClickListener( (v) -> this.launchExperiment() );
-        fbSkip.setOnClickListener( (v) -> this.skipCurrentActivity() );
-        lblRecord.setText( this.user.getName() );
-        lblDeviceName.setText( this.btDevice.getName() );
-        lblExperiment.setText( this.experiment.getName() );
-        flContainer.setOnLongClickListener( (v) -> {
+        FB_LAUNCH_NOW.setOnClickListener( (v) -> this.launchExperiment() );
+        FB_SKIP.setOnClickListener( (v) -> this.skipCurrentActivity() );
+        LBL_RECORD.setText( this.user.getName() );
+        LBL_DEVICE_NAME.setText( this.btDevice.getName() );
+        LBL_EXPERIMENT.setText( this.experiment.getName() );
+        FL_CONTAINER.setOnLongClickListener( (v) -> {
             ExperimentDirector.this.setInfoVisibility();
             return true;
         });
@@ -181,9 +181,9 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void setInfoVisibility()
     {
-        final CardView cdInfo = this.findViewById( R.id.cdInfo );
+        final CardView CD_INFO = this.findViewById( R.id.cdInfo );
 
-        int visibility = cdInfo.getVisibility();
+        int visibility = CD_INFO.getVisibility();
 
         if ( visibility == View.VISIBLE ) {
             visibility = View.GONE;
@@ -191,23 +191,23 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             visibility = View.VISIBLE;
         }
 
-        cdInfo.setVisibility( visibility );
+        CD_INFO.setVisibility( visibility );
     }
 
     private void setAbleToLaunch(boolean isAble)
     {
-        final FloatingActionButton fbLaunchNow = this.findViewById( R.id.fbLaunchNow );
-        final TextView lblConnectionStatus = this.findViewById( R.id.lblConnectionStatus );
+        final FloatingActionButton FB_LAUNCH_NOW = this.findViewById( R.id.fbLaunchNow );
+        final TextView LBL_CONN_STATUS = this.findViewById( R.id.lblConnectionStatus );
         int visibility;
 
         if ( isAble ) {
             // "Connected" in "approval" color (e.g green).
-            lblConnectionStatus.setText( R.string.lblConnected );
-            lblConnectionStatus.setTextColor( Color.parseColor( "#228B22" ) );
+            LBL_CONN_STATUS.setText( R.string.lblConnected );
+            LBL_CONN_STATUS.setTextColor( Color.parseColor( "#228B22" ) );
         } else {
             // "Disconnected" in "denial" color (e.g red).
-            lblConnectionStatus.setText( R.string.lblDisconnected );
-            lblConnectionStatus.setTextColor( Color.parseColor( "#8B0000" ) );
+            LBL_CONN_STATUS.setText( R.string.lblDisconnected );
+            LBL_CONN_STATUS.setTextColor( Color.parseColor( "#8B0000" ) );
         }
 
         // Check whether there is something to play
@@ -223,7 +223,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         }
 
         this.readyToLaunch = isAble;
-        fbLaunchNow.setVisibility( visibility );
+        FB_LAUNCH_NOW.setVisibility( visibility );
     }
 
     @Override
@@ -256,7 +256,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.getWindow().clearFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
 
         BluetoothUtils.closeBluetoothConnections( this );
-        Log.d( LogTag, "Director finished, stopped chrono, closed connections." );
+        Log.d(LOG_TAG, "Director finished, stopped chrono, closed connections." );
     }
 
     @Override
@@ -268,95 +268,95 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     @Override
     public void showStatus(String msg)
     {
-        this.showStatus( LogTag, msg );
+        this.showStatus(LOG_TAG, msg );
     }
 
     private void showActivities()
     {
-        final ListView lvActs = this.findViewById( R.id.lvExperimentActivities );
-        final TextView lblNoEntries = this.findViewById( R.id.lblNoEntries );
+        final ListView LV_ACTS = this.findViewById( R.id.lvExperimentActivities );
+        final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
         final int NUM_ENTRIES = this.groupsToPlay.length;
 
-        Log.i( LogTag, "starting showActivities()..." );
-        Log.i( LogTag, "entries: " + NUM_ENTRIES );
+        Log.i(LOG_TAG, "starting showActivities()..." );
+        Log.i(LOG_TAG, "entries: " + NUM_ENTRIES );
 
         if ( NUM_ENTRIES > 0 ) {
-            final ListViewActivityArrayAdapter actsAdapter;
+            final ListViewActivityArrayAdapter ACTS_ADAPTER;
 
             // Create adapter
-            actsAdapter = new ListViewActivityArrayAdapter( this, this.activitiesToPlay );
+            ACTS_ADAPTER = new ListViewActivityArrayAdapter( this, this.activitiesToPlay );
 
-            lvActs.setAdapter( actsAdapter );
-            lblNoEntries.setVisibility( View.GONE );
-            lvActs.setVisibility( View.VISIBLE );
+            LV_ACTS.setAdapter( ACTS_ADAPTER );
+            LBL_NO_ENTRIES.setVisibility( View.GONE );
+            LV_ACTS.setVisibility( View.VISIBLE );
         } else {
-            lblNoEntries.setVisibility( View.VISIBLE );
-            lvActs.setVisibility( View.GONE );
-            Log.i( LogTag, "    no entries" );
+            LBL_NO_ENTRIES.setVisibility( View.VISIBLE );
+            LV_ACTS.setVisibility( View.GONE );
+            Log.i(LOG_TAG, "    no entries" );
         }
 
-        Log.i( LogTag, "finished showActivities()" );
+        Log.i(LOG_TAG, "finished showActivities()" );
     }
 
     /** Builds the picture box needed to show images. */
     private ImageView buildPictureBox()
     {
-        final ImageView ivPictureBox = new ImageView( this );
+        final ImageView IV_PICTURE_BOX = new ImageView( this );
 
-        ivPictureBox.setLayoutParams(
+        IV_PICTURE_BOX.setLayoutParams(
                 new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT ) );
-        ivPictureBox.setLayerType( View.LAYER_TYPE_SOFTWARE, null );
-        return ivPictureBox;
+        IV_PICTURE_BOX.setLayerType( View.LAYER_TYPE_SOFTWARE, null );
+        return IV_PICTURE_BOX;
     }
 
     /** Builds the textview needed to show tags. */
     private TextView buildTextBox()
     {
-        final TextView textBox = new TextView( this );
+        final TextView TEXT_BOX = new TextView( this );
 
-        textBox.setTextSize( 24 );
-        textBox.setTextAlignment( TextView.TEXT_ALIGNMENT_CENTER );
-        textBox.setGravity( Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL );
-        textBox.setLayoutParams(
+        TEXT_BOX.setTextSize( 24 );
+        TEXT_BOX.setTextAlignment( TextView.TEXT_ALIGNMENT_CENTER );
+        TEXT_BOX.setGravity( Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL );
+        TEXT_BOX.setLayoutParams(
                 new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT ) );
-        return textBox;
+        return TEXT_BOX;
     }
 
     /** Builds the video box needed to show videos. */
     private VideoView buildVideoBox()
     {
-        final VideoView videoBox = new VideoView( this );
+        final VideoView VIDEO_BOX = new VideoView( this );
 
-        videoBox.setLayoutParams(
+        VIDEO_BOX.setLayoutParams(
                 new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT ) );
-        return videoBox;
+        return VIDEO_BOX;
     }
 
     /** Changes the main view in the container (FrameLayout). */
     private void changeChildInContainer(View v)
     {
-        final FrameLayout flContainer = this.findViewById( R.id.flContainer );
+        final FrameLayout FL_CONTAINER = this.findViewById( R.id.flContainer );
 
-        flContainer.removeAllViews();
-        flContainer.addView( v );
+        FL_CONTAINER.removeAllViews();
+        FL_CONTAINER.addView( v );
     }
 
     /** Triggers when the crono changes. */
     @SuppressWarnings("unused")
     private void onCronoUpdate(Chronometer crono)
     {
-        final TextView lblCrono = this.findViewById( R.id.lblCrono );
-        final int elapsedTimeSeconds = this.getElapsedExperimentSeconds();
-        Log.d( LogTag, "Current activity index: " + this.activityIndex);
-        Log.d( LogTag, "Accumulated time: " + this.accumulatedTimeInSeconds);
+        final TextView LBL_CRONO = this.findViewById( R.id.lblCrono );
+        final int ELAPSED_TIME_SECONDS = this.getElapsedExperimentSeconds();
+        Log.d(LOG_TAG, "Current activity index: " + this.activityIndex);
+        Log.d(LOG_TAG, "Accumulated time: " + this.accumulatedTimeInSeconds);
 
-        lblCrono.setText( new Duration( elapsedTimeSeconds ).toChronoString() );
+        LBL_CRONO.setText( new Duration( ELAPSED_TIME_SECONDS ).toChronoString() );
 
         // Stop if the service was disconnected
         if ( !this.serviceConnection.isConnected() ) {
@@ -367,12 +367,12 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         if ( this.onExperiment ) {
             final Group GROUP = this.groupsToPlay[ this.groupIndex];
             final Group.Activity ACTIVITY = GROUP.getActivities()[ this.activityIndex];
-            final int maxTimeToSpendInActivity = ACTIVITY.getTime().getTimeInSeconds();
-            final int seconds = elapsedTimeSeconds - this.accumulatedTimeInSeconds;
+            final int MAX_TIME_SPENT_IN_ACT = ACTIVITY.getTime().getTimeInSeconds();
+            final int SECONDS = ELAPSED_TIME_SECONDS - this.accumulatedTimeInSeconds;
 
-            Log.d( LogTag, "Elapsed time: " + seconds + '"' );
+            Log.d(LOG_TAG, "Elapsed time: " + SECONDS + '"' );
 
-            if ( seconds >= maxTimeToSpendInActivity ) {
+            if ( SECONDS >= MAX_TIME_SPENT_IN_ACT ) {
                 this.skipCurrentActivity();
             }
         } else {
@@ -434,11 +434,11 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             final Group GROUP = this.groupsToPlay[ this.groupIndex ];
 
             if ( this.activityIndex < GROUP.size() ) {
-                final long elapsedTime = this.getElapsedExperimentMillis();
-                final int secondsInAct = this.getElapsedActivityTime();
+                final long ELAPSED_TIME = this.getElapsedExperimentMillis();
+                final int SECONDS_IN_ACT = this.getElapsedActivityTime();
 
                 boolean changedGroup = this.calculateNextIndexes();
-                this.accumulatedTimeInSeconds += secondsInAct;
+                this.accumulatedTimeInSeconds += SECONDS_IN_ACT;
 
                 if ( this.onExperiment ) {
                     final Group NEW_GROUP = this.groupsToPlay[ this.groupIndex ];
@@ -446,7 +446,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                     if ( changedGroup
                       || ( NEW_GROUP instanceof ManualGroup ) )
                     {
-                        this.addToResult( new Result.ActivityChangeEvent( elapsedTime, this.inferTag() ) );
+                        this.addToResult( new Result.ActivityChangeEvent( ELAPSED_TIME, this.inferTag() ) );
                     }
 
                     this.showActivity();
@@ -480,26 +480,26 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         if ( BuildConfig.DEBUG ) {
             if ( HR >= 0 ) {
-                Log.d( LogTag, "HR received: " + HR + "bpm" );
+                Log.d(LOG_TAG, "HR received: " + HR + "bpm" );
             }
 
             if ( MEAN_RR >= 0 ) {
-                Log.d( LogTag, "Mean RR received: " + MEAN_RR + "millisecs" );
+                Log.d(LOG_TAG, "Mean RR received: " + MEAN_RR + "millisecs" );
             }
 
             if ( rrs != null ) {
                 final StringBuilder STR_RR = new StringBuilder();
 
-                Log.d( LogTag, "RR's received: " + rrs.length );
+                Log.d(LOG_TAG, "RR's received: " + rrs.length );
 
                 for(int rr: rrs) {
                     STR_RR.append( rr );
                     STR_RR.append( ' ' );
                 }
 
-                Log.d( LogTag, "RR's: { " + STR_RR.toString() + "}" );
+                Log.d(LOG_TAG, "RR's: { " + STR_RR.toString() + "}" );
             } else {
-                Log.d( LogTag, "No RR's received." );
+                Log.d(LOG_TAG, "No RR's received." );
             }
         }
 
@@ -542,10 +542,10 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void prepareGlobalUI(boolean experimentVisible)
     {
-        final FloatingActionButton fbLaunch = this.findViewById( R.id.fbLaunchNow );
-        final FloatingActionButton fbSkip = this.findViewById( R.id.fbSkip );
-        final FrameLayout flContainer = this.findViewById( R.id.flContainer );
-        final LinearLayout lyInfo = this.findViewById( R.id.lyInfo );
+        final FloatingActionButton FB_LAUNCH = this.findViewById( R.id.fbLaunchNow );
+        final FloatingActionButton FB_SKIP = this.findViewById( R.id.fbSkip );
+        final FrameLayout FL_CONTAINER = this.findViewById( R.id.flContainer );
+        final LinearLayout LY_INFO = this.findViewById( R.id.lyInfo );
         int frameVisibility = View.VISIBLE;
         int infoVisibility = View.GONE;
         int launchVisibility = View.GONE;
@@ -558,10 +558,10 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             skipVisibility = View.GONE;
         }
 
-        flContainer.setVisibility( frameVisibility );
-        lyInfo.setVisibility( infoVisibility );
-        fbSkip.setVisibility( skipVisibility );
-        fbLaunch.setVisibility( launchVisibility );
+        FL_CONTAINER.setVisibility( frameVisibility );
+        LY_INFO.setVisibility( infoVisibility );
+        FB_SKIP.setVisibility( skipVisibility );
+        FB_LAUNCH.setVisibility( launchVisibility );
     }
 
     /** Prepares the UI for a picture group: show the chronometer and the picture box. */
@@ -592,29 +592,29 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         // Store results
         if ( this.resultBuilder != null ) {
-            final long elapsedMillis = this.getElapsedExperimentMillis();
+            final long ELAPSED_MILLIS = this.getElapsedExperimentMillis();
 
             try {
-                this.orm.store( this.resultBuilder.build( elapsedMillis ) );
+                this.orm.store( this.resultBuilder.build( ELAPSED_MILLIS ) );
                 this.resultBuilder = null;
-                Log.i( LogTag, this.getString( R.string.msgFinishedExperiment ) );
+                Log.i(LOG_TAG, this.getString( R.string.msgFinishedExperiment ) );
             } catch(IOException exc) {
-                this.showStatus( LogTag, "unable to save experiment result" );
+                this.showStatus(LOG_TAG, "unable to save experiment result" );
             }
         }
 
         // Warn the experiment has finished
-        final AlertDialog.Builder dlg = new AlertDialog.Builder( this );
+        final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
 
-        dlg.setTitle( this.experiment.getName() );
-        dlg.setMessage( R.string.msgFinishedExperiment );
-        dlg.setCancelable( false );
-        dlg.setPositiveButton( R.string.lblBack, (d, i) -> {
+        DLG.setTitle( this.experiment.getName() );
+        DLG.setMessage( R.string.msgFinishedExperiment );
+        DLG.setCancelable( false );
+        DLG.setPositiveButton( R.string.lblBack, (d, i) -> {
             this.askBeforeExit = false;
             this.finish();
         });
 
-        dlg.create().show();
+        DLG.create().show();
     }
 
     /** Puts the current group and current activities on their start.
@@ -655,8 +655,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private void launchExperiment()
     {
         if ( this.groupsToPlay.length > 0 ) {
-            final TextView lblMaxTime = this.findViewById( R.id.lblMaxTime );
-            final Duration timeNeeded = this.experiment.calculateTimeNeeded();
+            final TextView LBL_MAX_TIME = this.findViewById( R.id.lblMaxTime );
+            final Duration TIME_NEEDED = this.experiment.calculateTimeNeeded();
 
             // Prevent screen rotation
             this.scrOrientationOnExperiment = this.getRequestedOrientation();
@@ -664,7 +664,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
             // Prepare the UI
             this.prepareUIForExperiment();
-            lblMaxTime.setText( timeNeeded.toChronoString() );
+            LBL_MAX_TIME.setText( TIME_NEEDED.toChronoString() );
 
             // Create the result object
             this.onExperiment = true;
@@ -677,13 +677,13 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             // Start counting time
             this.chrono.reset();
             this.chrono.start();
-            Log.i( LogTag, "Starting..." );
+            Log.i(LOG_TAG, "Starting..." );
 
             // Prepare first activity
             this.accumulatedTimeInSeconds = 0;
             this.showActivity();
         } else {
-            this.showStatus( LogTag, this.getString( R.string.errNotEnoughActivities) );
+            this.showStatus(LOG_TAG, this.getString( R.string.errNotEnoughActivities) );
         }
 
         return;
@@ -736,19 +736,19 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         dlg.setTitle( R.string.errUnableToShowActivity);
         dlg.setMessage( ERROR_MSG );
 
-        Log.e( LogTag, ERROR_MSG + "\n\t" + f.getAbsolutePath() );
+        Log.e(LOG_TAG, ERROR_MSG + "\n\t" + f.getAbsolutePath() );
         dlg.create().show();
     }
 
     private void loadImage(File imgFile)
     {
-        final File experimentDirectory = this.orm.buildMediaDirectoryFor( this.experiment );
-        final File mediaFile = new File( experimentDirectory, imgFile.getPath() );
+        final File DIR_EXPERIMENT = this.orm.buildMediaDirectoryFor( this.experiment );
+        final File MEDIA_FILE = new File( DIR_EXPERIMENT, imgFile.getPath() );
 
-        if ( mediaFile.exists() ) {
-            final Bitmap bitmap = BitmapFactory.decodeFile( mediaFile.getPath() );
+        if ( MEDIA_FILE.exists() ) {
+            final Bitmap BITMAP = BitmapFactory.decodeFile( MEDIA_FILE.getPath() );
 
-            this.ivPictureBox.setImageBitmap( bitmap );
+            this.ivPictureBox.setImageBitmap( BITMAP );
         } else {
             this.abortDueToMissingFile( imgFile );
         }
@@ -799,36 +799,36 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void showActivity(int i, int j)
     {
-        final TextView lblMaxActTime = this.findViewById( R.id.lblMaxActTime );
-        final Group.Activity activity = this.groupsToPlay[ i ].getActivities()[ j ];
-        final Group group = activity.getGroup();
+        final TextView LBL_MAX_ACT_TIME = this.findViewById( R.id.lblMaxActTime );
+        final Group.Activity ACT = this.groupsToPlay[ i ].getActivities()[ j ];
+        final Group GRP = ACT.getGroup();
 
-        if ( activity instanceof MediaGroup.MediaActivity ) {
-            final MediaGroup.MediaActivity mediaActivity = (MediaGroup.MediaActivity) activity;
+        if ( ACT instanceof MediaGroup.MediaActivity ) {
+            final MediaGroup.MediaActivity MEDIA_ACT = (MediaGroup.MediaActivity) ACT;
 
-            final MediaGroup mediaGroup = (MediaGroup) group;
+            final MediaGroup MEDIA_GRP = (MediaGroup) GRP;
 
-            if ( mediaGroup.getFormat() == MediaGroup.Format.Picture  ) {
+            if ( MEDIA_GRP.getFormat() == MediaGroup.Format.Picture  ) {
                 this.prepareUIForPictureActivity();
-                this.loadImage( mediaActivity.getFile() );
+                this.loadImage( MEDIA_ACT.getFile() );
             } else {
                 this.prepareUIForVideoActivity();
-                this.loadVideo( mediaActivity.getFile() );
+                this.loadVideo( MEDIA_ACT.getFile() );
             }
         }
         else
-        if ( activity instanceof ManualGroup.ManualActivity ) {
+        if ( ACT instanceof ManualGroup.ManualActivity ) {
             this.prepareUIForManualActivity();
-            this.loadManualActivity( (ManualGroup.ManualActivity) activity );
+            this.loadManualActivity( (ManualGroup.ManualActivity) ACT );
         }
 
         final int TOTAL_SECS = this.getElapsedExperimentSeconds();
-        final Duration DURATION_DELTA = new Duration( activity.getTime().getTimeInSeconds() );
-        lblMaxActTime.setText( DURATION_DELTA.add( TOTAL_SECS ).toChronoString() );
+        final Duration DURATION_DELTA = new Duration( ACT.getTime().getTimeInSeconds() );
+        LBL_MAX_ACT_TIME.setText( DURATION_DELTA.add( TOTAL_SECS ).toChronoString() );
 
-        Log.i( LogTag, "Starting activity: '" + activity.getTag() + "'"
+        Log.i(LOG_TAG, "Starting activity: '" + ACT.getTag() + "'"
                         + "\n\tCurrent time: " + TOTAL_SECS + "s"
-                        + "\n\tActivity time: " + activity.getTime().getTimeInSeconds() + "s"
+                        + "\n\tActivity time: " + ACT.getTime().getTimeInSeconds() + "s"
                         + "\n\tActivity ends at max: " + DURATION_DELTA + "s" );
     }
 
@@ -843,15 +843,15 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             }
         } else {
             // Random sequence
-            final Random rnd = new Random();
-            final Set<Integer> generatedIndexes = new HashSet<>( max );
+            final Random RND = new Random();
+            final Set<Integer> GENERATED_INDEXES = new HashSet<>( max );
             int generated = 0;
 
             while ( generated < max ) {
-                final int newIndex = rnd.nextInt( max );
+                final int newIndex = RND.nextInt( max );
 
-                if ( !generatedIndexes.contains( newIndex ) ) {
-                    generatedIndexes.add( newIndex );
+                if ( !GENERATED_INDEXES.contains( newIndex ) ) {
+                    GENERATED_INDEXES.add( newIndex );
                     toret[ generated ] = newIndex;
                     ++generated;
                 }

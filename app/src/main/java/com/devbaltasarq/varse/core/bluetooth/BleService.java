@@ -21,7 +21,7 @@ import java.util.UUID;
  * given Bluetooth LE device.
  */
 public class BleService extends Service {
-    private final static String LogTag = BleService.class.getSimpleName();
+    private final static String LOG_TAG = BleService.class.getSimpleName();
 
     /** This is the min accepted value (in millis), for any read rr (including itself).
      *      100 - 600bpm
@@ -31,7 +31,7 @@ public class BleService extends Service {
 
 
     private static class GattHeartRateCharAnalyzer {
-        private final static String LogTag = GattHeartRateCharAnalyzer.class.getSimpleName();
+        private final static String LOG_TAG = GattHeartRateCharAnalyzer.class.getSimpleName();
 
         GattHeartRateCharAnalyzer(final BluetoothGattCharacteristic GATT_CHAR)
         {
@@ -70,7 +70,7 @@ public class BleService extends Service {
                 }
 
                 this.extractHeartRateData();
-                Log.d( LogTag, String.format("Received heart rate: %d", heartRate ) );
+                Log.d(LOG_TAG, String.format("Received heart rate: %d", heartRate ) );
 
                 // Energy Expended Status bit
                 if ( ( FLAGS & 8 ) != 0 ) {
@@ -81,10 +81,10 @@ public class BleService extends Service {
                 if ( ( FLAGS & 16 ) != 0 ) {
                     this.extractRRData();
                 } else {
-                    Log.d( LogTag, "RR info was not present." );
+                    Log.d(LOG_TAG, "RR info was not present." );
                 }
             } else {
-                Log.w( LogTag, "Read data not for HR profile, instead: "
+                Log.w(LOG_TAG, "Read data not for HR profile, instead: "
                         + GATT_CHAR.getUuid().toString()  );
             }
         }
@@ -96,8 +96,8 @@ public class BleService extends Service {
             final byte[] DATA = GATT_CHAR.getValue();
             final StringBuilder bytes = new StringBuilder( LENGTH * 3 );
 
-            Log.d( LogTag, "HR info received: " + LENGTH + " bytes" );
-            Log.d( LogTag, "Flags: " + FLAGS );
+            Log.d(LOG_TAG, "HR info received: " + LENGTH + " bytes" );
+            Log.d(LOG_TAG, "Flags: " + FLAGS );
 
             bytes.append( '#' );
             bytes.append( LENGTH );
@@ -110,7 +110,7 @@ public class BleService extends Service {
                 bytes.append( ' ' );
             }
 
-            Log.d( LogTag, ":- HR byte sequence { " + bytes.toString() + "}" );
+            Log.d(LOG_TAG, ":- HR byte sequence { " + bytes.toString() + "}" );
         }
 
         private void extractHeartRateData()
@@ -123,13 +123,13 @@ public class BleService extends Service {
                         BluetoothGattCharacteristic.FORMAT_UINT16,
                         this.offset );
                 this.offset += 2;
-                Log.d( LogTag, "Heart rate format UINT16." );
+                Log.d(LOG_TAG, "Heart rate format UINT16." );
             } else {
                 this.heartRate = GATT_CHAR.getIntValue(
                         BluetoothGattCharacteristic.FORMAT_UINT8,
                         this.offset );
                 this.offset += 1;
-                Log.d( LogTag, "Heart rate format UINT8." );
+                Log.d(LOG_TAG, "Heart rate format UINT8." );
             }
 
             return;
@@ -160,19 +160,19 @@ public class BleService extends Service {
                     int rr = valueRR;
 
                     // rr = ( v / 1024 ) * 1000
-                    Log.d( LogTag, String.format( "Received raw rr (1024-based): %d", rr ) );
+                    Log.d(LOG_TAG, String.format( "Received raw rr (1024-based): %d", rr ) );
                     rr = (int) ( ( (double) rr / 1024 ) * 1000);
 
                     if ( rr >= MIN_RR_VALUE ) {
                         this.rr[ numRRs ] = rr;
                         this.meanRRs += rr;
                         ++numRRs;
-                        Log.d( LogTag, String.format( "Received rr: %d", rr ) );
+                        Log.d(LOG_TAG, String.format( "Received rr: %d", rr ) );
                     } else {
-                        Log.e( LogTag, String.format( "Received incorrect rr: %d", rr ) );
+                        Log.e(LOG_TAG, String.format( "Received incorrect rr: %d", rr ) );
                     }
                 } else {
-                    Log.e( LogTag, "Missing RR that was yet signaled in properties." );
+                    Log.e(LOG_TAG, "Missing RR that was yet signaled in properties." );
                 }
 
                 this.offset += 2;
@@ -226,27 +226,27 @@ public class BleService extends Service {
             this.readingGattCallback = this.createGattCallbackForReading();
 
             if ( this.adapter == null ) {
-                Log.e( LogTag, "Unable to get a bluetooth adapter" );
+                Log.e(LOG_TAG, "Unable to get a bluetooth adapter" );
             } else {
                 toret = true;
             }
         } else {
-            Log.e( LogTag, "Null reference given for BT device" );
+            Log.e(LOG_TAG, "Null reference given for BT device" );
         }
 
         return toret;
     }
 
-    private void broadcastUpdate(final String action)
+    private void broadcastUpdate(final String ACTION)
     {
-        final Intent intent = new Intent( action );
+        final Intent intent = new Intent( ACTION );
         this.sendBroadcast( intent );
     }
 
-    private void broadcastUpdate(final String action,
+    private void broadcastUpdate(final String ACTION,
                                  final BluetoothGattCharacteristic GATT_CHAR)
     {
-        final Intent INTENT = new Intent( action );
+        final Intent INTENT = new Intent( ACTION );
         final GattHeartRateCharAnalyzer GATT_ANALYZER = new GattHeartRateCharAnalyzer( GATT_CHAR );
 
         GATT_ANALYZER.extractData();
@@ -286,13 +286,13 @@ public class BleService extends Service {
             final String deviceId = this.btDevice.toString();
 
             if ( this.gatt == null ) {
-                Log.d( LogTag, "Trying to create a new connection to: " + deviceId );
+                Log.d(LOG_TAG, "Trying to create a new connection to: " + deviceId );
                 this.gatt = this.btDevice.connect( this, this.readingGattCallback );
 
                 if ( this.gatt == null ) {
-                    Log.e( LogTag, "Error trying to create a new connection: " + deviceId );
+                    Log.e(LOG_TAG, "Error trying to create a new connection: " + deviceId );
                 } else {
-                    Log.d( LogTag, "Created a new connection to: " + deviceId );
+                    Log.d(LOG_TAG, "Created a new connection to: " + deviceId );
                     toret = true;
                 }
             }
@@ -301,11 +301,11 @@ public class BleService extends Service {
             }
         } else {
             if ( this.adapter == null ) {
-                Log.e( LogTag, "BT Adapter is null" );
+                Log.e(LOG_TAG, "BT Adapter is null" );
             }
 
             if ( this.btDevice == null ) {
-                Log.e( LogTag, "BT Device is null" );
+                Log.e(LOG_TAG, "BT Device is null" );
             }
         }
 
@@ -335,17 +335,17 @@ public class BleService extends Service {
             if ( this.adapter != null
               && this.gatt != null )
             {
-                Log.i( LogTag, "Reading characteristic: " + characteristic );
-                Log.d( LogTag, "Properties: " + characteristic.getPermissions() );
+                Log.i(LOG_TAG, "Reading characteristic: " + characteristic );
+                Log.d(LOG_TAG, "Properties: " + characteristic.getPermissions() );
                 if ( !this.gatt.readCharacteristic( characteristic ) ) {
-                    Log.e( LogTag, "GATT Characteristic invalid: "
+                    Log.e(LOG_TAG, "GATT Characteristic invalid: "
                                            + characteristic.getUuid().toString() );
                 }
             } else {
-                Log.w( LogTag, "Connection is not ready for: " + this.btDevice.getName() );
+                Log.w(LOG_TAG, "Connection is not ready for: " + this.btDevice.getName() );
             }
         } else {
-            Log.e( LogTag, "BT Device is null!!!" );
+            Log.e(LOG_TAG, "BT Device is null!!!" );
         }
 
         return;
@@ -359,7 +359,7 @@ public class BleService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return this.binder;
+        return this.BINDER;
     }
 
     @Override
@@ -385,18 +385,18 @@ public class BleService extends Service {
                 if ( newState == BluetoothProfile.STATE_CONNECTED ) {
                     intentAction = ACTION_GATT_CONNECTED;
                     BleService.this.broadcastUpdate( intentAction );
-                    Log.i( LogTag, "Trying to connect to GATT server for reading.");
+                    Log.i(LOG_TAG, "Trying to connect to GATT server for reading.");
 
                     if ( !gatt.discoverServices() ) {
-                        Log.e( LogTag, "Unable to discover services for: " + gatt.getDevice().getName() );
+                        Log.e(LOG_TAG, "Unable to discover services for: " + gatt.getDevice().getName() );
                     }
 
-                    Log.i( LogTag, "Connected to GATT server for reading.");
+                    Log.i(LOG_TAG, "Connected to GATT server for reading.");
                 }
                 else
                 if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     intentAction = ACTION_GATT_DISCONNECTED;
-                    Log.i( LogTag, "Disconnected from GATT server." );
+                    Log.i(LOG_TAG, "Disconnected from GATT server." );
                     BleService.this.broadcastUpdate( intentAction );
                 }
             }
@@ -407,7 +407,7 @@ public class BleService extends Service {
                 if ( status == BluetoothGatt.GATT_SUCCESS ) {
                     BleService.this.broadcastUpdate( ACTION_GATT_SERVICES_DISCOVERED );
                 } else {
-                    Log.w( LogTag, "onServicesDiscovered received failed status: " + status);
+                    Log.w(LOG_TAG, "onServicesDiscovered received failed status: " + status);
                 }
 
                 return;
@@ -434,7 +434,7 @@ public class BleService extends Service {
         };
     }
 
-    private final IBinder binder = new LocalBinder();     // Mandatory since there isn't constructor
+    private final IBinder BINDER = new LocalBinder();     // Mandatory since there isn't constructor
     private BluetoothAdapter adapter;
     private BluetoothDeviceWrapper btDevice;
     private BluetoothGatt gatt;

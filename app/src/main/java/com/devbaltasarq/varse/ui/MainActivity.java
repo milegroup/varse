@@ -35,7 +35,7 @@ import java.io.InputStream;
 public class MainActivity extends AppActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
-    private static final String LogTag = MainActivity.class.getSimpleName();
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final int RQC_PICK_FILE = 0x813;
 
     @Override
@@ -44,43 +44,43 @@ public class MainActivity extends AppActivity
         super.onCreate( savedInstanceState );
         this.setContentView( R.layout.activity_main );
 
-        final Toolbar toolbar = this.findViewById( R.id.toolbar );
-        final DrawerLayout drawer = this.findViewById( R.id.drawer_layout );
+        final Toolbar TOOLBAR = this.findViewById( R.id.toolbar );
+        final DrawerLayout DRAWER = this.findViewById( R.id.drawer_layout );
 
-        final TextView lblAppName = this.findViewById( R.id.lblAppName );
-        final TextView lblAppVersion = this.findViewById( R.id.lblAppVersion );
-        final TextView lblOptPerformExperiment = this.findViewById( R.id.lblOptPerformExperiment );
-        final ImageView imgOptPerformExperiment = this.findViewById( R.id.imgOptPerformExperiment );
-        final ImageView ivIconApp = this.findViewById( R.id.ivIconApp );
-        final TextView lblOptExperiments = this.findViewById( R.id.lblOptExperiments );
-        final TextView lblOptResults = this.findViewById( R.id.lblOptResults );
-        final ImageView imgOptExperiments = this.findViewById( R.id.imgOptExperiments );
-        final ImageView imgOptResults = this.findViewById( R.id.imgOptResults );
-        final NavigationView navigationView = this.findViewById( R.id.nav_view );
-        final View.OnClickListener generalClickListener = (View v) ->
+        final TextView LBL_APP_NAME = this.findViewById( R.id.lblAppName );
+        final TextView LBL_APP_VERSION = this.findViewById( R.id.lblAppVersion );
+        final TextView LBL_OPT_PERFORM_EXPERIMENT = this.findViewById( R.id.lblOptPerformExperiment );
+        final ImageView IMG_OPT_PERFORM_EXPERIMENT = this.findViewById( R.id.imgOptPerformExperiment );
+        final ImageView IV_ICON_APP = this.findViewById( R.id.ivIconApp );
+        final TextView LBL_OPT_EXPERIMENTS = this.findViewById( R.id.lblOptExperiments );
+        final TextView LBL_OPT_RESULTS = this.findViewById( R.id.lblOptResults );
+        final ImageView IMG_OPT_EXPERIMENTS = this.findViewById( R.id.imgOptExperiments );
+        final ImageView IMG_OPT_RESULTS = this.findViewById( R.id.imgOptResults );
+        final NavigationView NAVIGATION_VIEW = this.findViewById( R.id.nav_view );
+        final View.OnClickListener GENERAL_CLICK_LISTENER = (View v) ->
                 MainActivity.this.goTo( v.getId() );
 
         this.setTitle( "" );
-        this.setSupportActionBar( toolbar );
+        this.setSupportActionBar( TOOLBAR );
 
-        final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        final ActionBarDrawerToggle TOGGLE = new ActionBarDrawerToggle(
+                this, DRAWER, TOOLBAR, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
-        drawer.addDrawerListener( toggle );
-        toggle.syncState();
-        navigationView.setNavigationItemSelectedListener( this );
-        lblAppVersion.setText( AppInfo.asString() );
-        lblAppName.setText( AppInfo.asShortString() );
+        DRAWER.addDrawerListener( TOGGLE );
+        TOGGLE.syncState();
+        NAVIGATION_VIEW.setNavigationItemSelectedListener( this );
+        LBL_APP_VERSION.setText( AppInfo.asString() );
+        LBL_APP_NAME.setText( AppInfo.asShortString() );
 
-        lblOptExperiments.setOnClickListener( generalClickListener );
-        lblOptResults.setOnClickListener( generalClickListener );
-        imgOptExperiments.setOnClickListener( generalClickListener );
-        imgOptResults.setOnClickListener( generalClickListener );
-        lblOptPerformExperiment.setOnClickListener( generalClickListener );
-        imgOptPerformExperiment.setOnClickListener( generalClickListener );
-        ivIconApp.setOnClickListener( (v) -> this.toggleAppVersionShown() );
-        lblAppName.setOnClickListener( (v) -> this.toggleAppVersionShown() );
-        lblAppVersion.setOnClickListener( (v) -> this.toggleAppVersionShown() );
+        LBL_OPT_EXPERIMENTS.setOnClickListener( GENERAL_CLICK_LISTENER );
+        LBL_OPT_RESULTS.setOnClickListener( GENERAL_CLICK_LISTENER );
+        IMG_OPT_EXPERIMENTS.setOnClickListener( GENERAL_CLICK_LISTENER );
+        IMG_OPT_RESULTS.setOnClickListener( GENERAL_CLICK_LISTENER );
+        LBL_OPT_PERFORM_EXPERIMENT.setOnClickListener( GENERAL_CLICK_LISTENER );
+        IMG_OPT_PERFORM_EXPERIMENT.setOnClickListener( GENERAL_CLICK_LISTENER );
+        IV_ICON_APP.setOnClickListener( (v) -> this.toggleAppVersionShown() );
+        LBL_APP_NAME.setOnClickListener( (v) -> this.toggleAppVersionShown() );
+        LBL_APP_VERSION.setOnClickListener( (v) -> this.toggleAppVersionShown() );
 
         this.block = false;
     }
@@ -98,11 +98,11 @@ public class MainActivity extends AppActivity
             Settings.open();
         } catch(JSONException exc)
         {
-            this.showStatus( LogTag,
+            this.showStatus(LOG_TAG,
                     this.getString( R.string.errInitializingSettings)
                         + exc.getMessage() );
             Settings.create();
-            this.showStatus( LogTag, this.getString( R.string.msgResettingSettings ) );
+            this.showStatus(LOG_TAG, this.getString( R.string.msgResettingSettings ) );
         }
     }
 
@@ -117,12 +117,12 @@ public class MainActivity extends AppActivity
 
     private void toggleAppVersionShown()
     {
-        final TableRow trAppVersionRow = this.findViewById( R.id.trAppVersionRow );
+        final TableRow TR_APP_VERSION_ROW = this.findViewById( R.id.trAppVersionRow );
 
-        if ( trAppVersionRow.getVisibility() == View.GONE ) {
-            trAppVersionRow.setVisibility( View.VISIBLE );
+        if ( TR_APP_VERSION_ROW.getVisibility() == View.GONE ) {
+            TR_APP_VERSION_ROW.setVisibility( View.VISIBLE );
         } else {
-            trAppVersionRow.setVisibility( View.GONE );
+            TR_APP_VERSION_ROW.setVisibility( View.GONE );
         }
 
         return;
@@ -165,8 +165,8 @@ public class MainActivity extends AppActivity
                     break;
             }
         } else {
-            Log.e( LogTag, "Tried to operate in blocked app" );
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
+            Log.e(LOG_TAG, "Tried to operate in blocked app" );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
 
         return toret;
@@ -175,10 +175,10 @@ public class MainActivity extends AppActivity
     @Override
     public void onBackPressed()
     {
-        final DrawerLayout drawer = this.findViewById( R.id.drawer_layout );
+        final DrawerLayout DRAWER = this.findViewById( R.id.drawer_layout );
 
-        if ( drawer.isDrawerOpen( GravityCompat.START ) ) {
-            drawer.closeDrawer(GravityCompat.START);
+        if ( DRAWER.isDrawerOpen( GravityCompat.START ) ) {
+            DRAWER.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
         }
@@ -210,10 +210,10 @@ public class MainActivity extends AppActivity
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item)
     {
-        final DrawerLayout drawer = this.findViewById( R.id.drawer_layout );
+        final DrawerLayout DRAWER = this.findViewById( R.id.drawer_layout );
 
         this.goTo( item.getItemId() );
-        drawer.closeDrawer( GravityCompat.START );
+        DRAWER.closeDrawer( GravityCompat.START );
 
         return true;
     }
@@ -232,22 +232,22 @@ public class MainActivity extends AppActivity
         if ( requestCode == RQC_PICK_FILE
           && resultCode == RESULT_OK )
         {
-            final Uri uri = data.getData();
+            final Uri URI = data.getData();
 
-            if ( uri != null ) {
-                final String FILE_EXTENSION = MimeTypeMap.getFileExtensionFromUrl( uri
+            if ( URI != null ) {
+                final String FILE_EXTENSION = MimeTypeMap.getFileExtensionFromUrl( URI
                         .toString().toLowerCase() );
                 final String RES_FILE_EXT = Orm.getFileExtFor( Persistent.TypeId.Result ).toLowerCase();
 
                 if ( FILE_EXTENSION.equals( "zip" )
                   || FILE_EXTENSION.equals( RES_FILE_EXT ) )
                 {
-                    this.importFile( uri );
+                    this.importFile( URI );
                 } else {
-                    this.showStatus( LogTag, this.getString( R.string.errUnsupportedFileType) );
+                    this.showStatus(LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
                 }
             } else {
-                this.showStatus( LogTag, this.getString( R.string.msgFileNotFound ) );
+                this.showStatus(LOG_TAG, this.getString( R.string.msgFileNotFound ) );
             }
         }
 
@@ -257,14 +257,14 @@ public class MainActivity extends AppActivity
     /** Launch file browser. */
     private void pickFile()
     {
-        final Intent intent = new Intent();
+        final Intent INTENT = new Intent();
 
         // Launch
-        intent.setType( "*/*" );
-        intent.setAction( Intent.ACTION_GET_CONTENT );
+        INTENT.setType( "*/*" );
+        INTENT.setAction( Intent.ACTION_GET_CONTENT );
 
         this.startActivityForResult(
-                Intent.createChooser( intent, this.getString( R.string.lblMediaSelection ) ),
+                Intent.createChooser( INTENT, this.getString( R.string.lblMediaSelection ) ),
                 RQC_PICK_FILE );
     }
 
@@ -288,23 +288,23 @@ public class MainActivity extends AppActivity
                     final String LBL_RESULT = this.getString( R.string.lblResult );
 
                     db.importResult( fileIn );
-                    this.showStatus( LogTag, this.getString( R.string.msgImported )
+                    this.showStatus(LOG_TAG, this.getString( R.string.msgImported )
                             + ": " + LBL_RESULT );
 
                 } else {
                     final String LBL_EXPERIMENT = this.getString( R.string.lblExperiment );
 
                     db.importExperiment( fileIn );
-                    this.showStatus( LogTag, this.getString( R.string.msgImported )
+                    this.showStatus(LOG_TAG, this.getString( R.string.msgImported )
                             + ": " + LBL_EXPERIMENT );
                 }
             } else {
-                this.showStatus( LogTag, this.getString( R.string.errUnsupportedFileType) );
+                this.showStatus(LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
             }
         } catch(IOException exc)
         {
-            this.showStatus( LogTag, this.getString( R.string.errIO) );
-            Log.e( LogTag, "Importing: '" + uri + "': " + exc.getMessage() );
+            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
+            Log.e(LOG_TAG, "Importing: '" + uri + "': " + exc.getMessage() );
         }
     }
 

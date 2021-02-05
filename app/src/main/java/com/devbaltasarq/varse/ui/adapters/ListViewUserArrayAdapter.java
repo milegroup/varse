@@ -25,27 +25,27 @@ public class ListViewUserArrayAdapter extends ArrayAdapter<User> {
     @Override
     public @NonNull View getView(int position, View rowView, @NonNull ViewGroup parent)
     {
-        final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
-        final User user = this.getItem( position );
+        final LayoutInflater LAYOUT_INFLATER = LayoutInflater.from( this.getContext() );
+        final User USR = this.getItem( position );
 
-        if ( user == null ) {
+        if ( USR == null ) {
             throw new Error( "User adapter: user is null" );
         }
 
         if ( rowView == null ) {
-            rowView = layoutInflater.inflate( R.layout.listview_user_entry, null );
+            rowView = LAYOUT_INFLATER.inflate( R.layout.listview_user_entry, null );
         }
 
-        final ImageButton btLaunch = rowView.findViewById( R.id.btLaunch );
-        final TextView lblUserDesc = rowView.findViewById( R.id.lblUserDesc );
+        final ImageButton BT_LAUNCH = rowView.findViewById( R.id.btLaunch );
+        final TextView LBL_USER_DESC = rowView.findViewById( R.id.lblUserDesc );
 
-        lblUserDesc.setText( user.getName() );
+        LBL_USER_DESC.setText( USR.getName() );
 
-        btLaunch.setOnClickListener( (v) -> {
+        BT_LAUNCH.setOnClickListener( (v) -> {
                 ListViewUserArrayAdapter self = ListViewUserArrayAdapter.this;
                 UsersActivity cntxt = (UsersActivity) self.getContext();
 
-                UsersActivity.selectedUser = user;
+                UsersActivity.selectedUser = USR;
                 cntxt.startActivity( new Intent( cntxt, PerformExperimentActivity.class ) );
         });
 

@@ -67,17 +67,17 @@ public class Experiment extends Persistent {
         boolean toret = false;
 
         if ( o instanceof Experiment ) {
-            final Experiment eo = (Experiment) o;
-            final Group[] eoGroups = eo.getGroups();
+            final Experiment EXPR = (Experiment) o;
+            final Group[] EXPR_GROUPS = EXPR.getGroups();
 
-            toret = this.getName().equals( eo.getName() )
-                 && this.isRandom() == eo.isRandom()
-                 && this.groups.size() == eoGroups.length;
+            toret = this.getName().equals( EXPR.getName() )
+                 && this.isRandom() == EXPR.isRandom()
+                 && this.groups.size() == EXPR_GROUPS.length;
 
 
             if ( toret ) {
-                for(int i = 0; i < eoGroups.length; ++i) {
-                    if ( !this.groups.get( i ).equals( eoGroups[ i ] ) ) {
+                for(int i = 0; i < EXPR_GROUPS.length; ++i) {
+                    if ( !this.groups.get( i ).equals( EXPR_GROUPS[ i ] ) ) {
                         toret = false;
                         break;
                     }
@@ -148,13 +148,13 @@ public class Experiment extends Persistent {
     /** Swaps a given media file with the previous one. */
     public void sortGroupUp(Group g)
     {
-        final int pos = this.groups.indexOf( g );
+        final int POS = this.groups.indexOf( g );
 
         // Nothing to do if not found or is the first one.
-        if ( pos >= 1 ) {
-            Group backUp = this.groups.get( pos - 1 );
-            this.groups.set( pos - 1, this.groups.get( pos ) );
-            this.groups.set( pos, backUp );
+        if ( POS >= 1 ) {
+            Group backUp = this.groups.get( POS - 1 );
+            this.groups.set( POS - 1, this.groups.get( POS ) );
+            this.groups.set( POS, backUp );
         }
 
         return;
@@ -163,14 +163,14 @@ public class Experiment extends Persistent {
     /** Swaps a given media file with the previous one. */
     public void sortGroupDown(Group g)
     {
-        final int length = this.groups.size();
-        final int pos = this.groups.indexOf( g );
+        final int LENGTH = this.groups.size();
+        final int POS = this.groups.indexOf( g );
 
         // Nothing to do if not found or is the last one.
-        if ( pos < ( length - 1 ) ) {
-            Group backUp = this.groups.get( pos + 1 );
-            this.groups.set( pos + 1, this.groups.get( pos ) );
-            this.groups.set( pos, backUp );
+        if ( POS < ( LENGTH - 1 ) ) {
+            Group backUp = this.groups.get( POS + 1 );
+            this.groups.set( POS + 1, this.groups.get( POS ) );
+            this.groups.set( POS, backUp );
         }
 
         return;
@@ -207,13 +207,13 @@ public class Experiment extends Persistent {
         SEARCH:
         for(Group g: this.groups) {
             if ( g instanceof MediaGroup ) {
-                final MediaGroup mg = (MediaGroup) g;
+                final MediaGroup MG = (MediaGroup) g;
 
-                for( Group.Activity act: mg.getActivities() ) {
-                    final MediaGroup.MediaActivity mact = (MediaGroup.MediaActivity) act;
+                for( Group.Activity act: MG.getActivities() ) {
+                    final MediaGroup.MediaActivity MACT = (MediaGroup.MediaActivity) act;
 
-                    if ( mact.getFile().getName().equals( fileName ) ) {
-                        toret = mact;
+                    if ( MACT.getFile().getName().equals( fileName ) ) {
+                        toret = MACT;
                         break SEARCH;
                     }
                 }
@@ -337,13 +337,13 @@ public class Experiment extends Persistent {
         try {
             jsonReader.beginObject();
             while ( jsonReader.hasNext() ) {
-                final String token = jsonReader.nextName();
+                final String TOKEN = jsonReader.nextName();
 
-                if ( token.equals( Orm.FIELD_NAME ) ) {
+                if ( TOKEN.equals( Orm.FIELD_NAME ) ) {
                     name = jsonReader.nextString();
                 }
                 else
-                if ( token.equals( Orm.FIELD_TYPE_ID ) ) {
+                if ( TOKEN.equals( Orm.FIELD_TYPE_ID ) ) {
                     try {
                         typeId = TypeId.parse( jsonReader.nextString() );
                     } catch (IllegalArgumentException exc)
@@ -352,15 +352,15 @@ public class Experiment extends Persistent {
                     }
                 }
                 else
-                if ( token.equals( Id.FIELD) ) {
+                if ( TOKEN.equals( Id.FIELD) ) {
                     id = readIdFromJSON( jsonReader );
                 }
                 else
-                if ( token.equals( Orm.FIELD_RANDOM ) ) {
+                if ( TOKEN.equals( Orm.FIELD_RANDOM ) ) {
                     rnd = jsonReader.nextBoolean();
                 }
                 else
-                if ( token.equals( Orm.FIELD_GROUPS ) ) {
+                if ( TOKEN.equals( Orm.FIELD_GROUPS ) ) {
                     jsonReader.beginArray();
                     while( jsonReader.hasNext() ) {
                         groups.add( Group.fromJSON( jsonReader ) );
@@ -378,15 +378,15 @@ public class Experiment extends Persistent {
           || id == null
           || name == null )
         {
-            final String msg = "Creating experiment from JSON: invalid or missing data.";
+            final String MSG = "Creating experiment from JSON: invalid or missing data.";
 
-            Log.e( LogTag, msg );
-            throw new JSONException( msg );
+            Log.e( LogTag, MSG );
+            throw new JSONException( MSG );
         }
 
-        final Experiment toret = new Experiment( id, name, rnd );
-        toret.replaceGroups( groups.toArray( new Group[ groups.size() ] ) );
-        return toret;
+        final Experiment TORET = new Experiment( id, name, rnd );
+        TORET.replaceGroups( groups.toArray( new Group[ groups.size() ] ) );
+        return TORET;
     }
 
     public Experiment copy()
@@ -407,14 +407,14 @@ public class Experiment extends Persistent {
      */
     public Group[] copyGroups()
     {
-        final Group[] myGroups = this.getGroups();
-        final Group[] toret = new Group[ myGroups.length ];
+        final Group[] MY_GROUPS = this.getGroups();
+        final Group[] TORET = new Group[ MY_GROUPS.length ];
 
-        for(int i = 0; i < toret.length; ++i) {
-            toret[ i ] = myGroups[ i ].copy();
+        for(int i = 0; i < TORET.length; ++i) {
+            TORET[ i ] = MY_GROUPS[ i ].copy();
         }
 
-        return toret;
+        return TORET;
     }
 
     private ArrayList<Group> groups;

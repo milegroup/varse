@@ -46,13 +46,12 @@ import com.devbaltasarq.varse.ui.AppActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class PerformExperimentActivity extends AppActivity implements ScannerUI {
-    private final String LogTag = PerformExperimentActivity.class.getSimpleName();
+    private final String LOG_TAG = PerformExperimentActivity.class.getSimpleName();
     private static final int RQC_ENABLE_BT = 367;
     private static final int RQC_TEST_BT_DEVICE = 378;
     private static final int RQC_ASK_CLEARANCE_FOR_BLUETOOTH = 389;
@@ -68,34 +67,34 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         @Override
         public @NonNull View getView(int i, View view, @NonNull ViewGroup viewGroup)
         {
-            final LayoutInflater inflater = LayoutInflater.from( this.getContext() );
+            final LayoutInflater INFLATER = LayoutInflater.from( this.getContext() );
 
             if ( view == null ) {
-                view = inflater.inflate( R.layout.listview_device_entry, null );
+                view = INFLATER.inflate( R.layout.listview_device_entry, null );
             }
 
-            final BluetoothDeviceWrapper device = this.getItem( i );
-            final TextView lblDeviceName = view.findViewById( R.id.lblDeviceName );
-            final TextView lblDeviceAddress = view.findViewById( R.id.lblDeviceAddress );
+            final BluetoothDeviceWrapper DEVICE = this.getItem( i );
+            final TextView LBL_DEVICE_NAME = view.findViewById( R.id.lblDeviceName );
+            final TextView LBL_DEVICE_ADDR = view.findViewById( R.id.lblDeviceAddress );
             String deviceName = this.getContext().getString( R.string.errUnknownDevice);
             String deviceAddress = "00:00:00:00:00:00";
 
             // Set device's name, if possible.
-            if ( device != null ) {
-                deviceName = device.getName();
-                deviceAddress = device.getAddress();
+            if ( DEVICE != null ) {
+                deviceName = DEVICE.getName();
+                deviceAddress = DEVICE.getAddress();
             }
 
             // Check the final name, is it valid?
             if ( deviceName == null
               || deviceName.isEmpty() )
             {
-                lblDeviceName.setText( R.string.errUnknownDevice );
+                LBL_DEVICE_NAME.setText( R.string.errUnknownDevice );
             } else {
-                lblDeviceName.setText( deviceName );
+                LBL_DEVICE_NAME.setText( deviceName );
             }
 
-            lblDeviceAddress.setText( deviceAddress );
+            LBL_DEVICE_ADDR.setText( deviceAddress );
             return view;
         }
     }
@@ -116,17 +115,17 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         this.setTitle( "" );
 
         // Widgets
-        final ImageButton btClosePerformExperiment = this.findViewById( R.id.btClosePerformExperiment );
-        final ImageButton btStartScan = this.findViewById( R.id.btStartScan );
-        final ImageButton btStopScan = this.findViewById( R.id.btStopScan );
-        final ImageButton btTestHRDevice = this.findViewById( R.id.btTestHRDevice );
-        final Spinner cbExperiments = this.findViewById( R.id.cbExperiments );
-        final ListView lvDevices = this.findViewById( R.id.lvDevices );
-        final FloatingActionButton fbLaunchExpr = this.findViewById( R.id.fbPerformExperiment );
+        final ImageButton BT_CLOSE_PERFORM_EXPR = this.findViewById( R.id.btClosePerformExperiment );
+        final ImageButton BT_START_SCAN = this.findViewById( R.id.btStartScan );
+        final ImageButton BT_STOP_SCAN = this.findViewById( R.id.btStopScan );
+        final ImageButton BT_TEST_HR_DEVICE = this.findViewById( R.id.btTestHRDevice );
+        final Spinner CB_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
+        final ListView LV_DEVICES = this.findViewById( R.id.lvDevices );
+        final FloatingActionButton FB_LAUNCH_EXPR = this.findViewById( R.id.fbPerformExperiment );
 
-        fbLaunchExpr.setOnClickListener( (v) -> this.performExperiment() );
+        FB_LAUNCH_EXPR.setOnClickListener( (v) -> this.performExperiment() );
 
-        cbExperiments.setOnItemSelectedListener(
+        CB_EXPERIMENTS.setOnItemSelectedListener(
             new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
@@ -139,34 +138,34 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 }
         });
 
-        btClosePerformExperiment.setOnClickListener((view) ->
+        BT_CLOSE_PERFORM_EXPR.setOnClickListener((view) ->
             PerformExperimentActivity.this.finish()
         );
 
-        btStartScan.setOnClickListener( (view) ->
+        BT_START_SCAN.setOnClickListener( (view) ->
             PerformExperimentActivity.this.startScanning()
         );
 
-        btStopScan.setOnClickListener( (view) ->
+        BT_STOP_SCAN.setOnClickListener( (view) ->
             PerformExperimentActivity.this.cancelAllConnections( true )
         );
 
-        btTestHRDevice.setOnClickListener( (view) ->
+        BT_TEST_HR_DEVICE.setOnClickListener( (view) ->
             PerformExperimentActivity.this.launchDeviceTester()
         );
 
-        lvDevices.setOnItemClickListener( (adptView, view, pos, l) -> {
-            final PerformExperimentActivity cntxt = PerformExperimentActivity.this;
-            final BluetoothDeviceWrapper btDevice = cntxt.devicesListAdapter.getItem( pos );
+        LV_DEVICES.setOnItemClickListener( (adptView, view, pos, l) -> {
+            final PerformExperimentActivity CONTEXT = PerformExperimentActivity.this;
+            final BluetoothDeviceWrapper BT_DEVICE = CONTEXT.devicesListAdapter.getItem( pos );
 
-            if ( btDevice != null ) {
-                cntxt.setChosenDevice( btDevice );
+            if ( BT_DEVICE != null ) {
+                CONTEXT.setChosenDevice( BT_DEVICE );
             } else {
-                cntxt.showStatus( cntxt.getString( R.string.errUnknownDevice) );
+                CONTEXT.showStatus( CONTEXT.getString( R.string.errUnknownDevice) );
             }
         });
 
-        lvDevices.setOnItemLongClickListener(
+        LV_DEVICES.setOnItemLongClickListener(
             (AdapterView<?> adapterView, View view, int i, long l) -> {
                 PerformExperimentActivity.this.showLastScanInfo();
                 return true;
@@ -228,7 +227,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             try {
                 this.unregisterReceiver( this.actionDeviceDiscovery );
             } catch(IllegalArgumentException exc) {
-                Log.e( LogTag, "the receiver for device discovery was not registered." );
+                Log.e(LOG_TAG, "the receiver for device discovery was not registered." );
             }
         }
 
@@ -299,7 +298,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             default:
                 final String MSG = "unknown request code was not managed: " + requestCode;
 
-                Log.e( LogTag, MSG );
+                Log.e(LOG_TAG, MSG );
                 throw new InternalError( MSG );
 
         }
@@ -342,7 +341,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             default:
                 final String MSG = "unknown permission request code was not managed" + requestCode;
 
-                Log.e( LogTag, MSG );
+                Log.e(LOG_TAG, MSG );
                 throw new InternalError( MSG );
         }
 
@@ -352,7 +351,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     /** Creates the list of hrDevices. */
     private void createList()
     {
-        final ListView lvDevices = this.findViewById( R.id.lvDevices );
+        final ListView LV_DEVICES = this.findViewById( R.id.lvDevices );
 
         // Create lists, if needed
         if ( this.hrDevices == null ) {
@@ -384,7 +383,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
         // Clear devices found list
         this.devicesListAdapter = new BtDeviceListAdapter( this, this.hrDevices );
-        lvDevices.setAdapter( this.devicesListAdapter );
+        LV_DEVICES.setAdapter( this.devicesListAdapter );
         this.clearDeviceListView();
     }
 
@@ -446,14 +445,14 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     @Override
     public void onDeviceFound(BluetoothDevice btDevice)
     {
-        final String addr = btDevice.getAddress();
+        final String ADDR = btDevice.getAddress();
 
         if ( btDevice != null
           && btDevice.getName() != null
           && btDevice.getAddress() != null
-          && !this.addrFound.contains( addr ) )
+          && !this.addrFound.contains( ADDR ) )
         {
-            this.addrFound.add( addr );
+            this.addrFound.add( ADDR );
             this.discoveredDevices.add( btDevice );
 
             PerformExperimentActivity.this.runOnUiThread( () -> {
@@ -473,12 +472,12 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
       */
     private void setChosenDevice(BluetoothDeviceWrapper newChosenDevice)
     {
-        final TextView lblChosenDevice = this.findViewById( R.id.lblChosenDevice );
+        final TextView LBL_CHOSEN_DEVICE = this.findViewById( R.id.lblChosenDevice );
 
         assert newChosenDevice != null: "FATAL: newChosenDevice is null!!!";
 
         chosenBtDevice = newChosenDevice;
-        lblChosenDevice.setText( newChosenDevice.getName() );
+        LBL_CHOSEN_DEVICE.setText( newChosenDevice.getName() );
     }
 
     /** Initializes Bluetooth. */
@@ -505,7 +504,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     /** Shows an info status on screen. */
     private void showStatus(String msg)
     {
-        this.showStatus( LogTag, msg );
+        this.showStatus(LOG_TAG, msg );
     }
 
     /** Hides the stop deviceSearch button and option menu, shows the opposite options. */
@@ -525,22 +524,22 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
      *                  false to do the opposite. */
     private void activateScanUI(boolean activate)
     {
-        final ImageButton btStartScan = this.findViewById( R.id.btStartScan );
-        final ImageButton btStopScan = this.findViewById( R.id.btStopScan );
+        final ImageButton BT_START_SCAN = this.findViewById( R.id.btStartScan );
+        final ImageButton BT_STOP_SCAN = this.findViewById( R.id.btStopScan );
 
 
         PerformExperimentActivity.this.runOnUiThread( () -> {
             if ( this.bluetoothAdapter != null ) {
                 if ( !activate ) {
-                    btStartScan.setVisibility( View.VISIBLE );
-                    btStopScan.setVisibility( View.GONE );
+                    BT_START_SCAN.setVisibility( View.VISIBLE );
+                    BT_STOP_SCAN.setVisibility( View.GONE );
                 } else {
-                    btStartScan.setVisibility( View.GONE );
-                    btStopScan.setVisibility( View.VISIBLE );
+                    BT_START_SCAN.setVisibility( View.GONE );
+                    BT_STOP_SCAN.setVisibility( View.VISIBLE );
                 }
             } else {
-                btStartScan.setVisibility( View.GONE );
-                btStopScan.setVisibility( View.GONE );
+                BT_START_SCAN.setVisibility( View.GONE );
+                BT_STOP_SCAN.setVisibility( View.GONE );
             }
 
             this.onCreateOptionsMenu( this.scanMenu );
@@ -560,8 +559,8 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             PerformExperimentActivity.this.runOnUiThread( () -> {
                 this.showStatus( this.getString( R.string.lblActivateBluetooth ) );
 
-                final Intent enableBtIntent = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
-                this.startActivityForResult( enableBtIntent, RQC_ENABLE_BT );
+                final Intent ENABLE_BT_INTENT = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
+                this.startActivityForResult( ENABLE_BT_INTENT, RQC_ENABLE_BT );
             });
         }
 
@@ -575,8 +574,8 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
         this.showStatus( "Test " + this.getString(  R.string.lblDevice ) + ": " + chosenBtDevice.getName() );
 
-        final Intent enableBtIntent = new Intent( this, TestHRDevice.class );
-        this.startActivityForResult( enableBtIntent, RQC_TEST_BT_DEVICE);
+        final Intent ENABLE_BT_INTENT = new Intent( this, TestHRDevice.class );
+        this.startActivityForResult( ENABLE_BT_INTENT, RQC_TEST_BT_DEVICE);
     }
 
     /** @return whether the device is looking for (scanning and filtering), hrDevices or not. */
@@ -615,7 +614,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
             this.handler.postDelayed( () -> {
                 if ( this.bluetoothAdapter.isDiscovering() ) {
-                    Log.d( LogTag, "Discovery forced finish." );
+                    Log.d(LOG_TAG, "Discovery forced finish." );
                     PerformExperimentActivity.this.stopScanning();
                 }
             }, MAX_SCAN_PERIOD );
@@ -670,12 +669,11 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
     public void addDeviceToListView(BluetoothDevice btDevice)
     {
-        final String addr = btDevice.getAddress();
-        final BluetoothDeviceWrapper btwDevice = new BluetoothDeviceWrapper( btDevice );
+        final BluetoothDeviceWrapper BTW_DEVICE = new BluetoothDeviceWrapper( btDevice );
 
         PerformExperimentActivity.this.runOnUiThread( () -> {
-            if ( !this.hrDevices.contains( btwDevice ) ) {
-                this.devicesListAdapter.add( btwDevice );
+            if ( !this.hrDevices.contains( BTW_DEVICE ) ) {
+                this.devicesListAdapter.add( BTW_DEVICE );
                 this.showStatus( this.getString( R.string.lblDeviceFound ) + ": " + btDevice.getName() );
             }
         });
@@ -693,13 +691,13 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         this.filteringFinished( true );
     }
 
-    public void filteringFinished(final boolean warn)
+    public void filteringFinished(final boolean WARN)
     {
         this.deviceSearch = false;
         this.closeAllGattConnections();
 
         PerformExperimentActivity.this.runOnUiThread( () -> {
-            if ( warn ) {
+            if ( WARN ) {
                 this.showStatus( this.getString(R.string.lblStopScan) );
             }
 
@@ -710,14 +708,14 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     /** Enables the launch button or not. */
     private void disableFurtherScan()
     {
-        final ImageButton btStartScan = this.findViewById( R.id.btStartScan );
+        final ImageButton BT_START_SCAN = this.findViewById( R.id.btStartScan );
 
-        if ( btStartScan.getVisibility() != View.INVISIBLE ) {
+        if ( BT_START_SCAN.getVisibility() != View.INVISIBLE ) {
             this.disableScanUI();
 
             PerformExperimentActivity.this.runOnUiThread( () -> {
-                btStartScan.setEnabled( false );
-                btStartScan.setVisibility( View.INVISIBLE );
+                BT_START_SCAN.setEnabled( false );
+                BT_START_SCAN.setVisibility( View.INVISIBLE );
 
                 this.showStatus( this.getString( R.string.errNoBluetooth) );
             });
@@ -729,43 +727,43 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     /** Reads the data from the ORM. */
     private void obtainData()
     {
-        final FloatingActionButton fbLaunchExpr = this.findViewById( R.id.fbPerformExperiment );
+        final FloatingActionButton FB_LAUNCH_EXPR = this.findViewById( R.id.fbPerformExperiment );
 
         // Read experiment's and user's names
         try {
-            final Orm dataStore = Orm.get();
+            final Orm DB = Orm.get();
 
-            this.experimentsList = dataStore.enumerateExperiments();
+            this.experimentsList = DB.enumerateExperiments();
 
             // Read user's names and experiment's names
-            final String[] userNames = dataStore.enumerateUserNames();
-            final String[] experimentNames = dataStore.enumerateObjNames( this.experimentsList );
+            final String[] USR_NAMES = DB.enumerateUserNames();
+            final String[] EXPR_NAMES = DB.enumerateObjNames( this.experimentsList );
 
             // Spinner users
-            final AutoCompleteTextView cbUsers = this.findViewById( R.id.cbUsers);
-            final ArrayAdapter<String> adapterUsers = new ArrayAdapter<>( this,
+            final AutoCompleteTextView CB_USRS = this.findViewById( R.id.cbUsers);
+            final ArrayAdapter<String> ADAPTER_USRS = new ArrayAdapter<>( this,
                     android.R.layout.simple_spinner_item,
-                    userNames );
-            adapterUsers.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
-            cbUsers.setAdapter( adapterUsers );
+                    USR_NAMES );
+            ADAPTER_USRS.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
+            CB_USRS.setAdapter( ADAPTER_USRS );
 
-            if ( userNames.length > 0 ) {
-                cbUsers.setText( userNames[ 0 ] );
-                cbUsers.setSelection( 0, userNames[ 0 ].length() );
+            if ( USR_NAMES.length > 0 ) {
+                CB_USRS.setText( USR_NAMES[ 0 ] );
+                CB_USRS.setSelection( 0, USR_NAMES[ 0 ].length() );
             }
 
             // Spinner experiments
-            final Spinner cbExperiments = this.findViewById( R.id.cbExperiments );
-            final ArrayAdapter<String> adapterExperiments = new ArrayAdapter<>( this,
+            final Spinner CB_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
+            final ArrayAdapter<String> ADAPTER_EXPR = new ArrayAdapter<>( this,
                     android.R.layout.simple_spinner_item,
-                    experimentNames );
-            adapterExperiments.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
-            cbExperiments.setAdapter( adapterExperiments );
+                    EXPR_NAMES );
+            ADAPTER_EXPR.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
+            CB_EXPERIMENTS.setAdapter( ADAPTER_EXPR );
 
             // Select chosen experiment
             if ( chosenExperiment != null ) {
                 int i = 0;
-                for(String exprName: experimentNames) {
+                for(String exprName: EXPR_NAMES) {
                     if ( chosenExperiment.getName().equals( exprName ) ) {
                         break;
                     }
@@ -773,8 +771,8 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                     ++i;
                 }
 
-                if ( i < experimentNames.length ) {
-                    cbExperiments.setSelection( i );
+                if ( i < EXPR_NAMES.length ) {
+                    CB_EXPERIMENTS.setSelection( i );
                 }
             }
         } catch(IOException exc) {
@@ -782,7 +780,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             this.showStatus( this.getString( R.string.errIO) );
         } finally {
             // Determine whether to allow to launch experiments or not
-            fbLaunchExpr.setEnabled( this.experimentsList.length > 0 );
+            FB_LAUNCH_EXPR.setEnabled( this.experimentsList.length > 0 );
         }
     }
 
@@ -792,24 +790,24 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         if ( pos >= 0
           && pos < this.experimentsList.length )
         {
-            final Orm dataStore = Orm.get();
-            final PartialObject partialExperiment = this.experimentsList[ pos ];
+            final Orm DB = Orm.get();
+            final PartialObject PARTIAL_EXPERIMENT = this.experimentsList[ pos ];
             Experiment experiment = null;
 
             try {
-                experiment = (Experiment) dataStore.retrieve(
-                                                partialExperiment.getId(),
+                experiment = (Experiment) DB.retrieve(
+                                                PARTIAL_EXPERIMENT.getId(),
                                                 Persistent.TypeId.Experiment );
             } catch(IOException exc)
             {
-                Log.d(LogTag, exc.getMessage()
-                                + "\n\tretrieving experiment: " + partialExperiment.toString() );
+                Log.d(LOG_TAG, exc.getMessage()
+                                + "\n\tretrieving experiment: " + PARTIAL_EXPERIMENT.toString() );
             }
 
             // Assign the chosen experiment
             if ( experiment != null ) {
                 chosenExperiment = experiment;
-                Log.d( LogTag, "Experiment chosen: " + chosenExperiment );
+                Log.d(LOG_TAG, "Experiment chosen: " + chosenExperiment );
             }
         }
 
@@ -830,7 +828,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 usr = Orm.get().createOrRetrieveUserByName( userName );
             } catch(IOException exc)
             {
-                Log.d(LogTag, exc.getMessage()
+                Log.d(LOG_TAG, exc.getMessage()
                         + "\n\tlooking for or creating user: " + userName.toString() );
             }
         }
@@ -838,7 +836,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         // Assign the chosen experiment
         if ( usr != null ) {
             chosenUser = usr;
-            Log.d( LogTag, "Chosen user: " + usr );
+            Log.d(LOG_TAG, "Chosen user: " + usr );
         }
 
         return;
@@ -847,26 +845,26 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     // Launches the experiment
     private void performExperiment()
     {
-        final Spinner cbExperiment = this.findViewById( R.id.cbExperiments );
-        final TextView edUsers = this.findViewById( R.id.cbUsers );
-        final String userName = edUsers.getText().toString();
+        final Spinner CB_EXPERIMENT = this.findViewById( R.id.cbExperiments );
+        final TextView ED_USERS = this.findViewById( R.id.cbUsers );
+        final String USR_NAME = ED_USERS.getText().toString();
 
-        this.onUserChosen( userName );
+        this.onUserChosen( USR_NAME );
 
         if ( chosenUser == null) {
-           this.showStatus( LogTag, "No chosen user." );
+           this.showStatus(LOG_TAG, "No chosen user." );
            return;
         }
 
-        this.onExperimentChosen( cbExperiment.getSelectedItemPosition() );
+        this.onExperimentChosen( CB_EXPERIMENT.getSelectedItemPosition() );
 
         if ( chosenExperiment == null ) {
-           this.showStatus( LogTag, "No chosen experiment." );
+           this.showStatus(LOG_TAG, "No chosen experiment." );
            return;
         }
 
-        final Intent launchExperimentCfg = new Intent( this, ExperimentDirector.class );
-        this.startActivity( launchExperimentCfg );
+        final Intent CFG_LAUNCH_EXPR = new Intent( this, ExperimentDirector.class );
+        this.startActivity( CFG_LAUNCH_EXPR );
     }
 
     @Override

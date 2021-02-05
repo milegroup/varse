@@ -23,27 +23,27 @@ public class EditManualEntryActivity extends AppActivity {
         super.onCreate(savedInstanceState);
         this.setContentView( R.layout.activity_edit_manual_entry );
 
-        final Toolbar toolbar = this.findViewById( R.id.toolbar );
-        this.setSupportActionBar( toolbar );
+        final Toolbar TOOLBAR = this.findViewById( R.id.toolbar );
+        this.setSupportActionBar( TOOLBAR );
 
         // Widgets
-        final ImageButton btBack = this.findViewById( R.id.btCloseEditManualEntry );
-        final FloatingActionButton btSave = this.findViewById( R.id.fbSaveManualEntry );
-        final EditText edTag = this.findViewById( R.id.edTag );
-        final EditText edDuration = this.findViewById( R.id.edActDuration );
-        final Spinner cbTimeUnit = this.findViewById( R.id.cbTimeUnit );
+        final ImageButton BT_BACK = this.findViewById( R.id.btCloseEditManualEntry );
+        final FloatingActionButton BT_SAVE = this.findViewById( R.id.fbSaveManualEntry );
+        final EditText ED_TAG = this.findViewById( R.id.edTag );
+        final EditText ED_DURATION = this.findViewById( R.id.edActDuration );
+        final Spinner CB_TIME_UNIT = this.findViewById( R.id.cbTimeUnit );
 
         // Spinner for time units
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource( this,
                 R.array.vTimeUnitChoices, android.R.layout.simple_spinner_item );
         adapter.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
-        cbTimeUnit.setAdapter( adapter );
+        CB_TIME_UNIT.setAdapter( adapter );
 
-        btBack.setOnClickListener( (v) -> this.finishWithResultCode( RSC_DISMISS_DATA ) );
-        btSave.setOnClickListener( (v) -> this.finishWithResultCode( RSC_SAVE_DATA ) );
+        BT_BACK.setOnClickListener( (v) -> this.finishWithResultCode( RSC_DISMISS_DATA ) );
+        BT_SAVE.setOnClickListener( (v) -> this.finishWithResultCode( RSC_SAVE_DATA ) );
 
         // Answer to events
-        edTag.addTextChangedListener( new TextWatcher() {
+        ED_TAG.addTextChangedListener( new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             }
@@ -59,7 +59,7 @@ public class EditManualEntryActivity extends AppActivity {
             }
         });
 
-        cbTimeUnit.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener() {
+        CB_TIME_UNIT.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 EditManualEntryActivity.this.writeDurationToManualActivity();
@@ -67,11 +67,11 @@ public class EditManualEntryActivity extends AppActivity {
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-                cbTimeUnit.setSelection( 0 );
+                CB_TIME_UNIT.setSelection( 0 );
             }
         });
 
-        edDuration.addTextChangedListener( new TextWatcher() {
+        ED_DURATION.addTextChangedListener( new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             }
@@ -95,23 +95,23 @@ public class EditManualEntryActivity extends AppActivity {
     {
         super.onResume();
 
-        final EditText edTag = this.findViewById( R.id.edTag );
-        final EditText edDuration = this.findViewById( R.id.edActDuration );
-        final Spinner cbTimeUnit = this.findViewById( R.id.cbTimeUnit );
+        final EditText ED_TAG = this.findViewById( R.id.edTag );
+        final EditText ED_DURATION = this.findViewById( R.id.edActDuration );
+        final Spinner CB_TIME_UNIT = this.findViewById( R.id.cbTimeUnit );
 
         assert manualActivity != null: "manual activity to edit can't be null";
 
-        edTag.setText( manualActivity.getTag().toString() );
-        fillInDurationInUI( manualActivity.getTime(), cbTimeUnit, edDuration );
+        ED_TAG.setText( manualActivity.getTag().toString() );
+        fillInDurationInUI( manualActivity.getTime(), CB_TIME_UNIT, ED_DURATION );
     }
 
     /** Sets the duration time. */
     private void writeDurationToManualActivity()
     {
-        final EditText edDuration = this.findViewById( R.id.edActDuration );
-        final Spinner cbTimeUnit = this.findViewById( R.id.cbTimeUnit );
+        final EditText ED_DURATION = this.findViewById( R.id.edActDuration );
+        final Spinner CB_TIME_UNIT = this.findViewById( R.id.cbTimeUnit );
 
-        fillInDurationInObj( EditManualEntryActivity.manualActivity.getTime(), cbTimeUnit, edDuration );
+        fillInDurationInObj( EditManualEntryActivity.manualActivity.getTime(), CB_TIME_UNIT, ED_DURATION );
     }
 
     public static ManualGroup.ManualActivity manualActivity;

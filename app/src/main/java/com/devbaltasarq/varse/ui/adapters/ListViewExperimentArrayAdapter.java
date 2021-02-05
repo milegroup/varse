@@ -25,32 +25,32 @@ public class ListViewExperimentArrayAdapter extends ArrayAdapter<Experiment> {
     @Override
     public @NonNull View getView(int position, View convertView, @NonNull ViewGroup parent)
     {
-        final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
-        final Experiment expr = this.getItem( position );
+        final LayoutInflater LAYOUT_INFLATER = LayoutInflater.from( this.getContext() );
+        final Experiment EXPR = this.getItem( position );
 
-        if ( expr == null ) {
+        if ( EXPR == null ) {
             throw new Error( "Experiment adapter, experiment is null" );
         }
 
         if ( convertView == null ) {
-            convertView = layoutInflater.inflate( R.layout.listview_experiment_entry, null );
+            convertView = LAYOUT_INFLATER.inflate( R.layout.listview_experiment_entry, null );
         }
 
-        final ImageButton btLaunch = convertView.findViewById( R.id.btLaunchExperiment );
-        final ImageButton btModify = convertView.findViewById( R.id.btEditUser);
-        final ImageButton btDelete = convertView.findViewById( R.id.btDeleteExperiment );
-        final ImageButton btExport = convertView.findViewById( R.id.btExportExperiment );
-        final ImageButton btShowResults = convertView.findViewById( R.id.btShowResultsExperiment );
-        final TextView lblExperimentDesc = convertView.findViewById( R.id.lblExperimentDesc );
-        final ExperimentsActivity cntxt = (ExperimentsActivity) ListViewExperimentArrayAdapter.this.getContext();
+        final ImageButton BT_LAUNCH = convertView.findViewById( R.id.btLaunchExperiment );
+        final ImageButton BT_MODIFY = convertView.findViewById( R.id.btEditUser);
+        final ImageButton BT_DELETE = convertView.findViewById( R.id.btDeleteExperiment );
+        final ImageButton BT_EXPORT = convertView.findViewById( R.id.btExportExperiment );
+        final ImageButton BT_SHOW_RESULTS = convertView.findViewById( R.id.btShowResultsExperiment );
+        final TextView LBL_EXPERIMENT_DESC = convertView.findViewById( R.id.lblExperimentDesc );
+        final ExperimentsActivity CONTEXT = (ExperimentsActivity) ListViewExperimentArrayAdapter.this.getContext();
 
-        lblExperimentDesc.setText( expr.toString() );
+        LBL_EXPERIMENT_DESC.setText( EXPR.toString() );
 
-        btLaunch.setOnClickListener( (v) -> cntxt.launchExperiment( expr ) );
-        btModify.setOnClickListener( (v) -> cntxt.editExperiment( expr ) );
-        btDelete.setOnClickListener( (v) -> cntxt.deleteExperiment( position, expr ) );
-        btExport.setOnClickListener( (v) -> cntxt.exportExperiment( expr ) );
-        btShowResults.setOnClickListener( (v) -> cntxt.launchExperimentResults( expr ) );
+        BT_LAUNCH.setOnClickListener( (v) -> CONTEXT.launchExperiment( EXPR ) );
+        BT_MODIFY.setOnClickListener( (v) -> CONTEXT.editExperiment( EXPR ) );
+        BT_DELETE.setOnClickListener( (v) -> CONTEXT.deleteExperiment( position, EXPR ) );
+        BT_EXPORT.setOnClickListener( (v) -> CONTEXT.exportExperiment( EXPR ) );
+        BT_SHOW_RESULTS.setOnClickListener( (v) -> CONTEXT.launchExperimentResults( EXPR ) );
 
         return convertView;
     }

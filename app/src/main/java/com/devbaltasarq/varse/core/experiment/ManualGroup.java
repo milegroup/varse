@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 /** Represents a group made of manual activities. */
 public class ManualGroup extends Group<ManualGroup.ManualActivity> {
-    public static final String LogTag = ManualGroup.class.getSimpleName();
+    public static final String LOG_TAG = ManualGroup.class.getSimpleName();
 
     /** Represents a manual activity, running for a given time. */
     public static class ManualActivity extends Group.Activity {
@@ -53,10 +53,10 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
             boolean toret = false;
 
             if ( o instanceof ManualActivity ) {
-                final ManualActivity mao = (ManualActivity) o;
+                final ManualActivity MACT_OBJ = (ManualActivity) o;
 
-                toret = this.getTime().equals( mao.getTime() )
-                     && this.getTag().equals( mao.getTag() );
+                toret = this.getTime().equals( MACT_OBJ.getTime() )
+                     && this.getTag().equals( MACT_OBJ.getTag() );
             }
 
             return toret;
@@ -93,13 +93,13 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
             // Load data
             try {
                 while ( jsonReader.hasNext() ) {
-                    final String token = jsonReader.nextName();
+                    final String TOKEN = jsonReader.nextName();
 
-                    if ( token.equals( Orm.FIELD_TAG ) ) {
+                    if ( TOKEN.equals( Orm.FIELD_TAG ) ) {
                         tag = new Tag( jsonReader.nextString() );
                     }
                     else
-                    if ( token.equals( Orm.FIELD_TIME ) ) {
+                    if ( TOKEN.equals( Orm.FIELD_TIME ) ) {
                         duration = new Duration( jsonReader.nextInt() );
                     }
                 }
@@ -112,10 +112,10 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
             if ( tag == null
               || duration == null )
             {
-                final String msg = "ManualActivity.fromJSON(): invalid or missing data.";
+                final String MSG_ERROR = "ManualActivity.fromJSON(): invalid or missing data.";
 
-                Log.e( LogTag, msg );
-                throw new JSONException( msg );
+                Log.e( LogTag, MSG_ERROR );
+                throw new JSONException( MSG_ERROR );
             }
 
             return new ManualActivity( id, tag, duration );
@@ -169,19 +169,19 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
     @Override
     public void setTimeForEachActivity(Duration time) throws NoSuchMethodError
     {
-        final String msg = "manual group cannot change its time as a whole";
+        final String MSG_ERROR = "manual group cannot change its time as a whole";
 
-        Log.e(LogTag, msg );
-        throw new NoSuchMethodError( msg );
+        Log.e(LOG_TAG, MSG_ERROR );
+        throw new NoSuchMethodError( MSG_ERROR );
     }
 
     @Override
     public Duration getTimeForEachActivity() throws NoSuchMethodError
     {
-        final String msg = "manual group holds activities with individual times";
+        final String MSG_ERROR = "manual group holds activities with individual times";
 
-        Log.e(LogTag, msg );
-        throw new NoSuchMethodError( msg );
+        Log.e(LOG_TAG, MSG_ERROR );
+        throw new NoSuchMethodError( MSG_ERROR );
     }
 
     @Override
@@ -213,16 +213,16 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
      */
     public ManualActivity[] copyActivities()
     {
-        final Activity[] acts = super.copyActivities();
+        final Activity[] ACTS = super.copyActivities();
 
-        return Arrays.copyOf( acts, acts.length, ManualActivity[].class );
+        return Arrays.copyOf( ACTS, ACTS.length, ManualActivity[].class );
     }
 
     @Override
     public ManualActivity[] get()
     {
-        final Activity[] toret = super.get();
+        final Activity[] TORET = super.get();
 
-        return Arrays.copyOf( toret, toret.length, ManualActivity[].class );
+        return Arrays.copyOf( TORET, TORET.length, ManualActivity[].class );
     }
 }

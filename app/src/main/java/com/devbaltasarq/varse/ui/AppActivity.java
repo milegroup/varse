@@ -12,12 +12,11 @@ import android.widget.Spinner;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
-import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.Tag;
 
 /** This activity has the capability of showing status messages through snackbars. */
 public class AppActivity extends AppCompatActivity {
-    public static final String LogTag = AppActivity.class.getSimpleName();
+    public static final String LOG_TAG = AppActivity.class.getSimpleName();
     public static final int RSC_SAVE_DATA = 0x5a7eda7a;
     public static final int RSC_DISMISS_DATA = 0x10dda7a;
 
@@ -158,7 +157,7 @@ public class AppActivity extends AppCompatActivity {
             d.parse( spUnit.getSelectedItemPosition(),  edTime.getText().toString() );
         } catch(NumberFormatException exc)
         {
-            Log.e( LogTag, "converting duration: " + exc.getMessage() );
+            Log.e(LOG_TAG, "converting duration: " + exc.getMessage() );
         }
 
         return;

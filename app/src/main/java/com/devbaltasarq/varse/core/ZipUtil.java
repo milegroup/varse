@@ -15,8 +15,8 @@ import java.util.zip.ZipOutputStream;
 
 /** Zip management utils. */
 public final class ZipUtil {
-    private static final String LogTagZip = ZipUtil.class.getSimpleName() + ".zip";
-    private static final String LogTagUnzip = ZipUtil.class.getSimpleName() + "ZipUtil.unzip";
+    private static final String LOG_TAG_ZIP = ZipUtil.class.getSimpleName() + ".zip";
+    private static final String LOG_TAG_UNZIP = ZipUtil.class.getSimpleName() + "ZipUtil.unzip";
     private static final int MAX_BUFFER = 40960;
     private static final byte[] BUFFER = new byte[ MAX_BUFFER ];
 
@@ -29,13 +29,13 @@ public final class ZipUtil {
     public static void zip(File[] files, File zipFileName) throws IOException
     {
         try {
-            Log.i( LogTagZip, "starting zipping to: " + zipFileName.getAbsolutePath() );
+            Log.i( LOG_TAG_ZIP, "starting zipping to: " + zipFileName.getAbsolutePath() );
             BufferedInputStream origin;
             FileOutputStream dest = new FileOutputStream( zipFileName );
             ZipOutputStream out = new ZipOutputStream( new BufferedOutputStream( dest ) );
 
             for (File file: files) {
-                Log.i( LogTagZip, "Adding: " + file );
+                Log.i( LOG_TAG_ZIP, "Adding: " + file );
 
                 FileInputStream fi = new FileInputStream( file );
                 origin = new BufferedInputStream( fi, MAX_BUFFER );
@@ -52,12 +52,12 @@ public final class ZipUtil {
             }
 
             out.close();
-            Log.i( LogTagZip, "finished zipping" );
+            Log.i( LOG_TAG_ZIP, "finished zipping" );
         } catch (IOException e) {
-            final String msg = "error zipping: " + e.getMessage();
+            final String MSG_ERROR = "error zipping: " + e.getMessage();
 
-            Log.e( LogTagZip, msg );
-            throw new IOException( msg );
+            Log.e( LOG_TAG_ZIP, MSG_ERROR );
+            throw new IOException( MSG_ERROR );
         }
     }
 
@@ -69,7 +69,7 @@ public final class ZipUtil {
      */
     public static void unzip(File zipFile, File targetDir) throws IOException
     {
-        Log.i(LogTagUnzip, "starting unzipping of: " + zipFile.getAbsolutePath() );
+        Log.i( LOG_TAG_UNZIP, "starting unzipping of: " + zipFile.getAbsolutePath() );
 
         FileInputStream fin = new FileInputStream( zipFile );
         unzip( fin, targetDir );
@@ -83,7 +83,7 @@ public final class ZipUtil {
      */
     public static void unzip(InputStream zipFileIn, File targetDir) throws IOException
     {
-        Log.i(LogTagUnzip, "starting unzipping from stream" );
+        Log.i( LOG_TAG_UNZIP, "starting unzipping from stream" );
 
         targetDir.mkdirs();
 
@@ -96,10 +96,10 @@ public final class ZipUtil {
                     // Create dir if required while unzipping
                     if ( ze.isDirectory() ) {
                         if ( !new File( ze.getName() ).mkdirs() ) {
-                            final String msg = "could not create directory: " + ze.getName();
+                            final String MSG_ERROR = "could not create directory: " + ze.getName();
 
-                            Log.e( LogTagUnzip, msg );
-                            throw new IOException( msg );
+                            Log.e( LOG_TAG_UNZIP, MSG_ERROR );
+                            throw new IOException( MSG_ERROR );
                         }
                     } else {
                         FileOutputStream fout = new FileOutputStream(
@@ -116,18 +116,18 @@ public final class ZipUtil {
                 }
 
                 zin.close();
-                Log.i( LogTagUnzip, "finished unzipping." );
+                Log.i( LOG_TAG_UNZIP, "finished unzipping." );
             } catch (IOException exc) {
-                final String msg = "error unzipping: " + exc.getMessage();
+                final String MSG_ERROR = "error unzipping: " + exc.getMessage();
 
-                Log.e( LogTagUnzip, msg );
-                throw new IOException( msg );
+                Log.e( LOG_TAG_UNZIP, MSG_ERROR );
+                throw new IOException( MSG_ERROR );
             }
         } else {
-            final String msg = "could not create directory: " + targetDir.getAbsolutePath();
+            final String MSG_ERROR = "could not create directory: " + targetDir.getAbsolutePath();
 
-            Log.e( LogTagUnzip, msg );
-            throw new IOException( msg );
+            Log.e( LOG_TAG_UNZIP, MSG_ERROR );
+            throw new IOException( MSG_ERROR );
         }
 
         return;

@@ -28,7 +28,7 @@ import java.io.File;
 
 /** Represents an adapter of the special items for the ListView of media files. */
 public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
-    public static final String LogTag = ListViewActivityArrayAdapter.class.getSimpleName();
+    public static final String LOG_TAG = ListViewActivityArrayAdapter.class.getSimpleName();
 
     public ListViewActivityArrayAdapter(Context cntxt, Group.Activity[] entries)
     {
@@ -38,43 +38,43 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
     @Override
     public @NonNull View getView(int position, View rowView, @NonNull ViewGroup parent)
     {
-        final Context context = this.getContext();
-        final LayoutInflater layoutInflater = LayoutInflater.from( this.getContext() );
-        final Group.Activity entryActivity = this.getItem( position );
+        final Context CONTEXT = this.getContext();
+        final LayoutInflater LAYOUT_INFLATER = LayoutInflater.from( this.getContext() );
+        final Group.Activity ENTRY_ACTIVITY = this.getItem( position );
         Bitmap thumbnail;
         EditGroupActivity editGroupActivity = null;
 
-        if ( context instanceof EditGroupActivity ) {
-            editGroupActivity = (EditGroupActivity) context;
+        if ( CONTEXT instanceof EditGroupActivity ) {
+            editGroupActivity = (EditGroupActivity) CONTEXT;
         }
 
-        if ( entryActivity == null ) {
+        if ( ENTRY_ACTIVITY == null ) {
             final String ERROR_MSG = "the activity target of this entry is null!!!";
 
-            Log.e( LogTag, ERROR_MSG );
+            Log.e(LOG_TAG, ERROR_MSG );
             throw new InternalError( ERROR_MSG );
         }
 
         if ( rowView == null ) {
-            rowView = layoutInflater.inflate( R.layout.listview_media_entry, null );
+            rowView = LAYOUT_INFLATER.inflate( R.layout.listview_media_entry, null );
         }
 
-        final ImageButton btSortFileUp = rowView.findViewById( R.id.btSortMediaUp );
-        final ImageButton btSortFileDown = rowView.findViewById( R.id.btSortMediaDown );
-        final ImageButton btEditMedia = rowView.findViewById( R.id.btEditMedia );
-        final ImageButton btDeleteMedia = rowView.findViewById( R.id.btDeleteMedia );
-        final TextView lblMediaDesc = rowView.findViewById( R.id.lblMediaDesc );
-        final ImageView ivMediaDesc = rowView.findViewById( R.id.ivMediaDesc );
-        final ImageView ivThumbnail = rowView.findViewById( R.id.ivThumbnail );
+        final ImageButton BT_SORT_FILE_UP = rowView.findViewById( R.id.btSortMediaUp );
+        final ImageButton BT_SORT_FILE_DOWN = rowView.findViewById( R.id.btSortMediaDown );
+        final ImageButton BT_EDIT_MEDIA = rowView.findViewById( R.id.btEditMedia );
+        final ImageButton BT_DELETE_MEDIA = rowView.findViewById( R.id.btDeleteMedia );
+        final TextView LBL_MEDIA_DESC = rowView.findViewById( R.id.lblMediaDesc );
+        final ImageView IV_MEDIA_DESC = rowView.findViewById( R.id.ivMediaDesc );
+        final ImageView IV_THUMBNAIL = rowView.findViewById( R.id.ivThumbnail );
 
         // Set image and file name
         int groupDescImgId = R.drawable.ic_picture_button;
 
-        if ( entryActivity instanceof MediaGroup.MediaActivity ) {
-            final String FILE_NAME = getFileNameOf( entryActivity );
+        if ( ENTRY_ACTIVITY instanceof MediaGroup.MediaActivity ) {
+            final String FILE_NAME = getFileNameOf( ENTRY_ACTIVITY );
             final Orm DB = Orm.get();
-            final Experiment EXPR = entryActivity.getExperimentOwner();
-            final MediaGroup MEDIA_GROUP = (MediaGroup) entryActivity.getGroup();
+            final Experiment EXPR = ENTRY_ACTIVITY.getExperimentOwner();
+            final MediaGroup MEDIA_GROUP = (MediaGroup) ENTRY_ACTIVITY.getGroup();
 
             if ( MEDIA_GROUP.getFormat() == MediaGroup.Format.Picture ) {
                 thumbnail = getImageThumbnail( DB, EXPR, new File( FILE_NAME ) );
@@ -84,7 +84,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
             }
 
             if ( thumbnail != null ) {
-                ivThumbnail.setImageBitmap( thumbnail );
+                IV_THUMBNAIL.setImageBitmap( thumbnail );
                 rowView.findViewById( R.id.lyMediaDesc ).setVisibility( View.GONE );
                 rowView.findViewById( R.id.lyThumbnail ).setVisibility( View.VISIBLE );
             } else {
@@ -92,13 +92,13 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
                 rowView.findViewById( R.id.lyThumbnail ).setVisibility( View.GONE );
             }
 
-            btEditMedia.setVisibility( View.GONE );
-            lblMediaDesc.setText( FILE_NAME );
+            BT_EDIT_MEDIA.setVisibility( View.GONE );
+            LBL_MEDIA_DESC.setText( FILE_NAME );
         }
         else
-        if ( entryActivity instanceof ManualGroup.ManualActivity ) {
-            lblMediaDesc.setText( entryActivity.toString() );
-            btEditMedia.setVisibility( View.VISIBLE );
+        if ( ENTRY_ACTIVITY instanceof ManualGroup.ManualActivity ) {
+            LBL_MEDIA_DESC.setText( ENTRY_ACTIVITY.toString() );
+            BT_EDIT_MEDIA.setVisibility( View.VISIBLE );
             groupDescImgId = R.drawable.ic_manual_button;
             rowView.findViewById( R.id.lyThumbnail ).setVisibility( View.GONE );
         } else {
@@ -106,20 +106,20 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
         }
 
 
-        ivMediaDesc.setImageDrawable( AppCompatResources.getDrawable( context, groupDescImgId ) );
+        IV_MEDIA_DESC.setImageDrawable( AppCompatResources.getDrawable( CONTEXT, groupDescImgId ) );
 
         if ( editGroupActivity != null ) {
-            final EditGroupActivity editAct = editGroupActivity;
+            final EditGroupActivity EDIT_ACT = editGroupActivity;
 
-            btSortFileUp.setOnClickListener( (v) -> editAct.sortActivityUp( entryActivity ) );
-            btSortFileDown.setOnClickListener( (v) -> editAct.sortActivityDown( entryActivity ) );
-            btDeleteMedia.setOnClickListener( (v) -> editAct.deleteActivity( entryActivity ) );
-            btEditMedia.setOnClickListener( (v) -> editAct.editActivity( entryActivity ) );
+            BT_SORT_FILE_UP.setOnClickListener( (v) -> EDIT_ACT.sortActivityUp( ENTRY_ACTIVITY ) );
+            BT_SORT_FILE_DOWN.setOnClickListener( (v) -> EDIT_ACT.sortActivityDown( ENTRY_ACTIVITY ) );
+            BT_DELETE_MEDIA.setOnClickListener( (v) -> EDIT_ACT.deleteActivity( ENTRY_ACTIVITY ) );
+            BT_EDIT_MEDIA.setOnClickListener( (v) -> EDIT_ACT.editActivity( ENTRY_ACTIVITY ) );
         } else {
-            btSortFileDown.setVisibility( View.GONE );
-            btSortFileUp.setVisibility( View.GONE );
-            btDeleteMedia.setVisibility( View.GONE );
-            btEditMedia.setVisibility( View.GONE );
+            BT_SORT_FILE_DOWN.setVisibility( View.GONE );
+            BT_SORT_FILE_UP.setVisibility( View.GONE );
+            BT_DELETE_MEDIA.setVisibility( View.GONE );
+            BT_EDIT_MEDIA.setVisibility( View.GONE );
         }
 
         return rowView;
@@ -132,10 +132,10 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
       */
     private static Bitmap getImageThumbnail(Orm db, Experiment expr, File f)
     {
-        final File mediaFile = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
+        final File MEDIA_FILE = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
 
         return ThumbnailUtils.extractThumbnail(
-                                        BitmapFactory.decodeFile( mediaFile.getAbsolutePath() ),
+                                        BitmapFactory.decodeFile( MEDIA_FILE.getAbsolutePath() ),
                                         128,
                                         128 );
     }
@@ -147,9 +147,9 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
      */
     private static Bitmap getVideoThumbnail(Orm db, Experiment expr, File f)
     {
-        final File mediaFile = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
+        final File MEDIA_FILE = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
 
-        return ThumbnailUtils.createVideoThumbnail( mediaFile.getAbsolutePath(),
+        return ThumbnailUtils.createVideoThumbnail( MEDIA_FILE.getAbsolutePath(),
                                              MediaStore.Images.Thumbnails.MICRO_KIND );
     }
 
@@ -166,7 +166,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
 
             toret = mact.getFile().getName();
         } else {
-            Log.e( LogTag, "not a media activity, no associated file" );
+            Log.e(LOG_TAG, "not a media activity, no associated file" );
         }
 
         return toret;

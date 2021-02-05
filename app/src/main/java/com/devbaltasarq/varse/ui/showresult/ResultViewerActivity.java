@@ -124,19 +124,19 @@ public class ResultViewerActivity extends AppActivity {
         final double DENSITY = this.getResources().getDisplayMetrics().scaledDensity;
         final ArrayList<LineChart.SeriesInfo> SERIES = new ArrayList<>();
         final ArrayList<LineChart.Point> POINTS = new ArrayList<>();
-        final Float[] dataHRInterpX = this.resultAnalyzer.getDataHRInterpolatedForX();
-        final Float[] dataHRInterp = this.resultAnalyzer.getDataHRInterpolated();
+        final Float[] DATA_HR_INTERP_X = this.resultAnalyzer.getDataHRInterpolatedForX();
+        final Float[] DATA_HR_INTERP = this.resultAnalyzer.getDataHRInterpolated();
 
-        if ( dataHRInterpX.length > 0 ) {
-            String tag = this.findTag( dataHRInterpX[ 0 ] );
+        if ( DATA_HR_INTERP_X.length > 0 ) {
+            String tag = this.findTag( DATA_HR_INTERP_X[ 0 ] );
             int color = this.calculateColor( tag, 0 );
             int index = 0;
             int colorIndex = 0;
 
             SERIES.add( new LineChart.SeriesInfo( tag, color ) );
 
-            for(float time: dataHRInterpX ) {
-                final double BPM = dataHRInterp[ index ];
+            for(float time: DATA_HR_INTERP_X ) {
+                final double BPM = DATA_HR_INTERP[ index ];
                 final String NEW_TAG = this.findTag( time );
 
                 if ( !tag.equals( NEW_TAG ) ) {

@@ -12,7 +12,7 @@ import java.io.IOException;
 
 /** Represents a group of Pictures. */
 public class PictureGroup extends MediaGroup {
-    public static final String LogTag = PictureGroup.class.getSimpleName();
+    public static final String LOG_TAG = PictureGroup.class.getSimpleName();
 
     public PictureGroup(Id id, Experiment expr)
     {
@@ -57,9 +57,9 @@ public class PictureGroup extends MediaGroup {
     @Override
     public void add(MediaActivity act)
     {
-        final File f = act.getFile();
+        final File F = act.getFile();
 
-        if ( !Orm.extractFileExt( f ).isEmpty() ) {
+        if ( !Orm.extractFileExt( F ).isEmpty() ) {
             if ( !MimeTools.isPicture( act.getFile() ) ) {
                 throw new Error( act.getFile() + " not a picture." );
             }

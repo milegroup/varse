@@ -63,22 +63,22 @@ public class Settings {
      */
     public void toJSON(Writer wrt) throws JSONException
     {
-        final JsonWriter jsonWriter = new JsonWriter( wrt );
-        final String ErrorMessage = "Writing settings to JSON: ";
+        final JsonWriter JSON_WRITER = new JsonWriter( wrt );
+        final String MSG_ERROR = "Writing settings to JSON: ";
 
         try {
-            jsonWriter.beginObject();
-            jsonWriter.name( EMAIL_FIELD ).value( this.getEmail() );
-            jsonWriter.endObject();
+            JSON_WRITER.beginObject();
+            JSON_WRITER.name( EMAIL_FIELD ).value( this.getEmail() );
+            JSON_WRITER.endObject();
         } catch(IOException exc)
         {
-            Log.e( LogTag, ErrorMessage + exc.getMessage() );
+            Log.e( LogTag, MSG_ERROR + exc.getMessage() );
             throw new JSONException( exc.getMessage() );
         } finally {
             try {
-                jsonWriter.close();
+                JSON_WRITER.close();
             } catch(IOException exc) {
-                Log.e( LogTag, ErrorMessage + exc.getMessage() );
+                Log.e( LogTag, MSG_ERROR + exc.getMessage() );
             }
         }
 
@@ -89,34 +89,34 @@ public class Settings {
 
     public static Settings fromJSON(Reader rd) throws JSONException
     {
-        final String ErrorMessage = "Reading settings from JSON: ";
-        final JsonReader jsonReader = new JsonReader( rd );
+        final String MSG_ERROR = "Reading settings from JSON: ";
+        final JsonReader JSON_READER = new JsonReader( rd );
         String email = "";
 
         try {
 
-            jsonReader.beginObject();
+            JSON_READER.beginObject();
 
-            while( jsonReader.hasNext() ) {
-                final String NAME = jsonReader.nextName();
+            while( JSON_READER.hasNext() ) {
+                final String NAME = JSON_READER.nextName();
 
                 if ( NAME.equals( EMAIL_FIELD ) ) {
-                    email = jsonReader.nextString();
+                    email = JSON_READER.nextString();
                 } else {
-                    jsonReader.skipValue();
+                    JSON_READER.skipValue();
                 }
             }
 
-            jsonReader.endObject();
+            JSON_READER.endObject();
         } catch(IOException exc)
         {
-            Log.e( LogTag, ErrorMessage + exc.getMessage() );
+            Log.e( LogTag, MSG_ERROR + exc.getMessage() );
             throw new JSONException( exc.getMessage() );
         } finally {
             try {
-                jsonReader.close();
+                JSON_READER.close();
             } catch(IOException exc) {
-                Log.e( LogTag, ErrorMessage + exc.getMessage() );
+                Log.e( LogTag, MSG_ERROR + exc.getMessage() );
             }
         }
 
