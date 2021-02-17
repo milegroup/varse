@@ -35,4 +35,12 @@
                 android:title="@string/lblImport" />
         </menu>
     </item>
+    <item android:title="@string/lblLegal">
+        <menu>
+            <item
+                android:id="@+id/nav_privacy_policy"
+                android:icon="@android:drawable/ic_dialog_info"
+                android:title="@string/lblPrivacyPolicy" />
+        </menu>
+    </item>
 </menu>

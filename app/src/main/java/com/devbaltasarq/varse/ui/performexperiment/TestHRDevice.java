@@ -61,7 +61,7 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
                 BluetoothUtils.fixBluetoothNeededPermissions( this );
 
         if ( BT_PERMISSIONS_NEEDED.length > 0 ) {
-            Toast.makeText( this, "Needing more Bluetooth permissions", Toast.LENGTH_LONG ).show();
+            Toast.makeText( this, R.string.errNoBluetooth, Toast.LENGTH_LONG ).show();
         }
 
         Log.d( LogTag, "UI started, service tried to bound." );

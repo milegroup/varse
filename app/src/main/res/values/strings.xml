@@ -68,9 +68,13 @@
     <string name="lblRR">rr</string>
     <string name="lblYes">Yes</string>
     <string name="lblNo">No</string>
+    <string name="lblCancel">Cancel</string>
     <string name="lblDefaultTag">default</string>
     <string name="lblUpload">Cloud backup</string>
     <string name="lblRecovery">Recovery</string>
+    <string name="lblPermissionsNeeded">Permissions needed</string>
+    <string name="lblLegal">Legal</string>
+    <string name="lblPrivacyPolicy">Privacy policy</string>
 
     <string name="msgAreYouSure">Are you sure?</string>
     <string name="msgResettingSettings">Resetting settings</string>
@@ -88,6 +92,12 @@
     <string name="msgForceCloudBackup">Force backup to the cloud</string>
     <string name="msgWaitForBackup">Please wait until backup is finished.</string>
     <string name="msgRecovery">Recovery from the cloud</string>
+    <string name="msgReportPermissionsNeeded">
+        This app collects location data to enable Bluetooth
+        connectivity, even when the app is closed or not in use.
+        You are going to be asked next for permission,
+        please allow its use to be able to connect to health devices.
+    </string>
 
     <!-- Errors -->
     <string name="errStore">Unable to initialise storage</string>

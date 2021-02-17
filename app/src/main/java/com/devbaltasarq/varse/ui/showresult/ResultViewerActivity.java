@@ -33,7 +33,8 @@ public class ResultViewerActivity extends AppActivity {
     private static int MAX_TAGS = 5;
 
 
-    @Override @SuppressWarnings("ClickableViewAccessibility")
+    @Override
+    @SuppressWarnings({"ClickableViewAccessibility", "deprecation"})
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate( savedInstanceState );
@@ -58,7 +59,7 @@ public class ResultViewerActivity extends AppActivity {
             this.plotChart();
             final String REPORT = this.resultAnalyzer.buildReport();
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N ) {
                 this.boxdata.setText( Html.fromHtml( REPORT, Html.FROM_HTML_MODE_COMPACT ) );
             } else {
                 this.boxdata.setText( Html.fromHtml( REPORT ) );

@@ -98,11 +98,11 @@ public class MainActivity extends AppActivity
             Settings.open();
         } catch(JSONException exc)
         {
-            this.showStatus(LOG_TAG,
+            this.showStatus( LOG_TAG,
                     this.getString( R.string.errInitializingSettings)
                         + exc.getMessage() );
             Settings.create();
-            this.showStatus(LOG_TAG, this.getString( R.string.msgResettingSettings ) );
+            this.showStatus( LOG_TAG, this.getString( R.string.msgResettingSettings ) );
         }
     }
 
@@ -133,36 +133,49 @@ public class MainActivity extends AppActivity
         boolean toret = false;
 
         if ( !this.block ) {
-            switch( id ) {
-                case R.id.imgOptPerformExperiment:
-                case R.id.lblOptPerformExperiment:
-                case R.id.nav_perform_experiment:
-                    this.startActivity( new Intent( this, PerformExperimentActivity.class ) );
-                    toret = true;
-                    break;
-                case R.id.imgOptExperiments:
-                case R.id.lblOptExperiments:
-                case R.id.nav_experiments:
-                case R.id.nav_export:
-                case R.id.action_export:
-                    this.startActivity( new Intent( this, ExperimentsActivity.class ) );
-                    toret = true;
-                    break;
-                case R.id.imgOptResults:
-                case R.id.lblOptResults:
-                case R.id.nav_results:
-                    this.startActivity( new Intent( this, ResultsActivity.class ) );
-                    toret = true;
-                    break;
-                case R.id.nav_settings:
-                    this.startActivity( new Intent( this, SettingsActivity.class ) );
-                    toret = true;
-                    break;
-                case R.id.nav_import:
-                case R.id.action_import:
-                    this.pickFile();
-                    toret = true;
-                    break;
+            if ( id == R.id.imgOptPerformExperiment
+              || id == R.id.lblOptPerformExperiment
+              || id == R.id.nav_perform_experiment )
+            {
+                this.startActivity( new Intent( this, PerformExperimentActivity.class ) );
+                toret = true;
+            }
+            else
+            if ( id == R.id.imgOptExperiments
+              || id ==  R.id.lblOptExperiments
+              || id ==  R.id.nav_experiments
+              || id ==  R.id.nav_export
+              || id ==  R.id.action_export )
+            {
+                this.startActivity( new Intent( this, ExperimentsActivity.class ) );
+                toret = true;
+            }
+            else
+            if ( id == R.id.imgOptResults
+              || id == R.id.lblOptResults
+              || id == R.id.nav_results )
+            {
+                this.startActivity( new Intent( this, ResultsActivity.class ) );
+                toret = true;
+            }
+            else
+            if ( id == R.id.nav_settings ) {
+                this.startActivity( new Intent( this, SettingsActivity.class ) );
+                toret = true;
+            }
+            else
+            if ( id == R.id.nav_import
+              || id == R.id.action_import )
+            {
+                this.pickFile();
+                toret = true;
+            }
+            else
+            if ( id == R.id.nav_privacy_policy ) {
+                Uri uri = Uri.parse( "https://milegroup.github.io/varse/privacy.html" );
+                Intent intent = new Intent( Intent.ACTION_VIEW, uri );
+                this.startActivity( intent );
+                toret = true;
             }
         } else {
             Log.e(LOG_TAG, "Tried to operate in blocked app" );

@@ -78,6 +78,7 @@ public final class Orm {
     private Orm(Context context)
     {
         this.context = context;
+        DIR_DOWNLOADS = context.getExternalFilesDir( Environment.DIRECTORY_DOWNLOADS );
         this.reset();
     }
 
@@ -1573,6 +1574,5 @@ public final class Orm {
 
     private static FileNameAdapter fileNameAdapter;
     private static Orm instance;
-    private static File DIR_DOWNLOADS = Environment.getExternalStoragePublicDirectory(
-                                                                Environment.DIRECTORY_DOWNLOADS );
+    private static File DIR_DOWNLOADS;
 }

@@ -291,8 +291,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 this.initBluetooth();
 
                 if ( this.bluetoothAdapter == null ) {
-                    this.btDefinitelyNotAvailable = true;
-                    this.disableFurtherScan();
+                    this.setBluetoothUnavailable();
                 }
                 break;
             default:
@@ -335,7 +334,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                     });
 
                     DLG.create().show();
-                    this.btDefinitelyNotAvailable = true;
+                    this.setBluetoothUnavailable();
                 }
                 break;
             default:
@@ -590,20 +589,39 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     {
         if ( !this.btDefinitelyNotAvailable ) {
             final String[] BT_PERMISSIONS_NEEDED =
-                    BluetoothUtils.fixBluetoothNeededPermissions( this );
+                    BluetoothUtils.fixBluetoothNeededPermissions( PerformExperimentActivity.this );
 
             // Launch scanning or ask for permissions
             if ( BT_PERMISSIONS_NEEDED.length > 0 ) {
-                ActivityCompat.requestPermissions(
-                            this,
-                                   BT_PERMISSIONS_NEEDED,
-                                   RQC_ASK_CLEARANCE_FOR_BLUETOOTH );
+                this.reportUserAboutPermissions( BT_PERMISSIONS_NEEDED );
             } else {
                 doStartScanning();
             }
         }
 
         return;
+    }
+
+    /** Reports the user about the need to give permissions. */
+    private void reportUserAboutPermissions(final String[] BT_PERMISSIONS_NEEDED)
+    {
+        final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
+
+        DLG.setTitle( R.string.lblPermissionsNeeded );
+        DLG.setMessage( R.string.msgReportPermissionsNeeded );
+
+        DLG.setPositiveButton( "Ok", (dialogInterface, i) -> {
+            ActivityCompat.requestPermissions(
+                    PerformExperimentActivity.this,
+                    BT_PERMISSIONS_NEEDED,
+                    RQC_ASK_CLEARANCE_FOR_BLUETOOTH );
+        });
+
+        DLG.setNegativeButton(R.string.lblCancel, (dialogInterface, i) -> {
+            PerformExperimentActivity.this.setBluetoothUnavailable();
+        });
+
+        DLG.create().show();
     }
 
     /** Launches deviceSearch for a given period of time */
@@ -703,6 +721,12 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
             this.disableScanUI();
         });
+    }
+
+    private void setBluetoothUnavailable()
+    {
+        this.btDefinitelyNotAvailable = true;
+        this.disableFurtherScan();
     }
 
     /** Enables the launch button or not. */
