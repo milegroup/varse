@@ -507,7 +507,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             // Build RR's, if necessary
             if ( rrs == null ) {
                 rrs = new int[] {
-                        (int) ( ( (float) HR / 60.0 ) * 1000 )
+                        (int) ( 60.0 / ( (float) HR ) * 1000.0 )
                 };
             }
 
