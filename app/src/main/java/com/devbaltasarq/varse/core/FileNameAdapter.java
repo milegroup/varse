@@ -17,11 +17,26 @@ public class FileNameAdapter {
      */
     public String encode(String initialTag)
     {
+        final String BASIC_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789-_";
+        final StringBuilder TORET = new StringBuilder();
+
         if ( initialTag.trim().isEmpty() ) {
             throw new Error( "empty tag" );
         }
 
-        return initialTag.trim().toLowerCase().replace( ' ', '_' );
+        initialTag = initialTag.trim().toLowerCase();
+
+        for(char ch: initialTag.toCharArray()) {
+            if ( BASIC_ALPHABET.indexOf( ch ) >= 0 ) {
+                TORET.append( ch );
+            }
+            else
+            if ( ch == ' ' ) {
+                TORET.append( '_' );
+            }
+        }
+
+        return TORET.toString();
     }
 
     /** @return the only instance of this class. */

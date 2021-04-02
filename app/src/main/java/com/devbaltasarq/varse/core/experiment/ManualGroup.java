@@ -133,7 +133,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
         @Override
         public String toString()
         {
-            return this.getTag() + " (" + this.getTime() + ")";
+            return this.getTag().getHumanReadable() + " (" + this.getTime() + ")";
         }
 
         private Duration time;

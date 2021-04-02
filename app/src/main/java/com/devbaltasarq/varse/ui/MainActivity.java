@@ -98,11 +98,11 @@ public class MainActivity extends AppActivity
             Settings.open();
         } catch(JSONException exc)
         {
-            this.showStatus( LOG_TAG,
+            Log.i( LOG_TAG,
                     this.getString( R.string.errInitializingSettings)
                         + exc.getMessage() );
             Settings.create();
-            this.showStatus( LOG_TAG, this.getString( R.string.msgResettingSettings ) );
+            Log.i( LOG_TAG, this.getString( R.string.msgResettingSettings ) );
         }
     }
 

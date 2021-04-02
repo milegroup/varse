@@ -54,10 +54,10 @@ public class TestJsonConversionTests {
 
         // Events
         long time = System.currentTimeMillis();
-        event1 = new Result.ActivityChangeEvent( time, act1.getTag().toString() );
+        event1 = new Result.ActivityChangeEvent( time, act1.getTag().getHumanReadable() );
         event2 = new Result.BeatEvent( time += 1000, 500 );
-        event3 = new Result.ActivityChangeEvent( time += 1000, act2.getTag().toString() );
-        event4 = new Result.ActivityChangeEvent( time += 1000, act2.getTag().toString() );
+        event3 = new Result.ActivityChangeEvent( time += 1000, act2.getTag().getHumanReadable() );
+        event4 = new Result.ActivityChangeEvent( time += 1000, act2.getTag().getHumanReadable() );
 
         // Result 1
         res1 = new Result( Id.createFake(), time, 10000, usr1, expr2,

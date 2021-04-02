@@ -43,6 +43,7 @@ import com.devbaltasarq.varse.core.bluetooth.ServiceConnectionWithStatus;
 import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
+import com.devbaltasarq.varse.core.experiment.Tag;
 import com.devbaltasarq.varse.ui.AppActivity;
 import com.devbaltasarq.varse.ui.adapters.ListViewActivityArrayAdapter;
 
@@ -256,7 +257,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.getWindow().clearFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
 
         BluetoothUtils.closeBluetoothConnections( this );
-        Log.d(LOG_TAG, "Director finished, stopped chrono, closed connections." );
+        Log.d( LOG_TAG, "Director finished, stopped chrono, closed connections." );
     }
 
     @Override
@@ -277,8 +278,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
         final int NUM_ENTRIES = this.groupsToPlay.length;
 
-        Log.i(LOG_TAG, "starting showActivities()..." );
-        Log.i(LOG_TAG, "entries: " + NUM_ENTRIES );
+        Log.i( LOG_TAG, "starting showActivities()..." );
+        Log.i( LOG_TAG, "entries: " + NUM_ENTRIES );
 
         if ( NUM_ENTRIES > 0 ) {
             final ListViewActivityArrayAdapter ACTS_ADAPTER;
@@ -292,10 +293,10 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         } else {
             LBL_NO_ENTRIES.setVisibility( View.VISIBLE );
             LV_ACTS.setVisibility( View.GONE );
-            Log.i(LOG_TAG, "    no entries" );
+            Log.i( LOG_TAG, "    no entries" );
         }
 
-        Log.i(LOG_TAG, "finished showActivities()" );
+        Log.i( LOG_TAG, "finished showActivities()" );
     }
 
     /** Builds the picture box needed to show images. */
@@ -403,26 +404,26 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     /** @return the current tag, depending on the kind of activity. */
     private String inferTag()
     {
-        String toret = "";
+        Tag toret = null;
 
         if ( this.onExperiment ) {
             final Group GROUP = this.groupsToPlay[ this.groupIndex ];
 
             if ( GROUP instanceof MediaGroup ) {
-                toret = ( (MediaGroup) GROUP ).getTag().toString();
+                toret = ( (MediaGroup) GROUP ).getTag();
             }
             else
             if ( GROUP instanceof ManualGroup ) {
                 final Group.Activity ACTIVITY = GROUP.getActivities()[ this.activityIndex ];
 
-                toret = ACTIVITY.getTag().toString();
+                toret = ACTIVITY.getTag();
             } else {
               throw new Error( "ExperimentDirector.inferTag(): unable to find tag" );
             }
 
         }
 
-        return toret;
+        return toret.getHumanReadable();
     }
 
     /** Skips current activity. */
@@ -773,7 +774,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void loadManualActivity(ManualGroup.ManualActivity manualActivity)
     {
-        this.tvTextBox.setText( manualActivity.getTag().toString() );
+        this.tvTextBox.setText( manualActivity.getTag().getHumanReadable() );
     }
 
     /** Adds a new event to the result.

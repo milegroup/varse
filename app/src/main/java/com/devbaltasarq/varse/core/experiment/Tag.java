@@ -54,13 +54,21 @@ public class Tag {
         return fileNameAdapter.encode( tag );
     }
 
+    /** @return the tag in an user-readable format. */
+    public String getHumanReadable()
+    {
+        String toret = this.tag.replace( '_', ' ' );
+
+        return Character.toUpperCase( toret.charAt( 0 ) ) + toret.substring( 1 );
+    }
+
     /** @return a copy of the tag text, in a different object. */
     public Tag copy()
     {
         return new Tag( this.tag );
     }
 
-    /** Gets the tag in an user-readable format. */
+    /** @return the tag in an user-readable format. */
     @Override
     public String toString()
     {

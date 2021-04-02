@@ -94,7 +94,6 @@ public class Settings {
         String email = "";
 
         try {
-
             JSON_READER.beginObject();
 
             while( JSON_READER.hasNext() ) {

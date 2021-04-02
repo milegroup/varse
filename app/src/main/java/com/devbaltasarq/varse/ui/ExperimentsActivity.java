@@ -5,12 +5,14 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -31,8 +33,9 @@ import java.util.ArrayList;
 public class ExperimentsActivity extends AppActivity {
     public static final String LOG_TAG = ExperimentsActivity.class.getSimpleName();
     public static final int RQC_ADD_EXPERIMENT = 76;
-    public static final int RQC_EDIT_EXPERIMENT = 77;
-    public static final int RQC_ASK_PERMISSION = 78;
+    public static final int RQC_ADD_BY_TEMPLATE = 77;
+    public static final int RQC_EDIT_EXPERIMENT = 78;
+    public static final int RQC_ASK_PERMISSION = 79;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -84,13 +87,47 @@ public class ExperimentsActivity extends AppActivity {
                 // Erase all the media that is not registered (not needed).
                 Orm.get().purgeOrphanMediaFor( selectedExperiment );
             } else {
-                Orm.get().purgeOrphanMedia();
+                if ( requestCode == RQC_ADD_BY_TEMPLATE ) {
+                    selectedExperiment = TemplatesActivity.selectedTemplate.create();
+                    selectedExperiment.setName(
+                            selectedExperiment.getName()
+                            + "_" + this.experimentEntries.size() );
+                    Orm.get().store( selectedExperiment );
+                    this.experimentEntries.add( selectedExperiment );
+                } else {
+                    Orm.get().purgeOrphanMedia();
+                }
             }
         } catch(IOException exc) {
             this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
 
         return;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+    {
+        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
+
+        if ( requestCode == RQC_ASK_PERMISSION ) {
+            // If request is cancelled, the result arrays are empty.
+            if ( grantResults.length > 0
+              && grantResults[ 0 ] == PackageManager.PERMISSION_GRANTED )
+            {
+                doExportExperiment( selectedExperiment );
+            } else {
+                this.showStatus(LOG_TAG, this.getString( R.string.errPermissionDenied) );
+            }
+        }
+
+        return;
+    }
+
+    @Override
+    public boolean askBeforeLeaving()
+    {
+        return false;
     }
 
     private void showExperiments()
@@ -179,12 +216,12 @@ public class ExperimentsActivity extends AppActivity {
 
     public void deleteExperiment(int position, Experiment e)
     {
-        AlertDialog.Builder dlg = new AlertDialog.Builder( this );
+        final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
 
-        dlg.setTitle( this.getString( R.string.lblDelete )
+        DLG.setTitle( this.getString( R.string.lblDelete )
                 + " " + this.getString( R.string.lblExperiment ).toLowerCase() );
-        dlg.setMessage( this.getString( R.string.msgAreYouSure ) );
-        dlg.setPositiveButton( R.string.lblDelete, (dlgIntf, i) -> {
+        DLG.setMessage( this.getString( R.string.msgAreYouSure ) );
+        DLG.setPositiveButton( R.string.lblDelete, (dlgIntf, i) -> {
             loadExperiment( e.getId() );
 
             if ( selectedExperiment != null ) {
@@ -196,8 +233,8 @@ public class ExperimentsActivity extends AppActivity {
                                             + ": " + e.toString() );
             }
         });
-        dlg.setNegativeButton( R.string.lblNo, null );
-        dlg.create().show();
+        DLG.setNegativeButton( R.string.lblNo, null );
+        DLG.create().show();
     }
 
     public void launchExperimentResults(Experiment e)
@@ -232,12 +269,32 @@ public class ExperimentsActivity extends AppActivity {
 
     public void addExperiment()
     {
-        selectedExperiment =
-            EditExperimentActivity.experiment = new Experiment( Id.createFake(), "expr" );
+        final IconListAlertDialog DLG = new IconListAlertDialog( this,
+                                        R.drawable.ic_app_icon,
+                                        R.string.lblExperiment,
+                                        new int[]{ R.drawable.ic_ecg_button, R.drawable.ic_template },
+                                        new int[]{ R.string.lblExperiment, R.string.lblTemplates } );
 
-        this.startActivityForResult(
-                new Intent( ExperimentsActivity.this, EditExperimentActivity.class ),
-                RQC_ADD_EXPERIMENT);
+        DLG.setItemClickListener( (AdapterView<?> adapterView, View view, int i, long l) -> {
+            DLG.dismiss();
+
+            if ( i == 0 ) {
+                selectedExperiment =
+                        EditExperimentActivity.experiment = new Experiment( Id.createFake(), "expr" );
+
+                this.startActivityForResult(
+                        new Intent( ExperimentsActivity.this, EditExperimentActivity.class ),
+                        RQC_ADD_EXPERIMENT );
+            } else {
+                selectedExperiment = null;
+
+                this.startActivityForResult(
+                        new Intent( ExperimentsActivity.this, TemplatesActivity.class ),
+                        RQC_ADD_BY_TEMPLATE );
+            }
+        });
+
+        DLG.show();
     }
 
     public void editExperiment(Experiment e)
@@ -290,33 +347,6 @@ public class ExperimentsActivity extends AppActivity {
                     this.getString( R.string.errExport)
                             + ": " + LBL_EXPERIMENT
                             + ": '" + e.getName() + '\'' );
-        }
-
-        return;
-    }
-
-    @Override
-    public boolean askBeforeLeaving()
-    {
-        return false;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
-    {
-        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
-
-        switch ( requestCode ) {
-            case RQC_ASK_PERMISSION: {
-                // If request is cancelled, the result arrays are empty.
-                if ( grantResults.length > 0
-                  && grantResults[ 0 ] == PackageManager.PERMISSION_GRANTED ) {
-                    doExportExperiment( selectedExperiment );
-                } else {
-                    this.showStatus(LOG_TAG, this.getString( R.string.errPermissionDenied) );
-                }
-                return;
-            }
         }
 
         return;

@@ -75,6 +75,7 @@
     <string name="lblPermissionsNeeded">Permissions needed</string>
     <string name="lblLegal">Legal</string>
     <string name="lblPrivacyPolicy">Privacy policy</string>
+    <string name="lblTemplates">Templates</string>
 
     <string name="msgAreYouSure">Are you sure?</string>
     <string name="msgResettingSettings">Resetting settings</string>

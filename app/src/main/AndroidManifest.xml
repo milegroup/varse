@@ -86,6 +86,9 @@
         <activity android:name=".ui.SettingsActivity"
             android:label="@string/action_settings"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".ui.TemplatesActivity"
+            android:label="@string/lblTemplates"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>

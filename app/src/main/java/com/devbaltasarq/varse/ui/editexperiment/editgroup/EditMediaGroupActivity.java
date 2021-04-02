@@ -242,16 +242,16 @@ public class EditMediaGroupActivity extends EditGroupActivity {
                         final File F = db.storeMedia( EXPERIMENT, mediaFileName, IN );
                         mediaGroup.add( new MediaGroup.MediaActivity( Id.create(), F ) );
                     } else {
-                        this.showStatus(LOG_TAG, this.getString( R.string.msgMediaAlreadyAdded ) );
+                        this.showStatus( LOG_TAG, this.getString( R.string.msgMediaAlreadyAdded ) );
                     }
                 } else {
-                    this.showStatus(LOG_TAG, this.getString( R.string.msgFileNotFound ) );
+                    this.showStatus( LOG_TAG, this.getString( R.string.msgFileNotFound ) );
                 }
             }
         } catch(IOException exc) {
-            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
+            this.showStatus( LOG_TAG, this.getString( R.string.errIO) );
         } catch(IllegalArgumentException exc) {
-            this.showStatus(LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
+            this.showStatus( LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
         }
 
         return;
@@ -266,7 +266,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         if ( uri == null
           || uri.getScheme() == null )
         {
-            this.showStatus(LOG_TAG, this.getString( R.string.msgFileNotFound ) );
+            this.showStatus( LOG_TAG, this.getString( R.string.msgFileNotFound ) );
         }
         else
         if ( uri.getScheme().equals( ContentResolver.SCHEME_CONTENT )
@@ -274,7 +274,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         {
             this.storeMediaFor( DB, uri, MEDIA_GRP );
         } else {
-            this.showStatus(LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
+            this.showStatus( LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
         }
 
         return;

@@ -78,7 +78,7 @@ public final class Orm {
     private Orm(Context context)
     {
         this.context = context;
-        DIR_DOWNLOADS = context.getExternalFilesDir( Environment.DIRECTORY_DOWNLOADS );
+        DIR_DOWNLOADS = Environment.getExternalStoragePublicDirectory( Environment.DIRECTORY_DOWNLOADS );
         this.reset();
     }
 
@@ -122,14 +122,13 @@ public final class Orm {
     /** Create the cache of files. */
     private void createCaches()
     {
-        final File[] FILE_LIST = this.dirDb.listFiles();
         this.filesUser = new HashSet<>();
         this.filesExperiment = new HashSet<>();
         this.filesResult = new HashSet<>();
         this.resultsPerExperiment = new HashMap<>();
 
-        for (File f: FILE_LIST) {
-            this.updateCaches( f );
+        for (final File F: this.dirDb.listFiles()) {
+            this.updateCaches( F );
         }
 
         return;

@@ -39,7 +39,6 @@ import java.io.IOException;
 
 public class ResultsActivity extends AppActivity {
     private final static String LOG_TAG = ResultsActivity.class.getSimpleName();
-    private  static final int RQC_ASK_PERMISSION = 78;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -79,28 +78,7 @@ public class ResultsActivity extends AppActivity {
     {
         super.onResume();
 
-        final Spinner SP_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
-        Persistent expr = null;
-
-        if ( experiment != null ) {
-            expr = experiment;
-        }
-
         this.loadExperimentsSpinner();
-
-        if ( expr != null ) {
-            experiment = expr;
-
-            for(int i = 0; i < SP_EXPERIMENTS.getAdapter().getCount(); ++i) {
-                expr = (Persistent) SP_EXPERIMENTS.getAdapter().getItem( i );
-
-                if ( expr.getId().equals( experiment.getId() ) ) {
-                    SP_EXPERIMENTS.setSelection( i, false );
-                    break;
-                }
-            }
-        }
-
         this.loadResults();
     }
 
@@ -151,13 +129,10 @@ public class ResultsActivity extends AppActivity {
         final int RESULT_REQUEST = ContextCompat.checkSelfPermission( this, PERMISSION );
 
         try {
-            final Result RESULT = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
-
             if ( RESULT_REQUEST != PackageManager.PERMISSION_GRANTED ) {
-                ActivityCompat.requestPermissions( this,
-                        new String[]{ PERMISSION },
-                        RQC_ASK_PERMISSION );
+                this.showStatus(LOG_TAG, this.getString( R.string.errPermissionDenied ) );
             } else {
+                final Result RESULT = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
                 this.doExportResult( RESULT );
             }
         } catch(IOException exc) {
@@ -275,7 +250,7 @@ public class ResultsActivity extends AppActivity {
                 experiment = experimentsList[ 0 ];
             }
         } catch(IOException exc) {
-            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
+            this.showStatus( LOG_TAG, this.getString( R.string.errIO) );
         }
 
         return;
@@ -309,10 +284,11 @@ public class ResultsActivity extends AppActivity {
             }
 
             // Prepare the list view
+            LV_RESULTS.setAdapter( new ListViewResultArrayAdapter(this, new Result[]{} ) );
             LV_RESULTS.setAdapter( new ListViewResultArrayAdapter(this, RESULT_ENTRIES ) );
 
             // Show the experiments list (or maybe not).
-            if ( PO_ENTRIES.length > 0 ) {
+            if ( RESULT_ENTRIES.length > 0 ) {
                 LBL_NO_ENTRIES.setVisibility( View.GONE );
                 LV_RESULTS.setVisibility( View.VISIBLE );
             } else {

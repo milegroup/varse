@@ -109,7 +109,7 @@ public class ResultViewerActivity extends AppActivity {
 
         for (int i = 0; i < EPISODE_TYPES.length; i++) {
             if ( ( EPISODE_INITS[ i ] <= timeValue )
-                    && ( EPISODE_ENDS[ i ] >= timeValue ) )
+              && ( EPISODE_ENDS[ i ] >= timeValue ) )
             {
                 tag = EPISODE_TYPES[ i ];
                 break;
