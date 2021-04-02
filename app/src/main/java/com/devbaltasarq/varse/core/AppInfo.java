@@ -7,7 +7,7 @@ package com.devbaltasarq.varse.core;
 /** The version information for this app. */
 public class AppInfo {
     public static final String NAME = "VARSE";
-    public static final String VERSION = "v1.6.6 20210319";
+    public static final String VERSION = "v1.6.6 20210402";
     public static final String AUTHOR = "MILE Group";
     public static final String EDITION = "Zapatero";
     public static final String APP_EMAIL = "varse.milegroup@gmx.com";
