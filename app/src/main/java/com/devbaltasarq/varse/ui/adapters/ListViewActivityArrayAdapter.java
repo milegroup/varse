@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.ui.adapters;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -71,7 +72,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
         int groupDescImgId = R.drawable.ic_picture_button;
 
         if ( ENTRY_ACTIVITY instanceof MediaGroup.MediaActivity ) {
-            final String FILE_NAME = getFileNameOf( ENTRY_ACTIVITY );
+            final String FILE_NAME = getAssociatedFileNameOf( ENTRY_ACTIVITY );
             final Orm DB = Orm.get();
             final Experiment EXPR = ENTRY_ACTIVITY.getExperimentOwner();
             final MediaGroup MEDIA_GROUP = (MediaGroup) ENTRY_ACTIVITY.getGroup();
@@ -84,7 +85,19 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
             }
 
             if ( thumbnail != null ) {
+                final Bitmap BMP_WHOLE;
+
+                if ( MEDIA_GROUP.getFormat() == MediaGroup.Format.Picture ) {
+                    BMP_WHOLE = BitmapFactory.decodeFile(
+                                    new File( DB.buildMediaDirectoryFor( EXPR ), FILE_NAME )
+                                                .getAbsolutePath() );
+                } else {
+                    BMP_WHOLE = thumbnail;
+                }
+
                 IV_THUMBNAIL.setImageBitmap( thumbnail );
+                IV_THUMBNAIL.setOnClickListener( (v) -> this.showBig( BMP_WHOLE ) );
+
                 rowView.findViewById( R.id.lyMediaDesc ).setVisibility( View.GONE );
                 rowView.findViewById( R.id.lyThumbnail ).setVisibility( View.VISIBLE );
             } else {
@@ -157,7 +170,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
       * @param activity the activity to extract the name from
       * @return the name of the file.
       */
-    private static String getFileNameOf(Group.Activity activity)
+    private static String getAssociatedFileNameOf(Group.Activity activity)
     {
         String toret = activity.toString();
 
@@ -170,5 +183,18 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
         }
 
         return toret;
+    }
+
+    /** Shows the bitmap associated with the thumnail. */
+    private void showBig(Bitmap bmp)
+    {
+        final Context CNTXT = this.getContext();
+        final AlertDialog.Builder DLG = new AlertDialog.Builder( CNTXT );
+        final ImageView IMG_VIEWER = new ImageView( CNTXT );
+
+        IMG_VIEWER.setImageBitmap( bmp );
+
+        DLG.setView( IMG_VIEWER );
+        DLG.create().show();
     }
 }

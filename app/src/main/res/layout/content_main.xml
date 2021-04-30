@@ -31,7 +31,8 @@
                 android:text="@string/lblPerformExperiment" />
 
             <ImageView android:id="@+id/imgOptPerformExperiment"
-                app:srcCompat="@drawable/ic_launch" />
+                app:srcCompat="@drawable/ic_launch"
+                android:contentDescription="@string/lblPerformExperiment"/>
         </TableRow>
 
         <TableRow
@@ -46,6 +47,7 @@
                 android:text="@string/lblExperiments" />
 
             <ImageView android:id="@+id/imgOptExperiments"
+                android:contentDescription="@string/lblExperiments"
                 app:srcCompat="@drawable/ic_ecg" />
         </TableRow>
 
@@ -61,6 +63,7 @@
                 android:text="@string/lblResults" />
 
             <ImageView android:id="@+id/imgOptResults"
+                android:contentDescription="@string/lblResults"
                 app:srcCompat="@drawable/ic_chart" />
         </TableRow>
 

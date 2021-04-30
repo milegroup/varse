@@ -41,7 +41,9 @@ public final class Orm {
 
     private static final String FIELD_ID = Id.FIELD;
     public static final String FIELD_EXPERIMENT_ID = "experiment_id";
+    public static final String FIELD_EXPERIMENT = "experiment";
     public static final String FIELD_USER_ID = "user_id";
+    public static final String FIELD_USER = "user";
     public static final String FIELD_DATE = "date";
     public static final String FIELD_ELAPSED_TIME = "elapsed_time";
     public static final String FIELD_HEART_BEAT_AT = "heart_beat_at";
@@ -68,10 +70,14 @@ public final class Orm {
             "id" + FILE_NAME_PART_SEPARATOR + "$" + FIELD_ID + ".$" + FIELD_EXT;
     private static final String RESULT_FILE_FORMAT =
             "id" + FILE_NAME_PART_SEPARATOR + "$" + FIELD_ID
+            + FILE_NAME_PART_SEPARATOR + FIELD_USER
+            + FILE_NAME_PART_SEPARATOR + "$" + FIELD_USER
+            + FILE_NAME_PART_SEPARATOR + FIELD_EXPERIMENT
+            + FILE_NAME_PART_SEPARATOR + "$" + FIELD_EXPERIMENT
             + FILE_NAME_PART_SEPARATOR + FIELD_USER_ID
-                    + FILE_NAME_PART_SEPARATOR + "$" + FIELD_USER_ID
+            + FILE_NAME_PART_SEPARATOR + "$" + FIELD_USER_ID
             + FILE_NAME_PART_SEPARATOR + FIELD_EXPERIMENT_ID
-                    + FILE_NAME_PART_SEPARATOR + "$" + FIELD_EXPERIMENT_ID
+            + FILE_NAME_PART_SEPARATOR + "$" + FIELD_EXPERIMENT_ID
             + ".$" + FIELD_EXT;
 
     /** Prepares the ORM to operate. */
@@ -156,7 +162,7 @@ public final class Orm {
       */
     private void updateCaches(File f)
     {
-        final Persistent.TypeId TYPE_ID = this.getTypeIdForExt( f );
+        final Persistent.TypeId TYPE_ID = getTypeIdForExt( f );
 
         this.addToGeneralCache( f );
 
@@ -247,7 +253,7 @@ public final class Orm {
       */
     private void removeFromGeneralCache(File f)
     {
-        this.getCacheForType( this.getTypeIdForExt( f ) ).remove( f );
+        this.getCacheForType( getTypeIdForExt( f ) ).remove( f );
     }
 
     /** Add a file to the general cache.
@@ -255,7 +261,7 @@ public final class Orm {
       */
     private void addToGeneralCache(File f)
     {
-        final HashSet<File> CACHED_LIST = this.getCacheForType( this.getTypeIdForExt( f ) );
+        final HashSet<File> CACHED_LIST = this.getCacheForType( getTypeIdForExt( f ) );
 
         if ( !CACHED_LIST.contains( f ) ) {
             CACHED_LIST.add( f );
@@ -267,7 +273,7 @@ public final class Orm {
     /** @return true if the file exists in the cache, false otherwise. */
     private boolean existsInCache(File f)
     {
-        return this.getCacheForType( this.getTypeIdForExt( f ) ).contains( f );
+        return this.getCacheForType( getTypeIdForExt( f ) ).contains( f );
     }
 
     /** Decide the type for a file, following the extension.
@@ -276,7 +282,7 @@ public final class Orm {
      * @return the typeid for that file.
      * @see Persistent
      */
-    private Persistent.TypeId getTypeIdForExt(File f)
+    private static Persistent.TypeId getTypeIdForExt(File f)
     {
         final String EXT_USR = getFileExtFor( Persistent.TypeId.User );
         final String EXT_EXPERIMENT = getFileExtFor( Persistent.TypeId.Experiment );
@@ -293,15 +299,14 @@ public final class Orm {
         else
         if ( f.getName().endsWith( EXT_RESULT ) ) {
             toret = Persistent.TypeId.Result;
+        } else {
+            final String ERROR_MSG = "File ext not found for: "
+                        + f.getName();
+            Log.e( LOG_TAG, ERROR_MSG );
+            throw new Error( ERROR_MSG );
         }
 
         return toret;
-    }
-
-    /** @return the appropriate data file name for this object. */
-    private String getFileNameFor(Persistent p)
-    {
-        return getFileNameFor( p, p.getTypeId() );
     }
 
     /** @return the appropriate data file name for this object. */
@@ -315,11 +320,12 @@ public final class Orm {
                 {
                     if ( po.getId().equals( id ) ) {
                         final String RESULT_INFO = po.getName();
-
                         final Id EXPR_ID = new Id( Result.parseExperimentIdFromName( RESULT_INFO ) );
                         final Id USER_ID = new Id( Result.parseUserIdFromName( RESULT_INFO ) );
+                        final User USR = this.createOrRetrieveUserById( USER_ID );
+                        final Experiment EXPR = (Experiment) this.retrieve( EXPR_ID, Persistent.TypeId.Experiment );
 
-                        toret = this.getFileNameForResult( id, EXPR_ID, USER_ID );
+                        toret = getFileNameForResult( id, EXPR_ID, USER_ID, USR.getName(), EXPR.getName() );
                         break;
                     }
                 }
@@ -342,31 +348,38 @@ public final class Orm {
       * @param id The id of the result file.
       * @param exprId The experiment id for the result data set file.
       * @param userId The user id for the result data set file.
+      * @param userName The name of the user.
+      * @param experimentName the name of the experiment.
       */
-    private String getFileNameForResult(Id id, Id exprId, Id userId)
+    private static String getFileNameForResult(Id id, Id exprId, Id userId, String userName, String experimentName)
     {
         return RESULT_FILE_FORMAT
-                .replace( "$" + FIELD_ID, id.toString() )
                 .replace( "$" + FIELD_EXT, getFileExtFor( Persistent.TypeId.Result ) )
+                .replace( "$" + FIELD_ID, id.toString() )
+                .replace( "$" + FIELD_USER_ID, userId.toString() )
                 .replace( "$" + FIELD_EXPERIMENT_ID, exprId.toString() )
-                .replace( "$" + FIELD_USER_ID, userId.toString() );
+                .replace( "$" + FIELD_USER, FileNameAdapter.get().encode( userName ) )
+                .replace( "$" + FIELD_EXPERIMENT, FileNameAdapter.get().encode( experimentName ) );
     }
 
     /** @return the appropriate data file name for this object. */
-    private String getFileNameFor(Persistent p, Persistent.TypeId typeId)
+    public static String getFileNameFor(Persistent p)
     {
-        String toret;
+        final Persistent.TypeId TYPE_ID = p.getTypeId();
+        String toret = "";
 
-        if ( typeId == Persistent.TypeId.Result ) {
+        if ( TYPE_ID == Persistent.TypeId.Result ) {
             final Result RES = (Result) p;
 
-            toret = this.getFileNameForResult( p.getId(),
+            toret = getFileNameForResult( p.getId(),
                                                RES.getExperiment().getId(),
-                                               RES.getUser().getId() );
+                                               RES.getUser().getId(),
+                                               RES.getUser().getName(),
+                                               RES.getExperiment().getName() );
         } else {
             toret = REGULAR_FILE_FORMAT
                     .replace( "$" + FIELD_ID, p.getId().toString() )
-                    .replace( "$" + FIELD_EXT, getFileExtFor( typeId ) );
+                    .replace( "$" + FIELD_EXT, getFileExtFor( TYPE_ID ) );
         }
 
         return toret;

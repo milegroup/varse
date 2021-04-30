@@ -73,10 +73,10 @@ public class Result extends Persistent {
                             this.events.toArray( new Event[ 0 ] ) );
         }
 
-        private User user;
-        private Experiment experiment;
-        private long dateTime;
-        private ArrayList<Event> events;
+        private final User user;
+        private final Experiment experiment;
+        private final long dateTime;
+        private final ArrayList<Event> events;
     }
 
     /** Base class for events. */
@@ -310,6 +310,7 @@ public class Result extends Persistent {
     /** Creates a new Result, in which the events of the experiment will be stored.
      * @param id   the id of the result.
      * @param dateTime the moment (in millis) this experiment was collected.
+     * @param durationInMillis the duration of the experiment in milliseconds.
      * @param usr the usr this experiment was performed for.
      * @param expr the experiment that was performed.
      */
@@ -659,7 +660,18 @@ public class Result extends Persistent {
         return toret;
     }
 
-    /** Creates the result name. This name contains important info.
+    /** Enumeration fo the structure of the result name. */
+    private enum NameStructure {
+        ResultId,
+        Id,
+        Time,
+        User,
+        Experiment
+    }
+
+    /** Creates the result name (NOT the file name).
+      * This name contains important info.
+      * The name structure must be made consistent with the next functions.
       * @param res The result to build a name for.
       */
     public static String buildResultName(Result res)
@@ -671,12 +683,30 @@ public class Result extends Persistent {
                 + "-e" + res.getExperiment().getId().get();
     }
 
+    private static String[] parseName(String resName)
+    {
+        if ( resName == null
+          || resName.isEmpty() )
+        {
+            resName = "";
+        }
+
+        resName = resName.trim();
+        final String[] TORET = resName.split( "-" );
+
+        if ( TORET.length != NameStructure.values().length ) {
+            throw new Error( "dividing result name in parts" );
+        }
+
+        return TORET;
+    }
+
     /** @return the result's id, reading it from its name.
      * @param resName the name of the result to extract the time from.
      */
     public static long parseIdFromName(String resName)
     {
-        final String STR_ID = parseName( resName )[ 1 ];
+        final String STR_ID = parseName( resName )[ NameStructure.Id.ordinal() ];
 
         if ( STR_ID.charAt( 0 ) != 'i' ) {
             throw new Error( "malformed result name looking for id: "
@@ -692,7 +722,7 @@ public class Result extends Persistent {
       */
     public static long parseTimeFromName(String resName)
     {
-        final String STR_TIME = parseName( resName )[ 2 ];
+        final String STR_TIME = parseName( resName )[ NameStructure.Time.ordinal() ];
 
         if ( STR_TIME.charAt( 0 ) != 't' ) {
             throw new Error( "malformed result name looking for time: "
@@ -708,7 +738,7 @@ public class Result extends Persistent {
      */
     public static long parseUserIdFromName(String resName)
     {
-        final String STR_USR_ID = parseName( resName )[ 3 ];
+        final String STR_USR_ID = parseName( resName )[ NameStructure.User.ordinal() ];
 
         if ( STR_USR_ID.charAt( 0 ) != 'u' ) {
             throw new Error( "malformed result name looking for user's id: "
@@ -724,7 +754,7 @@ public class Result extends Persistent {
      */
     public static long parseExperimentIdFromName(String resName)
     {
-        final String STR_EXPERIMENT_ID = parseName( resName )[ 4 ];
+        final String STR_EXPERIMENT_ID = parseName( resName )[ NameStructure.Experiment.ordinal() ];
 
         if ( STR_EXPERIMENT_ID.charAt( 0 ) != 'e' ) {
             throw new Error( "malformed result name looking for experiment's id: "
@@ -735,27 +765,9 @@ public class Result extends Persistent {
         return Long.parseLong( STR_EXPERIMENT_ID.substring( 1 ) );
     }
 
-    private static String[] parseName(String resName)
-    {
-        if ( resName == null
-          || resName.isEmpty() )
-        {
-            resName = "";
-        }
-
-        resName = resName.trim();
-        final String[] TORET = resName.split( "-" );
-
-        if ( TORET.length != 5 ) {
-            throw new Error( "dividing result name in parts" );
-        }
-
-        return TORET;
-    }
-
-    private long durationInMillis;
-    private User user;
-    private Experiment experiment;
-    private long dateTime;
-    private Event[] events;
+    private final long durationInMillis;
+    private final User user;
+    private final Experiment experiment;
+    private final long dateTime;
+    private final Event[] events;
 }

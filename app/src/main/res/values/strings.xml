@@ -76,6 +76,8 @@
     <string name="lblLegal">Legal</string>
     <string name="lblPrivacyPolicy">Privacy policy</string>
     <string name="lblTemplates">Templates</string>
+    <string name="lblData">Data</string>
+    <string name="lblGraphic">Graphic</string>
 
     <string name="msgAreYouSure">Are you sure?</string>
     <string name="msgResettingSettings">Resetting settings</string>
@@ -96,8 +98,9 @@
     <string name="msgReportPermissionsNeeded">
         This app collects location data to enable Bluetooth
         connectivity, even when the app is closed or not in use.
-        You are going to be asked next for permission,
-        please allow its use to be able to connect to health devices.
+        You are going to be asked next for permission.
+        Please completely allow its use (again, even when the app is not in use),
+        in order to be able to connect to health devices.
     </string>
 
     <!-- Errors -->

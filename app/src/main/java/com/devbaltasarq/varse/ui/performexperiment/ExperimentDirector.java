@@ -54,6 +54,9 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import static android.view.View.SYSTEM_UI_FLAG_FULLSCREEN;
+import static android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+
 
 public class ExperimentDirector extends AppActivity implements HRListenerActivity {
     public static final String LOG_TAG = ExperimentDirector.class.getSimpleName();
@@ -539,6 +542,11 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private void prepareUIForExperiment()
     {
         this.prepareGlobalUI( true );
+
+        // Hide system buttons
+        this.getWindow().getDecorView().setSystemUiVisibility(
+                SYSTEM_UI_FLAG_FULLSCREEN
+                        | SYSTEM_UI_FLAG_HIDE_NAVIGATION );
     }
 
     private void prepareGlobalUI(boolean experimentVisible)

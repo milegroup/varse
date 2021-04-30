@@ -26,9 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Arrays;
-
 import static org.junit.Assert.*;
+
 
 /** Tests the JSON conversion mechanisms. */
 @RunWith(AndroidJUnit4.class)

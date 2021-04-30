@@ -15,7 +15,7 @@ import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.ui.UsersActivity;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
-/** Represents an adapter of the special items for the ListView of media files. */
+/** Represents an adapter of the special items for the ListView of User objects. */
 public class ListViewUserArrayAdapter extends ArrayAdapter<User> {
     public ListViewUserArrayAdapter(Context cntxt, User[] entries)
     {

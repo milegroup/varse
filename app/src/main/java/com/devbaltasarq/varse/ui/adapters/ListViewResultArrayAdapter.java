@@ -16,7 +16,7 @@ import com.devbaltasarq.varse.ui.ResultsActivity;
 import java.util.Calendar;
 import java.util.Locale;
 
-/** Represents an adapter of the special items for the ListView of media files. */
+/** Represents an adapter of the special items for the ListView of Result objects. */
 public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
     public ListViewResultArrayAdapter(Context cntxt, Result[] entries)
     {

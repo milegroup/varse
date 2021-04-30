@@ -17,7 +17,7 @@ import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.VideoGroup;
 import com.devbaltasarq.varse.ui.editexperiment.EditExperimentActivity;
 
-/** Represents an adapter of the special items for the ListView of media files. */
+/** Represents an adapter of the special items for the ListView of groups inside experiments. */
 public class ListViewGroupArrayAdapter extends ArrayAdapter<Group> {
     public ListViewGroupArrayAdapter(Context cntxt, Group[] entries)
     {

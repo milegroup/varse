@@ -7,6 +7,7 @@ package com.devbaltasarq.varse.ui.showresult;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -44,6 +45,13 @@ public class ResultViewerActivity extends AppActivity {
         final ImageButton BT_BACK = this.findViewById( R.id.btCloseResultViewer );
         BT_BACK.setOnClickListener( (v) -> this.finish() );
 
+        // Change data/graphic button
+        final ImageButton BT_GRAPH = this.findViewById( R.id.btGraphic );
+        final ImageButton BT_DATA = this.findViewById( R.id.btData );
+
+        BT_GRAPH.setOnClickListener( (v) -> this.changeToGraphView() );
+        BT_DATA.setOnClickListener( (v) -> this.changeToDataView() );
+
         // Chart image viewer
         final StandardGestures GESTURES = new StandardGestures( this );
         this.chartView = findViewById( R.id.ivChartViewer );
@@ -68,13 +76,47 @@ public class ResultViewerActivity extends AppActivity {
             this.showStatus( LogTag, "Empty data" );
         }
 
-        return;
+        this.changeToGraphView();
     }
 
     @Override
     public boolean askBeforeLeaving()
     {
         return false;
+    }
+
+    /** Show the graphic and hide the data info. */
+    private void changeToGraphView()
+    {
+        final ImageButton BT_GRAPH = this.findViewById( R.id.btGraphic );
+        final ImageButton BT_DATA = this.findViewById( R.id.btData );
+        final ImageView IV_CHART = this.findViewById( R.id.ivChartViewer );
+        final TextView TV_DATA = this.findViewById( R.id.lblTextData );
+
+        BT_DATA.getDrawable().mutate().setTint( 0xff000000 );
+        BT_DATA.setEnabled( true );
+        BT_GRAPH.getDrawable().mutate().setTint( 0xffaaaaaa );
+        BT_GRAPH.setEnabled( false );
+
+        TV_DATA.setVisibility( View.GONE );
+        IV_CHART.setVisibility( View.VISIBLE );
+    }
+
+    /** Show the text view and hide the graphic. */
+    private void changeToDataView()
+    {
+        final ImageButton BT_GRAPH = this.findViewById( R.id.btGraphic );
+        final ImageButton BT_DATA = this.findViewById( R.id.btData );
+        final ImageView IV_CHART = this.findViewById( R.id.ivChartViewer );
+        final TextView TV_DATA = this.findViewById( R.id.lblTextData );
+
+        BT_GRAPH.getDrawable().mutate().setTint( 0xff000000 );
+        BT_GRAPH.setEnabled( true );
+        BT_DATA.getDrawable().mutate().setTint( 0xffaaaaaa );
+        BT_DATA.setEnabled( false );
+
+        IV_CHART.setVisibility( View.GONE );
+        TV_DATA.setVisibility( View.VISIBLE );
     }
 
     /** Sets the color of the data line by tag or the color index.
