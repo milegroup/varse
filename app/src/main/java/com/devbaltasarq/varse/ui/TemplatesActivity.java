@@ -33,6 +33,11 @@ public class TemplatesActivity extends AppActivity {
         BT_CLOSE_TEMPLATES.setOnClickListener( (v) -> this.finish() );
 
         this.setTitle( "" );
+
+        this.tags = new Template.TemplateStrings();
+        this.tags.set( Template.TemplateStrings.TAG_NEUTRAL, this.getString( R.string.lblNeutral ) );
+        this.tags.set( Template.TemplateStrings.TAG_PLEASANT, this.getString( R.string.lblPleasant ) );
+        this.tags.set( Template.TemplateStrings.TAG_UNPLEASANT, this.getString( R.string.lblUnpleasant ) );
     }
 
     @Override
@@ -47,7 +52,8 @@ public class TemplatesActivity extends AppActivity {
     {
         selectedTemplate = Template.Templates.values()[ pos ].create(
                                                     this,
-                                                    Orm.get() );
+                                                    Orm.get(),
+                                                    this.tags );
 
         this.finish();
     }
@@ -83,4 +89,5 @@ public class TemplatesActivity extends AppActivity {
 
     static Template selectedTemplate;
     private ArrayAdapter<String> templatesListAdapter;
+    private Template.TemplateStrings tags;
 }

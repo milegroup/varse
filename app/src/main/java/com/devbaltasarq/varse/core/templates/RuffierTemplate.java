@@ -18,9 +18,9 @@ import java.io.IOException;
 
 
 public class RuffierTemplate extends Template {
-    public RuffierTemplate(Context cntxt, Orm db, String name)
+    public RuffierTemplate(Context cntxt, Orm db, String name, TemplateStrings tags)
     {
-        super( cntxt, db, name );
+        super( cntxt, db, name, tags );
     }
 
     public Experiment create() throws IOException

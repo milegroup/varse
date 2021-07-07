@@ -19,20 +19,24 @@ import java.io.IOException;
 
 
 public class AffectiveTemplate extends Template {
-    public AffectiveTemplate(Context cntxt, Orm db, String name)
+    public AffectiveTemplate(Context cntxt, Orm db, String name, TemplateStrings tags)
     {
-        super( cntxt, db, name );
+        super( cntxt, db, name, tags );
     }
 
-    public Experiment create() throws IOException
+    public Experiment create()
+            throws IOException
     {
         final Orm DB = this.getDb();
         final Experiment EXPR = this.getExperiment();
-        final PictureGroup GRP_NEUTRAL = this.createPictureGroup( "neutral",
+        final PictureGroup GRP_NEUTRAL = this.createPictureGroup(
+                this.getTags().get( TemplateStrings.TAG_NEUTRAL ),
                 new Duration( 9 ) );
-        final PictureGroup GRP_NASTY = this.createPictureGroup( "desagradable",
+        final PictureGroup GRP_NASTY = this.createPictureGroup(
+                this.getTags().get( TemplateStrings.TAG_UNPLEASANT ),
                 new Duration( 9 ) );
-        final PictureGroup GRP_NICE = this.createPictureGroup( "agradable",
+        final PictureGroup GRP_NICE = this.createPictureGroup(
+                this.getTags().get( TemplateStrings.TAG_PLEASANT ),
                 new Duration( 9 ) );
 
         this.fillNeutralGroup( GRP_NEUTRAL );

@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -31,22 +32,23 @@ public abstract class Template {
         Affective,
         Ruffier;
 
-        public Template create(Context cntxt, Orm db)
+        public Template create(Context cntxt, Orm db, TemplateStrings tags)
         {
             Template toret = null;
+            final String TEMPLATE_NAME = this.toString().toLowerCase();
 
             switch ( this ) {
                 case Quick:
-                    toret = new QuickTemplate( cntxt, db, this.toString().toLowerCase() );
+                    toret = new QuickTemplate( cntxt, db, TEMPLATE_NAME, tags );
                     break;
                 case Default:
-                    toret = new DefaultTemplate( cntxt, db, this.toString().toLowerCase() );
+                    toret = new DefaultTemplate( cntxt, db, TEMPLATE_NAME, tags );
                     break;
                 case Affective:
-                    toret = new AffectiveTemplate( cntxt, db, this.toString().toLowerCase() );
+                    toret = new AffectiveTemplate( cntxt, db, TEMPLATE_NAME, tags );
                     break;
                 case Ruffier:
-                    toret = new RuffierTemplate( cntxt, db, this.toString().toLowerCase() );
+                    toret = new RuffierTemplate( cntxt, db, TEMPLATE_NAME, tags );
                     break;
                 default:
                     throw new Error( "Template.createTemplate(): No class found corresponding to enum" );
@@ -68,9 +70,33 @@ public abstract class Template {
         }
     }
 
+    public static class TemplateStrings {
+        public static final int TAG_NEUTRAL = 0;
+        public static final int TAG_PLEASANT = 1;
+        public static final int TAG_UNPLEASANT = 2;
 
-    public Template(Context cntxt, Orm db, String name)
+        public TemplateStrings()
+        {
+            this.strings = new HashMap<Integer, String>( 5 );
+        }
+
+        public void set(int id, String tag)
+        {
+            this.strings.put( id, tag );
+        }
+
+        public String get(int id)
+        {
+            return this.strings.get( id );
+        }
+
+        private final HashMap<Integer, String> strings;
+    }
+
+
+    public Template(Context cntxt, Orm db, String name, TemplateStrings tags)
     {
+        this.tags = tags;
         this.db = db;
         this.context = cntxt;
         this.experiment = new Experiment( Id.create(), name );
@@ -84,6 +110,11 @@ public abstract class Template {
     public Orm getDb()
     {
         return this.db;
+    }
+
+    public TemplateStrings getTags()
+    {
+        return this.tags;
     }
 
     public Context getContext()
@@ -137,6 +168,7 @@ public abstract class Template {
         return new PictureGroup( Id.create(), new Tag( tag ), duration, this.getExperiment() );
     }
 
+    private final TemplateStrings tags;
     private final Experiment experiment;
     private final Context context;
     private final Orm db;

@@ -21,9 +21,9 @@ import java.io.IOException;
 
 
 public class QuickTemplate extends Template {
-    public QuickTemplate(Context cntxt, Orm db, String name)
+    public QuickTemplate(Context cntxt, Orm db, String name, TemplateStrings tags)
     {
-        super( cntxt, db, name );
+        super( cntxt, db, name, tags );
     }
 
     public Experiment create() throws IOException

@@ -20,9 +20,9 @@ import com.devbaltasarq.varse.core.experiment.Tag;
 
 
 public class DefaultTemplate extends Template {
-    public DefaultTemplate(Context cntxt, Orm db, String name)
+    public DefaultTemplate(Context cntxt, Orm db, String name, TemplateStrings tags)
     {
-        super( cntxt, db, name );
+        super( cntxt, db, name, tags );
     }
 
     public Experiment create() throws IOException

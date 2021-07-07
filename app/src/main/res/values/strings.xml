@@ -78,6 +78,9 @@
     <string name="lblTemplates">Templates</string>
     <string name="lblData">Data</string>
     <string name="lblGraphic">Graphic</string>
+    <string name="lblPleasant">Pleasant</string>
+    <string name="lblUnpleasant">Unpleasant</string>
+    <string name="lblNeutral">Neutral</string>
 
     <string name="msgAreYouSure">Are you sure?</string>
     <string name="msgResettingSettings">Resetting settings</string>
