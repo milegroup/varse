@@ -35,9 +35,22 @@ public class TemplatesActivity extends AppActivity {
         this.setTitle( "" );
 
         this.tags = new Template.TemplateStrings();
-        this.tags.set( Template.TemplateStrings.TAG_NEUTRAL, this.getString( R.string.lblNeutral ) );
-        this.tags.set( Template.TemplateStrings.TAG_PLEASANT, this.getString( R.string.lblPleasant ) );
-        this.tags.set( Template.TemplateStrings.TAG_UNPLEASANT, this.getString( R.string.lblUnpleasant ) );
+        this.tags.set( Template.TemplateStrings.TAG_NEUTRAL,
+                       this.getString( R.string.lblNeutral ) );
+        this.tags.set( Template.TemplateStrings.TAG_PLEASANT,
+                       this.getString( R.string.lblPleasant ) );
+        this.tags.set( Template.TemplateStrings.TAG_UNPLEASANT,
+                       this.getString( R.string.lblUnpleasant ) );
+        this.tags.set( Template.TemplateStrings.MSG_RUFFIUS_PHASE1,
+                       this.getString( R.string.msgTemplateRuffiusPhase1 ) );
+        this.tags.set( Template.TemplateStrings.MSG_RUFFIUS_PHASE2,
+                       this.getString( R.string.msgTemplateRuffiusPhase2 ) );
+        this.tags.set( Template.TemplateStrings.MSG_RUFFIUS_PHASE3,
+                       this.getString( R.string.msgTemplateRuffiusPhase3 ) );
+        this.tags.set( Template.TemplateStrings.MSG_DEFAULT_PHASE1,
+                       this.getString( R.string.msgTemplateDefaultPhase1 ) );
+        this.tags.set( Template.TemplateStrings.MSG_QUICK,
+                       this.getString( R.string.msgTemplateQuick ) );
     }
 
     @Override

@@ -71,9 +71,16 @@ public abstract class Template {
     }
 
     public static class TemplateStrings {
-        public static final int TAG_NEUTRAL = 0;
-        public static final int TAG_PLEASANT = 1;
-        public static final int TAG_UNPLEASANT = 2;
+        public static final int TAG_NEUTRAL = 15000;
+        public static final int TAG_PLEASANT = 15001;
+        public static final int TAG_UNPLEASANT = 15002;
+        public static final int MSG_RUFFIUS_PHASE1 = 15003;
+        public static final int MSG_RUFFIUS_PHASE2 = 15004;
+        public static final int MSG_RUFFIUS_PHASE3 = 15005;
+        public static final int MSG_DEFAULT_PHASE1 = 15006;
+        public static final int MSG_DEFAULT_PHASE2 = 15007;
+        public static final int MSG_DEFAULT_PHASE3 = 15008;
+        public static final int MSG_QUICK = 15009;
 
         public TemplateStrings()
         {
@@ -112,7 +119,7 @@ public abstract class Template {
         return this.db;
     }
 
-    public TemplateStrings getTags()
+    public TemplateStrings getStrs()
     {
         return this.tags;
     }
