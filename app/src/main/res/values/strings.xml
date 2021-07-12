@@ -105,6 +105,13 @@
         Please completely allow its use (again, even when the app is not in use),
         in order to be able to connect to health devices.
     </string>
+    <string name="msgTemplateRuffiusPhase1">Stay seated.</string>
+    <string name="msgTemplateRuffiusPhase2">Thirty squats in forty five seconds.</string>
+    <string name="msgTemplateRuffiusPhase3">Go back to sitting position.</string>
+    <string name="msgTemplateDefaultPhase1">Collection will start momentarily.</string>
+    <string name="msgTemplateDefaultPhase2">Relax.</string>
+    <string name="msgTemplateDefaultPhase3">Please stand by…</string>
+    <string name="msgTemplateQuick">Collecting data…</string>
 
     <!-- Errors -->
     <string name="errStore">Unable to initialise storage</string>

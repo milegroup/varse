@@ -31,21 +31,23 @@ public class DefaultTemplate extends Template {
         final Experiment EXPR = this.getExperiment();
         final ManualGroup GRP_POST = this.createManualGroup();
         final ManualGroup GRP_PREV = this.createManualGroup();
-        final PictureGroup GRP_MAIN = this.createPictureGroup( "relax",
-                                                                new Duration( 3, 0 ) );
+        final PictureGroup GRP_MAIN = this.createPictureGroup(
+                            this.getStrs().get( TemplateStrings.MSG_DEFAULT_PHASE1 ),
+                            new Duration( 3, 0 ) );
 
         final ManualGroup.ManualActivity ACT_PREV = new ManualGroup.ManualActivity(
                 Id.create(),
-                new Tag( "Collection will start momentarily." ),
+                new Tag( this.getStrs().get( TemplateStrings.MSG_DEFAULT_PHASE2 ) ),
                 new Duration( 1, 0 ) );
 
         final MediaGroup.MediaActivity ACT_MAIN = new MediaGroup.MediaActivity(
                 Id.create(),
-                this.storeFileFromAssets( R.drawable.template_default_relaxing_image, "relaxing_image.jpg" ) );
+                this.storeFileFromAssets( R.drawable.template_default_relaxing_image,
+        "relaxing_image.jpg" ) );
 
         final ManualGroup.ManualActivity ACT_POST = new ManualGroup.ManualActivity(
                 Id.create(),
-                new Tag( "Please stand by..." ),
+                new Tag( this.getStrs().get( TemplateStrings.MSG_DEFAULT_PHASE3 ) ),
                 new Duration( 1, 0 ) );
 
         GRP_PREV.add( ACT_PREV );
