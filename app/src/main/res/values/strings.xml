@@ -124,6 +124,8 @@
     <string name="errScanFailed">BlueTooth device scan failed</string>
     <string name="errUnknownDevice">Unknown device</string>
     <string name="errNoHR">No health profile detected</string>
+    <string name="errNoUsr">No record name given</string>
+    <string name="errNoExperiment">No experiment chosen</string>
     <string name="errPermissionDenied">Permission denied</string>
     <string name="errUnsupportedFileType">Unsupported file type</string>
     <string name="errUnableToShowActivity">Unable to show activity</string>

@@ -15,23 +15,16 @@ import java.util.Locale;
 public class ResultAnalyzer {
     private static String LogTag = ResultAnalyzer.class.getSimpleName();
 
-    // Stress level calculation constants
-    private static final float STRESS_LEVEL_A1 = -8.64502f;
-    private static final float STRESS_LEVEL_A2 = -0.01312f;
-    private static final float STRESS_LEVEL_A3 = 0.04295f;
-    private static final float STRESS_LEVEL_A4 = -0.01223f;
-    private static final float STRESS_LEVEL_INDEPENDENT_TERM = 5.97785f;
-
     public ResultAnalyzer(final Result RESULT, final int MAX_TAGS)
     {
-        this.dataRRnf = new ArrayList<>();
-        this.episodesInits = new ArrayList<>();
-        this.episodesEnds = new ArrayList<>();
-        this.episodesType = new ArrayList<>();
         this.numOfTags = 0;
-
         this.maxTags = MAX_TAGS;
         this.result = RESULT;
+
+        this.dataRRnf = new ArrayList<>( this.result.size() );
+        this.episodesInits = new ArrayList<>( maxTags );
+        this.episodesEnds = new ArrayList<>( maxTags );
+        this.episodesType = new ArrayList<>( maxTags );
     }
 
     public void analyze()
@@ -41,16 +34,16 @@ public class ResultAnalyzer {
 
         if ( this.dataRRnf.size() > 0 ) {
             // Generates dataHRnf (unfiltered sequence of BPS values)
-            dataHRnf = new ArrayList<>();
-            for (int i = 0; i< dataRRnf.size(); i++) {
+            ArrayList<Float> dataHRnf = new ArrayList<>( dataRRnf.size() );
+            for (int i = 0; i < dataRRnf.size(); i++) {
                 dataHRnf.add(60.0f/(dataRRnf.get(i)/1000.0f));
             }
 
             // Calculates dataBeatTimesnf (unfiltered beat positions in seconds) from dataRRnf
-            dataBeatTimesnf = new ArrayList<>();
+            ArrayList<Float> dataBeatTimesnf = new ArrayList<>( dataRRnf.size() );
             dataBeatTimesnf.add(dataRRnf.get(0)/1000.0f);
-            for (int i=1; i<dataRRnf.size(); i++) {
-                dataBeatTimesnf.add(dataBeatTimesnf.get(i-1)+dataRRnf.get(i)/1000.0f);
+            for (int i = 1; i < dataRRnf.size(); i++) {
+                dataBeatTimesnf.add( dataBeatTimesnf.get(i-1) + ( dataRRnf.get(i)/1000.0f ) );
             }
 
             // Filters beat times creating a sequence of RR intervals
@@ -63,8 +56,8 @@ public class ResultAnalyzer {
             Log.i( LogTag,"Last beat position: " + dataBeatTimes.get( dataBeatTimes.size() - 1 ) + " seconds");
 
             // Creates a series of HR values linearly interpolated
-            dataHRInterpX = new ArrayList<>();
-            dataHRInterp = new ArrayList<>();
+            dataHRInterpX = new ArrayList<>( dataRRnf.size() );
+            dataHRInterp = new ArrayList<>( dataRRnf.size() );
             Interpolate();
 
             Log.i(LogTag,"length of xinterp: "+ dataHRInterpX.size());
@@ -78,21 +71,16 @@ public class ResultAnalyzer {
             this.valuePNN50 = this.calculatePNN50( this.dataRR );
             this.valueMADRR = this.calculateMADRR( this.dataRR );       // Median
             this.valueApEn = this.calculateApEn( this.dataRR, 2, 0.2f ); // Entropy
-            this.valueStress = this.calculateStress();
         }
     }
 
     private void loadData()
     {
-        final Result.Event[] EVENTS = result.buildEventsList();
+        final Result.Event[] EVENTS = this.result.buildEventsList();
         Result.ActivityChangeEvent lastTagEvent = null;
 
         // Init data holders
         this.numOfTags = 0;
-        this.dataRRnf = new ArrayList<>( result.size() );
-        this.episodesInits = new ArrayList<>(maxTags);
-        this.episodesEnds = new ArrayList<>(maxTags);
-        this.episodesType = new ArrayList<>(maxTags);
 
         // Store all data
         for(Result.Event evt: EVENTS) {
@@ -120,19 +108,34 @@ public class ResultAnalyzer {
         Log.i( LogTag,"Size of vector: " + this.dataRRnf.size() );
     }
 
-    private List<Float> getSegmentRR(int tagIndex) {
-        List<Float> segment = new ArrayList<>();
-        Log.i(LogTag,"Getting segment corresponding to tag: "+episodesType.get(tagIndex));
-        for (int indexRR=0; indexRR < dataRR.size(); indexRR++) {
-            if ((dataBeatTimes.get(indexRR)>=episodesInits.get(tagIndex)) && (dataBeatTimes.get(indexRR)<=episodesEnds.get(tagIndex))) {
-                segment.add(dataRR.get(indexRR));
+    private List<Float> getSegmentRR(int tagIndex)
+    {
+        final float EPISODE_INIT = episodesInits.get( tagIndex );
+        final float EPISODE_END = episodesEnds.get( tagIndex );
+        final int APPROX_LENGTH = (int) ( EPISODE_END - EPISODE_INIT ) * 2;
+        final List<Float> TORET = new ArrayList<>( APPROX_LENGTH );
+
+        Log.i( LogTag,"Getting segment corresponding to tag: " + episodesType.get( tagIndex ) );
+
+        for (int indexRR = 0; indexRR < dataRR.size(); indexRR++) {
+            final boolean IS_OVER_LOWER_LIMIT = dataBeatTimes.get(indexRR) >= EPISODE_INIT;
+            final boolean IS_UNDER_UPPER_LIMIT = dataBeatTimes.get(indexRR) <= EPISODE_END;
+
+            if ( !IS_OVER_LOWER_LIMIT ) {
+                continue;
             }
+            else
+            if ( !IS_UNDER_UPPER_LIMIT ) {
+                break;
+            }
+
+            TORET.add( dataRR.get( indexRR ) );
         }
-        Log.i(LogTag,"Num of values: "+segment.size());
 
-        return segment;
+        Log.i( LogTag,"Num of values: "+ TORET.size() );
+
+        return TORET;
     }
-
 
     private void FilterData()
     {
@@ -300,18 +303,15 @@ public class ResultAnalyzer {
         TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateNormHRV(dataRR)) );
         TEXT.append( "</p>" );
 
-        TEXT.append( "<br/><h3>Stress factors</h3>" );
-        TEXT.append( "<p>&nbsp;&nbsp;Stress probe: " );
-        TEXT.append( this.getProbeStress() );
-        TEXT.append( "<br/>&nbsp;&nbsp;&nbsp;&nbsp;(>.5 indicates stress))" );
-        TEXT.append( "</p>" );
-
-        TEXT.append( "<p>&nbsp;&nbsp;MadRR: " );
-        TEXT.append( this.valueMADRR );
+        TEXT.append( "<p>&nbsp;&nbsp;<b>MadRR</b>: " );
+        TEXT.append( String.format( Locale.getDefault(), "%.2f", this.valueMADRR ) );
         TEXT.append( "ms.</p>" );
 
-        TEXT.append( "<p>&nbsp;&nbsp;ApEn: " );
-        TEXT.append( this.valueApEn );
+        // ------------------------
+
+        TEXT.append( "<br/><h3>Non-linear indexes</h3>" );
+        TEXT.append( "<p>&nbsp;&nbsp;<b>ApEn</b>: " );
+        TEXT.append( String.format( Locale.getDefault(), "%.2f", this.valueApEn ) );
         TEXT.append( "ms.</p>" );
 
         // ------------------------
@@ -350,7 +350,7 @@ public class ResultAnalyzer {
         // ------------------------
 
         for (int tagIndex = 0; tagIndex < numOfTags; tagIndex++) {
-            float length = episodesEnds.get(tagIndex)-episodesInits.get(tagIndex);
+            float length = episodesEnds.get(tagIndex) - episodesInits.get(tagIndex);
             List<Float> tagSegment = getSegmentRR(tagIndex);
 
             TEXT.append( "<br/><h3> Tag: " );
@@ -378,6 +378,13 @@ public class ResultAnalyzer {
             TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateNormHRV(tagSegment)) );
             TEXT.append( "</p>" );
 
+            TEXT.append( "<p>&nbsp;&nbsp;<b>MadRR</b>: " );
+            TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateMADRR( tagSegment ) ) );
+            TEXT.append( "ms.</p>" );
+
+            TEXT.append( "<p>&nbsp;&nbsp;<b>ApEn</b>: " );
+            TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateApEn( tagSegment, 2, 0.2f ) ) );
+            TEXT.append( "ms.</p>" );
 
             List<Float> tagPowerbands = calculateSpectrum(episodesInits.get(tagIndex), episodesEnds.get(tagIndex));
             TEXT.append( "<p>&nbsp;&nbsp;<b>Total spectral power</b>: " );
@@ -777,26 +784,6 @@ public class ResultAnalyzer {
         return Collections.max(diffs);
     }
 
-    /** Calculates the stress level, resulting in a value between -1 and >1. */
-    private float calculateStress()
-    {
-        final float TERM1 = STRESS_LEVEL_A1 * this.valueApEn;
-        final float TERM2 = STRESS_LEVEL_A2 * this.valueMADRR;
-        final float TERM3 = STRESS_LEVEL_A3 * this.valueMeanBPM;
-        final float TERM4 = STRESS_LEVEL_A4 * this.valuePNN50;
-
-        this.valueStress = TERM1 + TERM2 + TERM3 + TERM4 + STRESS_LEVEL_INDEPENDENT_TERM;
-        return this.valueStress;
-    }
-
-    /** @return a value between 0 and 1. Values > .5 indicate stress. */
-    public float getProbeStress()
-    {
-        final float ODDS_RATIO = (float) Math.exp( this.valueStress );
-
-        return ( ODDS_RATIO / ( ODDS_RATIO + 1 ) );
-    }
-
     public int getRRnfCount()
     {
         return this.dataRRnf.size();
@@ -827,24 +814,24 @@ public class ResultAnalyzer {
         return this.dataHRInterpX.toArray( new Float[ 0 ] );
     }
 
-    private List<Float> dataRRnf;
-    private List<Float> dataHRnf;
-    private List<Float> dataBeatTimesnf;
+
+    private final int maxTags;
+    private final List<Float> dataRRnf;
+    private final List<Float> episodesInits;
+    private final List<Float> episodesEnds;
+    private final List<String> episodesType;
+
+    private int numOfTags;
+    private int filteredData;
+
     private List<Float> dataBeatTimes;
     private List<Float> dataRR;
     private List<Float> dataHR;
     private List<Float> dataHRInterpX;
     private List<Float> dataHRInterp;
-    private List<Float> episodesInits;
-    private List<Float> episodesEnds;
-    private List<String> episodesType;
-    private int maxTags;
-    private int numOfTags;
-    private int filteredData;
 
     private float valueMADRR;
     private float valueApEn;
-    private float valueStress;
     private float valuePNN50;
     private float valueSTD;
     private float valueRMS;

@@ -876,14 +876,14 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         this.onUserChosen( USR_NAME );
 
         if ( chosenUser == null) {
-           this.showStatus(LOG_TAG, "No chosen user." );
+           this.showStatus( LOG_TAG, this.getString( R.string.errNoUsr ) );
            return;
         }
 
         this.onExperimentChosen( CB_EXPERIMENT.getSelectedItemPosition() );
 
         if ( chosenExperiment == null ) {
-           this.showStatus(LOG_TAG, "No chosen experiment." );
+           this.showStatus( LOG_TAG, this.getString( R.string.errNoExperiment ) );
            return;
         }
 
