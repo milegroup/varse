@@ -34,7 +34,7 @@ public class QuickTemplate extends Template {
 
         final ManualGroup.ManualActivity ACT = new ManualGroup.ManualActivity(
                 Id.create(),
-                new Tag( this.getStrs().get( TemplateStrings.MSG_QUICK ) ),
+                new Tag( this.getStrs().get( TemplateStrings.Id.MSG_QUICK ) ),
                 new Duration( 3, 0 ) );
 
         GRP.add( ACT );

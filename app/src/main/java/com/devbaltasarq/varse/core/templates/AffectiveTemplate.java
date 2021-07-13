@@ -30,13 +30,13 @@ public class AffectiveTemplate extends Template {
         final Orm DB = this.getDb();
         final Experiment EXPR = this.getExperiment();
         final PictureGroup GRP_NEUTRAL = this.createPictureGroup(
-                this.getStrs().get( TemplateStrings.TAG_NEUTRAL ),
+                this.getStrs().get( TemplateStrings.Id.TAG_NEUTRAL ),
                 new Duration( 9 ) );
         final PictureGroup GRP_NASTY = this.createPictureGroup(
-                this.getStrs().get( TemplateStrings.TAG_UNPLEASANT ),
+                this.getStrs().get( TemplateStrings.Id.TAG_UNPLEASANT ),
                 new Duration( 9 ) );
         final PictureGroup GRP_NICE = this.createPictureGroup(
-                this.getStrs().get( TemplateStrings.TAG_PLEASANT ),
+                this.getStrs().get( TemplateStrings.Id.TAG_PLEASANT ),
                 new Duration( 9 ) );
 
         this.fillNeutralGroup( GRP_NEUTRAL );

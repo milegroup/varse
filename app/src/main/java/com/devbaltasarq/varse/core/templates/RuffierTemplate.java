@@ -33,17 +33,17 @@ public class RuffierTemplate extends Template {
 
         final ManualGroup.ManualActivity ACT_PREV = new ManualGroup.ManualActivity(
                 Id.create(),
-                new Tag( this.getStrs().get( TemplateStrings.MSG_RUFFIUS_PHASE1 ) ),
+                new Tag( this.getStrs().get( TemplateStrings.Id.MSG_RUFFIUS_PHASE1 ) ),
                 new Duration( 1, 0 ) );
 
         final ManualGroup.ManualActivity ACT_MAIN = new ManualGroup.ManualActivity(
                 Id.create(),
-                new Tag( this.getStrs().get( TemplateStrings.MSG_RUFFIUS_PHASE2 ) ),
+                new Tag( this.getStrs().get( TemplateStrings.Id.MSG_RUFFIUS_PHASE2 ) ),
                 new Duration( 0, 45 ) );
 
         final ManualGroup.ManualActivity ACT_POST = new ManualGroup.ManualActivity(
                 Id.create(),
-                new Tag( this.getStrs().get( TemplateStrings.MSG_RUFFIUS_PHASE3 ) ),
+                new Tag( this.getStrs().get( TemplateStrings.Id.MSG_RUFFIUS_PHASE3 ) ),
                 new Duration( 1, 0 ) );
 
         GRP_PREV.add( ACT_PREV );

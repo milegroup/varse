@@ -32,12 +32,12 @@ public class DefaultTemplate extends Template {
         final ManualGroup GRP_POST = this.createManualGroup();
         final ManualGroup GRP_PREV = this.createManualGroup();
         final PictureGroup GRP_MAIN = this.createPictureGroup(
-                            this.getStrs().get( TemplateStrings.MSG_DEFAULT_PHASE1 ),
+                            this.getStrs().get( TemplateStrings.Id.MSG_DEFAULT_PHASE1 ),
                             new Duration( 3, 0 ) );
 
         final ManualGroup.ManualActivity ACT_PREV = new ManualGroup.ManualActivity(
                 Id.create(),
-                new Tag( this.getStrs().get( TemplateStrings.MSG_DEFAULT_PHASE2 ) ),
+                new Tag( this.getStrs().get( TemplateStrings.Id.MSG_DEFAULT_PHASE2 ) ),
                 new Duration( 1, 0 ) );
 
         final MediaGroup.MediaActivity ACT_MAIN = new MediaGroup.MediaActivity(
@@ -47,7 +47,7 @@ public class DefaultTemplate extends Template {
 
         final ManualGroup.ManualActivity ACT_POST = new ManualGroup.ManualActivity(
                 Id.create(),
-                new Tag( this.getStrs().get( TemplateStrings.MSG_DEFAULT_PHASE3 ) ),
+                new Tag( this.getStrs().get( TemplateStrings.Id.MSG_DEFAULT_PHASE3 ) ),
                 new Duration( 1, 0 ) );
 
         GRP_PREV.add( ACT_PREV );

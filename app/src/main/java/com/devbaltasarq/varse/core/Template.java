@@ -71,33 +71,35 @@ public abstract class Template {
     }
 
     public static class TemplateStrings {
-        public static final int TAG_NEUTRAL = 15000;
-        public static final int TAG_PLEASANT = 15001;
-        public static final int TAG_UNPLEASANT = 15002;
-        public static final int MSG_RUFFIUS_PHASE1 = 15003;
-        public static final int MSG_RUFFIUS_PHASE2 = 15004;
-        public static final int MSG_RUFFIUS_PHASE3 = 15005;
-        public static final int MSG_DEFAULT_PHASE1 = 15006;
-        public static final int MSG_DEFAULT_PHASE2 = 15007;
-        public static final int MSG_DEFAULT_PHASE3 = 15008;
-        public static final int MSG_QUICK = 15009;
+        public enum Id {
+            TAG_NEUTRAL,
+            TAG_PLEASANT,
+            TAG_UNPLEASANT,
+            MSG_RUFFIUS_PHASE1,
+            MSG_RUFFIUS_PHASE2,
+            MSG_RUFFIUS_PHASE3,
+            MSG_DEFAULT_PHASE1,
+            MSG_DEFAULT_PHASE2,
+            MSG_DEFAULT_PHASE3,
+            MSG_QUICK
+        }
 
         public TemplateStrings()
         {
-            this.strings = new HashMap<Integer, String>( 5 );
+            this.strings = new HashMap<>( 5 );
         }
 
-        public void set(int id, String tag)
+        public void set(Id id, String tag)
         {
             this.strings.put( id, tag );
         }
 
-        public String get(int id)
+        public String get(Id id)
         {
             return this.strings.get( id );
         }
 
-        private final HashMap<Integer, String> strings;
+        private final HashMap<Id, String> strings;
     }
 
 
