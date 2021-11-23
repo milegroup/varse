@@ -21,7 +21,7 @@ import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;
-import com.devbaltasarq.varse.core.FileNameAdapter;
+import com.devbaltasarq.varse.core.PlainStringEncoder;
 import com.devbaltasarq.varse.core.Orm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Settings;
@@ -91,7 +91,7 @@ public class MainActivity extends AppActivity
         super.onStart();
 
         // Initialize the database
-        Orm.init( this.getApplicationContext(), FileNameAdapter.get() );
+        Orm.init( this.getApplicationContext(), PlainStringEncoder.get() );
 
         // Initialize settings
         try {

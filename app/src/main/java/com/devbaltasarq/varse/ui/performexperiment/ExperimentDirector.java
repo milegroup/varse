@@ -405,7 +405,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     }
 
     /** @return the current tag, depending on the kind of activity. */
-    private String inferTag()
+    private Tag inferTag()
     {
         Tag toret = null;
 
@@ -426,7 +426,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         }
 
-        return toret.getHumanReadable();
+        return toret;
     }
 
     /** Skips current activity. */

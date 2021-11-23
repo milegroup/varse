@@ -1,10 +1,10 @@
 package com.devbaltasarq.varse.core.experiment;
 
-import com.devbaltasarq.varse.core.FileNameAdapter;
+import com.devbaltasarq.varse.core.PlainStringEncoder;
 
 /** Represents a Tag.
   * Depends on FileNameAdapter, in order to adapt tags.
-  * @see FileNameAdapter
+  * @see PlainStringEncoder
   */
 public class Tag {
     public static final String FIELD = "tag";
@@ -14,7 +14,7 @@ public class Tag {
     public Tag(String tag)
     {
         if ( fileNameAdapter == null ) {
-            fileNameAdapter = FileNameAdapter.get();
+            fileNameAdapter = PlainStringEncoder.get();
         }
 
         this.tag = encode( tag );
@@ -48,7 +48,7 @@ public class Tag {
     }
 
     /** @return a string formatted as a tag needs to accomplish with standards.
-      * @see FileNameAdapter, which converts the tag appropriately. */
+      * @see PlainStringEncoder , which converts the tag appropriately. */
     public String encode(String tag)
     {
         return fileNameAdapter.encode( tag );
@@ -68,7 +68,7 @@ public class Tag {
         return new Tag( this.tag );
     }
 
-    /** @return the tag in an user-readable format. */
+    /** @return the tag in a NON user-readable format. */
     @Override
     public String toString()
     {
@@ -76,5 +76,5 @@ public class Tag {
     }
 
     private String tag;
-    private static FileNameAdapter fileNameAdapter;
+    private static PlainStringEncoder fileNameAdapter;
 }
