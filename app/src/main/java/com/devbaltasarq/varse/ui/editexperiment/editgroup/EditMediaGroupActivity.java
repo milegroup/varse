@@ -21,7 +21,7 @@ import android.widget.Spinner;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.core.experiment.PictureGroup;
@@ -219,7 +219,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
      * @param db the orm to operate with
      * @param mediaGroup the mediagroup to create the media activity into
      */
-    private void storeMediaFor(Orm db, Uri uri, MediaGroup mediaGroup)
+    private void storeMediaFor(Ofm db, Uri uri, MediaGroup mediaGroup)
     {
         try {
             String mediaFileName = uri.getLastPathSegment();
@@ -236,7 +236,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
                 if ( IN != null ) {
                     final Experiment EXPERIMENT = mediaGroup.getExperimentOwner();
 
-                    mediaFileName = Orm.buildMediaFileNameForDbFromMediaFileName( mediaFileName );
+                    mediaFileName = Ofm.buildMediaFileNameForDbFromMediaFileName( mediaFileName );
 
                     if ( !db.existsMedia( EXPERIMENT, mediaFileName ) ) {
                         final File F = db.storeMedia( EXPERIMENT, mediaFileName, IN );
@@ -260,7 +260,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     /** Stores the media resource in the app's filesystem. */
     private void storeMedia(Uri uri)
     {
-        final Orm DB = Orm.get();
+        final Ofm DB = Ofm.get();
         final MediaGroup MEDIA_GRP = (MediaGroup) group;
 
         if ( uri == null
@@ -289,7 +289,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     @Override
     public void deleteActivity(Group.Activity act)
     {
-        final Orm DB = Orm.get();
+        final Ofm DB = Ofm.get();
         final MediaGroup.MediaActivity MEDIA_ACTIVITY = (MediaGroup.MediaActivity) act;
         final String FILE_NAME = MEDIA_ACTIVITY.getFile().getName();
         final Experiment OWNER = group.getExperimentOwner();

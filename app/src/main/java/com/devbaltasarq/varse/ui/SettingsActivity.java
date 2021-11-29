@@ -1,7 +1,7 @@
 package com.devbaltasarq.varse.ui;
 
+
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,7 +20,7 @@ import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;
 import com.devbaltasarq.varse.core.DropboxUsrClient;
 import com.devbaltasarq.varse.core.MailClient;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Settings;
 import com.dropbox.core.DbxException;
@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+
 
 public class SettingsActivity extends AppActivity {
     public final static String LOG_TAG = SettingsActivity.class.getSimpleName();
@@ -76,12 +77,7 @@ public class SettingsActivity extends AppActivity {
 
                 DLG.setMessage( R.string.msgAreYouSure );
                 DLG.setNegativeButton( R.string.lblBack, null );
-                DLG.setPositiveButton( R.string.lblRecovery, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        SELF.recovery();
-                    }
-                });
+                DLG.setPositiveButton( R.string.lblRecovery, (dialogInterface, i) -> SELF.recovery() );
 
                 DLG.show();
         };
@@ -269,7 +265,7 @@ public class SettingsActivity extends AppActivity {
         final ImageButton BT_RECOVERY = this.findViewById( R.id.btForceBackup );
         final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbProgressRecovery );
         final SettingsActivity SELF = this;
-        final Orm ORM = Orm.get();
+        final Ofm OFM = Ofm.get();
         final String USER_EMAIL = Settings.get().getEmail();
 
         BT_RECOVERY.setEnabled( false );
@@ -302,14 +298,14 @@ public class SettingsActivity extends AppActivity {
 
                     // Download everything
                     for(String fileName: dataFiles) {
-                        DBOX_SERVICE.downloadDataFileTo( fileName, ORM );
+                        DBOX_SERVICE.downloadDataFileTo( fileName, OFM );
 
                         PB_PROGRESS.incrementProgressBy( 1 );
                     }
 
                     for(Pair<String, String[]> resFileSet: resFiles) {
                         for(String resFile: resFileSet.second) {
-                            DBOX_SERVICE.downloadResFileTo( resFileSet.first, resFile, ORM );
+                            DBOX_SERVICE.downloadResFileTo( resFileSet.first, resFile, OFM );
 
                             PB_PROGRESS.incrementProgressBy( 1 );
                         }
@@ -326,7 +322,7 @@ public class SettingsActivity extends AppActivity {
                     SELF.runOnUiThread( () -> {
                         PB_PROGRESS.setVisibility( View.GONE );
                         BT_RECOVERY.setEnabled( true );
-                        ORM.reset();
+                        OFM.reset();
 
                         SELF.handler.removeCallbacksAndMessages( null );
                         SELF.handlerThread.quit();
@@ -351,7 +347,7 @@ public class SettingsActivity extends AppActivity {
         final ImageButton BT_FORCE_BACKUP = this.findViewById( R.id.btForceBackup );
         final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbProgressCompleteBackup );
         final SettingsActivity SELF = this;
-        final Orm ORM = Orm.get();
+        final Ofm OFM = Ofm.get();
         final String USR_EMAIL = Settings.get().getEmail();
 
         BT_FORCE_BACKUP.setEnabled( false );
@@ -367,15 +363,14 @@ public class SettingsActivity extends AppActivity {
 
                     // Collect files
                     final ArrayList<File> DATA_FILES = new ArrayList<>();
-                    final List<Pair<String, File[]>> RES_FILES = ORM.enumerateResFiles();
-                    int numFiles = 0;
+                    final List<Pair<String, File[]>> RES_FILES = OFM.enumerateResFiles();
 
                     for(Persistent.TypeId typeId: Persistent.TypeId.values()) {
-                        DATA_FILES.addAll( Arrays.asList( ORM.enumerateFiles( typeId ) ) );
+                        DATA_FILES.addAll( Arrays.asList( OFM.enumerateFiles( typeId ) ) );
                     }
 
                     // Find the total number of files
-                    numFiles = DATA_FILES.size();
+                    int numFiles = DATA_FILES.size();
 
                     for(Pair<String, File[]> subDir: RES_FILES) {
                         numFiles += subDir.second.length;

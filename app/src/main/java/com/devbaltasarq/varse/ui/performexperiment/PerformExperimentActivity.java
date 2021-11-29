@@ -32,8 +32,8 @@ import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
-import com.devbaltasarq.varse.core.Orm;
-import com.devbaltasarq.varse.core.PartialObject;
+import com.devbaltasarq.varse.core.Ofm;
+import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
@@ -454,12 +454,12 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             this.addrFound.add( ADDR );
             this.discoveredDevices.add( btDevice );
 
-            PerformExperimentActivity.this.runOnUiThread( () -> {
+            PerformExperimentActivity.this.runOnUiThread( () ->
                 this.showStatus( btDevice.getName()
                                  + " " + this.getString( R.string.lblDeviceFound ).toLowerCase()
-                                 + "..." );
+                                 + "..." )
 
-            });
+            );
         }
 
         return;
@@ -617,9 +617,9 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                     RQC_ASK_CLEARANCE_FOR_BLUETOOTH );
         });
 
-        DLG.setNegativeButton(R.string.lblCancel, (dialogInterface, i) -> {
-            PerformExperimentActivity.this.setBluetoothUnavailable();
-        });
+        DLG.setNegativeButton( R.string.lblCancel, (dialogInterface, i) ->
+            PerformExperimentActivity.this.setBluetoothUnavailable()
+        );
 
         DLG.create().show();
     }
@@ -699,9 +699,9 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
     public void denyAdditionToList(BluetoothDevice btDevice)
     {
-        PerformExperimentActivity.this.runOnUiThread( () -> {
-            this.showStatus( this.getString( R.string.errNoHR) + ": " + btDevice.getName() );
-        });
+        PerformExperimentActivity.this.runOnUiThread( () ->
+            this.showStatus( this.getString( R.string.errNoHR) + ": " + btDevice.getName() )
+        );
     }
 
     public void filteringFinished()
@@ -748,14 +748,14 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         return;
     }
 
-    /** Reads the data from the ORM. */
+    /** Reads the data from the Ofm. */
     private void obtainData()
     {
         final FloatingActionButton FB_LAUNCH_EXPR = this.findViewById( R.id.fbPerformExperiment );
 
         // Read experiment's and user's names
         try {
-            final Orm DB = Orm.get();
+            final Ofm DB = Ofm.get();
 
             this.experimentsList = DB.enumerateExperiments();
 
@@ -814,7 +814,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         if ( pos >= 0
           && pos < this.experimentsList.length )
         {
-            final Orm DB = Orm.get();
+            final Ofm DB = Ofm.get();
             final PartialObject PARTIAL_EXPERIMENT = this.experimentsList[ pos ];
             Experiment experiment = null;
 
@@ -849,7 +849,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             userName = userName.trim();
 
             try {
-                usr = Orm.get().createOrRetrieveUserByName( userName );
+                usr = Ofm.get().createOrRetrieveUserByName( userName );
             } catch(IOException exc)
             {
                 Log.d(LOG_TAG, exc.getMessage()

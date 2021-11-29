@@ -20,8 +20,8 @@ import android.widget.TextView;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
-import com.devbaltasarq.varse.core.PartialObject;
+import com.devbaltasarq.varse.core.Ofm;
+import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.ui.editexperiment.EditExperimentActivity;
 import com.devbaltasarq.varse.ui.adapters.ListViewExperimentArrayAdapter;
@@ -72,30 +72,30 @@ public class ExperimentsActivity extends AppActivity {
             if ( resultCode == RSC_SAVE_DATA ) {
                 if ( requestCode == RQC_ADD_EXPERIMENT ) {
                     // Add new experiment
-                    Orm.get().store( selectedExperiment );
+                    Ofm.get().store( selectedExperiment );
                     this.experimentEntries.add( selectedExperiment );
                 }
                 else
                 if ( requestCode == RQC_EDIT_EXPERIMENT ) {
                     // Edit a given experiment
-                    Orm.get().store( selectedExperiment );
+                    Ofm.get().store( selectedExperiment );
                     this.substituteExperiment( selectedExperiment );
                 }
 
                 this.updateExperimentsList();
 
                 // Erase all the media that is not registered (not needed).
-                Orm.get().purgeOrphanMediaFor( selectedExperiment );
+                Ofm.get().purgeOrphanMediaFor( selectedExperiment );
             } else {
                 if ( requestCode == RQC_ADD_BY_TEMPLATE ) {
                     selectedExperiment = TemplatesActivity.selectedTemplate.create();
                     selectedExperiment.setName(
                             selectedExperiment.getName()
                             + "_" + this.experimentEntries.size() );
-                    Orm.get().store( selectedExperiment );
+                    Ofm.get().store( selectedExperiment );
                     this.experimentEntries.add( selectedExperiment );
                 } else {
-                    Orm.get().purgeOrphanMedia();
+                    Ofm.get().purgeOrphanMedia();
                 }
             }
         } catch(IOException exc) {
@@ -135,7 +135,7 @@ public class ExperimentsActivity extends AppActivity {
         try {
             final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
             final ListView LV_EXPERIMENTS = this.findViewById( R.id.lvExperiments );
-            final PartialObject[] PO_ENTRIES = Orm.get().enumerateExperiments();
+            final PartialObject[] PO_ENTRIES = Ofm.get().enumerateExperiments();
 
             // Prepare the list of experiments
             this.experimentEntries = new ArrayList<>( PO_ENTRIES.length );
@@ -192,7 +192,7 @@ public class ExperimentsActivity extends AppActivity {
 
         try {
             selectedExperiment =
-                            (Experiment) Orm.get().retrieve( id, Persistent.TypeId.Experiment );
+                            (Experiment) Ofm.get().retrieve( id, Persistent.TypeId.Experiment );
         } catch(IOException exc)
         {
             Log.e(LOG_TAG, "error retrieving experiment: " + exc.getMessage() );
@@ -225,7 +225,7 @@ public class ExperimentsActivity extends AppActivity {
             loadExperiment( e.getId() );
 
             if ( selectedExperiment != null ) {
-                Orm.get().remove( selectedExperiment );
+                Ofm.get().remove( selectedExperiment );
                 this.experimentEntries.remove( position );
                 this.updateExperimentsList();
             } else {
@@ -243,7 +243,7 @@ public class ExperimentsActivity extends AppActivity {
 
         try {
              selectedExperiment = (Experiment)
-                                  Orm.get().retrieve( e.getId(), Persistent.TypeId.Experiment );
+                                  Ofm.get().retrieve( e.getId(), Persistent.TypeId.Experiment );
         } catch(IOException exc) {
             this.showStatus(LOG_TAG,
                              this.getString( R.string.msgFileNotFound )
@@ -333,7 +333,7 @@ public class ExperimentsActivity extends AppActivity {
     private void doExportExperiment(Experiment e)
     {
         final String LBL_EXPERIMENT = this.getString( R.string.lblExperiment );
-        final Orm DB = Orm.get();
+        final Ofm DB = Ofm.get();
 
         try {
             DB.exportExperiment( null, e );

@@ -5,7 +5,7 @@ import android.util.Log;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 
 import java.io.File;
 
@@ -54,7 +54,7 @@ public class VideoGroup extends MediaGroup {
     {
         final File F = act.getFile();
 
-        if ( !Orm.extractFileExt( F ).isEmpty() ) {
+        if ( !Ofm.extractFileExt( F ).isEmpty() ) {
             if ( !MimeTools.isVideo( act.getFile() ) ) {
                 throw new Error( act.getFile() + " not a video." );
             }
@@ -87,7 +87,7 @@ public class VideoGroup extends MediaGroup {
         int toret = 0;
 
         for(MediaActivity mact: this.get()) {
-            toret += MediaActivity.calculateVideoDuration( Orm.get(), mact );
+            toret += MediaActivity.calculateVideoDuration( Ofm.get(), mact );
         }
 
         return new Duration( toret );

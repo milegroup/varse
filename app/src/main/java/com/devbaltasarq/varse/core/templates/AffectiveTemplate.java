@@ -10,7 +10,7 @@ import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Template;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.core.experiment.PictureGroup;
@@ -19,7 +19,7 @@ import java.io.IOException;
 
 
 public class AffectiveTemplate extends Template {
-    public AffectiveTemplate(Context cntxt, Orm db, String name, TemplateStrings tags)
+    public AffectiveTemplate(Context cntxt, Ofm db, String name, TemplateStrings tags)
     {
         super( cntxt, db, name, tags );
     }
@@ -27,7 +27,7 @@ public class AffectiveTemplate extends Template {
     public Experiment create()
             throws IOException
     {
-        final Orm DB = this.getDb();
+        final Ofm DB = this.getDb();
         final Experiment EXPR = this.getExperiment();
         final PictureGroup GRP_NEUTRAL = this.createPictureGroup(
                 this.getStrs().get( TemplateStrings.Id.TAG_NEUTRAL ),

@@ -32,9 +32,9 @@ public abstract class Template {
         Affective,
         Ruffier;
 
-        public Template create(Context cntxt, Orm db, TemplateStrings tags)
+        public Template create(Context cntxt, Ofm db, TemplateStrings tags)
         {
-            Template toret = null;
+            Template toret;
             final String TEMPLATE_NAME = this.toString().toLowerCase();
 
             switch ( this ) {
@@ -103,7 +103,7 @@ public abstract class Template {
     }
 
 
-    public Template(Context cntxt, Orm db, String name, TemplateStrings tags)
+    public Template(Context cntxt, Ofm db, String name, TemplateStrings tags)
     {
         this.tags = tags;
         this.db = db;
@@ -116,7 +116,7 @@ public abstract class Template {
         return this.experiment;
     }
 
-    public Orm getDb()
+    public Ofm getDb()
     {
         return this.db;
     }
@@ -144,7 +144,7 @@ public abstract class Template {
         final Drawable IMG = ContextCompat.getDrawable( this.getContext(), imageId );
         final Bitmap BITMAP = ( (BitmapDrawable) IMG ).getBitmap();
         final ByteArrayOutputStream BIT_OUT_STREAM = new ByteArrayOutputStream();
-        final String FILE_NAME = Orm.buildMediaFileNameForDbFromMediaFileName( fileName );
+        final String FILE_NAME = Ofm.buildMediaFileNameForDbFromMediaFileName( fileName );
 
         BITMAP.compress( Bitmap.CompressFormat.JPEG, 100, BIT_OUT_STREAM );
         final ByteArrayInputStream BIT_IN_STREAM = new ByteArrayInputStream( BIT_OUT_STREAM.toByteArray() );
@@ -180,5 +180,5 @@ public abstract class Template {
     private final TemplateStrings tags;
     private final Experiment experiment;
     private final Context context;
-    private final Orm db;
+    private final Ofm db;
 }

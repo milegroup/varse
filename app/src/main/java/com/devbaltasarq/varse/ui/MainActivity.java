@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.ui;
 
+
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
@@ -22,15 +23,17 @@ import android.widget.TextView;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;
 import com.devbaltasarq.varse.core.PlainStringEncoder;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Settings;
+import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.io.InputStream;
+
 
 public class MainActivity extends AppActivity
         implements NavigationView.OnNavigationItemSelectedListener
@@ -91,7 +94,7 @@ public class MainActivity extends AppActivity
         super.onStart();
 
         // Initialize the database
-        Orm.init( this.getApplicationContext(), PlainStringEncoder.get() );
+        Ofm.init( this.getApplicationContext(), PlainStringEncoder.get() );
 
         // Initialize settings
         try {
@@ -112,7 +115,7 @@ public class MainActivity extends AppActivity
         super.onResume();
 
         // Initialize the database
-        Orm.get().removeCache();
+        Ofm.get().removeCache();
     }
 
     private void toggleAppVersionShown()
@@ -250,7 +253,7 @@ public class MainActivity extends AppActivity
             if ( URI != null ) {
                 final String FILE_EXTENSION = MimeTypeMap.getFileExtensionFromUrl( URI
                         .toString().toLowerCase() );
-                final String RES_FILE_EXT = Orm.getFileExtFor( Persistent.TypeId.Result ).toLowerCase();
+                final String RES_FILE_EXT = EntitiesCache.getFileExtFor( Persistent.TypeId.Result ).toLowerCase();
 
                 if ( FILE_EXTENSION.equals( "zip" )
                   || FILE_EXTENSION.equals( RES_FILE_EXT ) )
@@ -285,7 +288,7 @@ public class MainActivity extends AppActivity
     private void importFile(Uri uri)
     {
         try {
-            final Orm db = Orm.get();
+            final Ofm db = Ofm.get();
 
             if ( uri != null
               && uri.getScheme() != null
@@ -294,9 +297,9 @@ public class MainActivity extends AppActivity
             {
                 final String URI_PATH_SEGMENT = uri.getLastPathSegment();
                 final InputStream fileIn = this.getContentResolver().openInputStream( uri );
-                final String FILE_EXT = Orm.extractFileExt( URI_PATH_SEGMENT );
+                final String FILE_EXT = Ofm.extractFileExt( URI_PATH_SEGMENT );
 
-                if ( FILE_EXT.equalsIgnoreCase( Orm.getFileExtFor( Persistent.TypeId.Result ) ) )
+                if ( FILE_EXT.equalsIgnoreCase( EntitiesCache.getFileExtFor( Persistent.TypeId.Result ) ) )
                 {
                     final String LBL_RESULT = this.getString( R.string.lblResult );
 

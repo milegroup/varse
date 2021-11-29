@@ -1,9 +1,14 @@
-package com.devbaltasarq.varse.core;
+package com.devbaltasarq.varse.core.ofmcache;
 
 
 import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
+
+import com.devbaltasarq.varse.core.Experiment;
+import com.devbaltasarq.varse.core.Id;
+import com.devbaltasarq.varse.core.Ofm;
+import com.devbaltasarq.varse.core.Persistent;
 
 import org.json.JSONException;
 
@@ -93,7 +98,7 @@ public class PartialObject extends Persistent {
                     typeId = readTypeIdFromJson( jsonReader );
                 }
                 else
-                if ( nextName.equals( Orm.FIELD_NAME ) ) {
+                if ( nextName.equals( Ofm.FIELD_NAME ) ) {
                     name = jsonReader.nextString();
                 }
 
@@ -114,6 +119,6 @@ public class PartialObject extends Persistent {
         return new PartialObject( id, typeId, name );
     }
 
-    private String name;
-    private TypeId typeId;
+    private final String name;
+    private final TypeId typeId;
 }

@@ -12,8 +12,8 @@ import java.io.Writer;
 import java.io.Reader;
 
 public class Settings {
-    private static String LogTag = Settings.class.getSimpleName();
-    private static String EMAIL_FIELD = "email";
+    private static final String LogTag = Settings.class.getSimpleName();
+    private static final String EMAIL_FIELD = "email";
 
     private Settings(String email)
     {
@@ -43,23 +43,23 @@ public class Settings {
 
     public void save()
     {
-        final Orm ORM = Orm.get();
-        final File F = ORM.getSettingsPath();
+        final Ofm OFM = Ofm.get();
+        final File F = OFM.getSettingsPath();
         Writer wrt = null;
 
         try {
-            wrt = Orm.openWriterFor( F );
+            wrt = Ofm.openWriterFor( F );
             this.toJSON( wrt );
         } catch(IOException | JSONException exc) {
             Log.e( LogTag, "saving settings: " + exc );
         } finally {
-            Orm.close( wrt );
+            Ofm.close( wrt );
         }
     }
 
     /** Writes the common properties of a persistent object to JSON.
      * @param wrt The writer to write to.
-     * @throws IOException throws it when there are problems with the stream.
+     * @throws JSONException throws it when there are problems with the stream.
      */
     public void toJSON(Writer wrt) throws JSONException
     {
@@ -126,7 +126,7 @@ public class Settings {
     {
         if ( settings == null ) {
             try {
-                settings = fromJSON( Orm.openReaderFor( Orm.get().getSettingsPath() ));
+                settings = fromJSON( Ofm.openReaderFor( Ofm.get().getSettingsPath() ));
             } catch(IOException exc) {
                 throw new JSONException( exc.getMessage() );
             }

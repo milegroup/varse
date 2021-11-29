@@ -10,7 +10,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Template;
 
 
@@ -29,7 +29,10 @@ public class TemplatesActivity extends AppActivity {
         final ImageButton BT_CLOSE_TEMPLATES = this.findViewById( R.id.btCloseTemplates );
         final ListView LV_TEMPLATES = this.findViewById( R.id.lvTemplates );
 
-        LV_TEMPLATES.setOnItemClickListener( (adapter, view, pos, t) -> { TemplatesActivity.this.setTemplate( pos ); } );
+        LV_TEMPLATES.setOnItemClickListener( (adapter, view, pos, t) ->
+                TemplatesActivity.this.setTemplate( pos )
+        );
+
         BT_CLOSE_TEMPLATES.setOnClickListener( (v) -> this.finish() );
 
         this.setTitle( "" );
@@ -69,7 +72,7 @@ public class TemplatesActivity extends AppActivity {
     {
         selectedTemplate = Template.Templates.values()[ pos ].create(
                                                     this,
-                                                    Orm.get(),
+                                                    Ofm.get(),
                                                     this.tags );
 
         this.finish();
@@ -82,9 +85,11 @@ public class TemplatesActivity extends AppActivity {
         final String[] ENTRIES = Template.Templates.toStringArray();
 
         // Prepare the list view
-        this.templatesListAdapter =
-                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, ENTRIES );
-        LV_TEMPLATES.setAdapter( this.templatesListAdapter);
+        LV_TEMPLATES.setAdapter(
+                new ArrayAdapter<>(this,
+                                    android.R.layout.simple_list_item_1,
+                                    ENTRIES )
+        );
 
         // Show the experiments list (or maybe not).
         if ( ENTRIES.length > 0 ) {
@@ -105,6 +110,5 @@ public class TemplatesActivity extends AppActivity {
     }
 
     static Template selectedTemplate;
-    private ArrayAdapter<String> templatesListAdapter;
     private Template.TemplateStrings tags;
 }

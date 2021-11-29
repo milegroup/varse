@@ -5,6 +5,7 @@ package com.devbaltasarq.varse.core;
 public class Id {
     public static final int START_CREATED_IDS = -100;
     public static final String FIELD = "_id";
+    public static final String FILE_NAME_PART = "id";
 
     /** Creates a new id. */
     public Id(long id)

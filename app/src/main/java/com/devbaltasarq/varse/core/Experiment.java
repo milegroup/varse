@@ -308,10 +308,10 @@ public class Experiment extends Persistent {
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
         this.writeIdToJSON( jsonWriter );
-        jsonWriter.name( Orm.FIELD_NAME ).value( this.getName() );
-        jsonWriter.name( Orm.FIELD_RANDOM ).value( this.isRandom() );
+        jsonWriter.name( Ofm.FIELD_NAME ).value( this.getName() );
+        jsonWriter.name( Ofm.FIELD_RANDOM ).value( this.isRandom() );
 
-        jsonWriter.name( Orm.FIELD_GROUPS ).beginArray();
+        jsonWriter.name( Ofm.FIELD_GROUPS ).beginArray();
         for(Group grp: this.groups) {
             jsonWriter.beginObject();
             grp.writeToJSON( jsonWriter );
@@ -339,11 +339,11 @@ public class Experiment extends Persistent {
             while ( jsonReader.hasNext() ) {
                 final String TOKEN = jsonReader.nextName();
 
-                if ( TOKEN.equals( Orm.FIELD_NAME ) ) {
+                if ( TOKEN.equals( Ofm.FIELD_NAME ) ) {
                     name = jsonReader.nextString();
                 }
                 else
-                if ( TOKEN.equals( Orm.FIELD_TYPE_ID ) ) {
+                if ( TOKEN.equals( Ofm.FIELD_TYPE_ID ) ) {
                     try {
                         typeId = TypeId.parse( jsonReader.nextString() );
                     } catch (IllegalArgumentException exc)
@@ -356,11 +356,11 @@ public class Experiment extends Persistent {
                     id = readIdFromJSON( jsonReader );
                 }
                 else
-                if ( TOKEN.equals( Orm.FIELD_RANDOM ) ) {
+                if ( TOKEN.equals( Ofm.FIELD_RANDOM ) ) {
                     rnd = jsonReader.nextBoolean();
                 }
                 else
-                if ( TOKEN.equals( Orm.FIELD_GROUPS ) ) {
+                if ( TOKEN.equals( Ofm.FIELD_GROUPS ) ) {
                     jsonReader.beginArray();
                     while( jsonReader.hasNext() ) {
                         groups.add( Group.fromJSON( jsonReader ) );

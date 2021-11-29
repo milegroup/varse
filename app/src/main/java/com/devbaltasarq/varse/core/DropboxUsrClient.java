@@ -7,6 +7,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.devbaltasarq.varse.R;
+import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
 import com.dropbox.core.DbxDownloader;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
@@ -36,10 +37,10 @@ import java.util.List;
  * DropBox will transform in /application/varse/john@doe.com.
  */
 public class DropboxUsrClient {
-    public static String TAG = DropboxUsrClient.class.getSimpleName();
-    private static String RES_DIR_NAME = Orm.DIR_RES;
+    public static final String TAG = DropboxUsrClient.class.getSimpleName();
+    private static final String RES_DIR_NAME = Ofm.DIR_RES;
 
-    private enum ListMode{ NO_DIRS, INCLUDE_DIRS };
+    private enum ListMode{ NO_DIRS, INCLUDE_DIRS }
 
     /** Creates a new Dropbox client for the user of the given email.
       * @param OWNER The activity this client is going to be used in.
@@ -47,19 +48,16 @@ public class DropboxUsrClient {
       */
     public DropboxUsrClient(final Activity OWNER, final String USR_EMAIL)
     {
-        this.OWNER = OWNER;
         this.USR_EMAIL = USR_EMAIL;
 
-        final String RES_DIR = this.buildResDirUsr();
-
         // Create the access credentials and the client
-        String appPackage = this.OWNER.getPackageName();
+        String appPackage = OWNER.getPackageName();
 
         DbxRequestConfig config =
                 DbxRequestConfig.newBuilder( appPackage ).build();
 
         this.DBOX_CLIENT = new DbxClientV2( config,
-                this.OWNER.getString( R.string.dropbox_token ) );
+                                            OWNER.getString( R.string.dropbox_token ) );
     }
 
     /** Lists all files in the user directory.
@@ -129,8 +127,8 @@ public class DropboxUsrClient {
       */
     private static void sortFiles(List<String> files)
     {
-        final String EXPERIMENT_EXTENSION = Orm.getFileExtFor( Persistent.TypeId.Experiment );
-        final String RESULT_EXTENSION = Orm.getFileExtFor( Persistent.TypeId.Result );
+        final String EXPERIMENT_EXTENSION = EntitiesCache.getFileExtFor( Persistent.TypeId.Experiment );
+        final String RESULT_EXTENSION = EntitiesCache.getFileExtFor( Persistent.TypeId.Result );
 
         final ArrayList<String> EXPERIMENT_FILES = new ArrayList<>( files.size() );
         final ArrayList<String> RESULT_FILES = new ArrayList<>( files.size() );
@@ -159,15 +157,15 @@ public class DropboxUsrClient {
     /** Download a file from dropbox's user directory.
       * @param subDir the subdirectory inside the res dir in which the file exists.
       * @param fileName a res file without path, which should exist.
-      * @param ORM the data store to send the file to.
+      * @param OFM the data store to send the file to.
       * @throws DbxException when dropbox comms go wrong.
       */
-    public void downloadResFileTo(String subDir, String fileName, final Orm ORM) throws DbxException
+    public void downloadResFileTo(String subDir, String fileName, final Ofm OFM) throws DbxException
     {
         final String FILE_PATH = this.buildPathForResFile( subDir, fileName );
 
         try {
-            ORM.copyResFileAs( subDir,
+            OFM.copyResFileAs( subDir,
                                this.downloadFileTo( fileName, FILE_PATH ),
                                fileName );
         } catch(IOException exc)
@@ -178,22 +176,22 @@ public class DropboxUsrClient {
 
     /** Download a file from dropbox's user directory.
       * @param fileName a data file without path, which should exist.
-      * @param ORM the data store to send the file to.
+      * @param OFM the data store to send the file to.
       * @throws DbxException when dropbox comms go wrong.
       */
-    public void downloadDataFileTo(String fileName, final Orm ORM) throws DbxException
+    public void downloadDataFileTo(String fileName, final Ofm OFM) throws DbxException
     {
         final String FILE_PATH = this.buildPathForDataFile( fileName );
 
         try {
-            ORM.copyDataFileAs( this.downloadFileTo( fileName, FILE_PATH ), fileName );
+            OFM.copyDataFileAs( this.downloadFileTo( fileName, FILE_PATH ), fileName );
         } catch(IOException exc)
         {
             Log.e( TAG, "error copying to orm the downloaded data file:" + exc.getMessage() );
         }
     }
 
-    /** Downloads a given file into a local ORM.
+    /** Downloads a given file into a local Ofm.
       * @param fileName the name of the file, and only its name (in order to save in local).
       * @param FILE_PATH the path of the file, which should exist.
       * @throws DbxException when dropbox comms go wrong.
@@ -201,7 +199,7 @@ public class DropboxUsrClient {
     private File downloadFileTo(String fileName, String FILE_PATH) throws DbxException
     {
         DbxDownloader<FileMetadata> downloader = DBOX_CLIENT.files().download( FILE_PATH );
-        File f = null;
+        File f;
         OutputStream out = null;
 
         try {
@@ -292,9 +290,8 @@ public class DropboxUsrClient {
                 + DropboxDirectorySeparator;
     }
 
-    private final Activity OWNER;
     private final String USR_EMAIL;
     private final DbxClientV2 DBOX_CLIENT;
 
-    private static String DropboxDirectorySeparator = "/";
+    private static final String DropboxDirectorySeparator = "/";
 }

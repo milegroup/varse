@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -24,8 +23,8 @@ import android.widget.Toast;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.DropboxUsrClient;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
-import com.devbaltasarq.varse.core.PartialObject;
+import com.devbaltasarq.varse.core.Ofm;
+import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.Settings;
@@ -54,7 +53,7 @@ public class ResultsActivity extends AppActivity {
 
         // Init
         this.backupFinished = true;
-        this.dataStore = Orm.get();
+        this.dataStore = Ofm.get();
         this.dataStore.removeCache();
 
         // Event handlers
@@ -146,7 +145,7 @@ public class ResultsActivity extends AppActivity {
     {
         final ResultsActivity SELF = this;
         final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbIndeterminateResultUpload );
-        final Orm ORM = this.dataStore;
+        final Ofm OFM = this.dataStore;
         final String USR_EMAIL = Settings.get().getEmail();
         final DropboxUsrClient DBOX_SERVICE = new DropboxUsrClient( this, USR_EMAIL );
 
@@ -159,12 +158,12 @@ public class ResultsActivity extends AppActivity {
 
         this.handler.post( () -> {
                 try {
-                    final Result RES = (Result) Orm.get().retrieve( res.getId(), Persistent.TypeId.Result );
+                    final Result RES = (Result) Ofm.get().retrieve( res.getId(), Persistent.TypeId.Result );
 
                     // Collect files
                     File[] allFiles = new File[] {
-                            ORM.getFileById( RES.getId(), Persistent.TypeId.Result ),
-                            ORM.getFileById( RES.getExperiment().getId(), Persistent.TypeId.Experiment )
+                            OFM.getFileById( RES.getId(), Persistent.TypeId.Result ),
+                            OFM.getFileById( RES.getExperiment().getId(), Persistent.TypeId.Experiment )
                     };
 
                     // Upload them
@@ -227,7 +226,7 @@ public class ResultsActivity extends AppActivity {
         return;
     }
 
-    /** Reads the experiments' names from the ORM. */
+    /** Reads the experiments' names from the Ofm. */
     private void loadExperimentsSpinner()
     {
         final Spinner CB_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
@@ -266,7 +265,7 @@ public class ResultsActivity extends AppActivity {
         try {
             final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
             final ListView LV_RESULTS = this.findViewById( R.id.lvResultItems );
-            final PartialObject[] PO_ENTRIES = dataStore.enumerateResultsForExperiment( experiment.getId() );
+            final PartialObject[] PO_ENTRIES = this.dataStore.enumerateResultsForExperiment( experiment.getId() );
 
             // Prepare the list of experiments
             final Result[] RESULT_ENTRIES = new Result[ PO_ENTRIES.length ];
@@ -316,7 +315,7 @@ public class ResultsActivity extends AppActivity {
     private HandlerThread handlerThread;
     private Handler handler;
     private Persistent[] experimentsList;
-    private Orm dataStore;
+    private Ofm dataStore;
 
     static Persistent experiment;
 }

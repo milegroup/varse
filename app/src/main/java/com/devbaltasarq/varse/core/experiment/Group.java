@@ -7,7 +7,7 @@ import android.util.Log;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
 
 import org.json.JSONException;
@@ -77,7 +77,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         public void writeToJSON(JsonWriter jsonWriter) throws IOException
         {
             this.writeIdToJSON( jsonWriter );
-            jsonWriter.name( Orm.FIELD_TAG ).value( this.getTag().toString() );
+            jsonWriter.name( Ofm.FIELD_TAG ).value( this.getTag().toString() );
         }
 
         public static Activity fromJSON(JsonReader jsonReader) throws JSONException
@@ -98,7 +98,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                         id = readIdFromJSON( jsonReader );
                     }
                     else
-                    if ( NEXT_NAME.equals( Orm.FIELD_TYPE_ID ) ) {
+                    if ( NEXT_NAME.equals( Ofm.FIELD_TYPE_ID ) ) {
                         typeId = readTypeIdFromJson( jsonReader );
                     }
                 }
@@ -371,9 +371,9 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
         this.writeIdToJSON( jsonWriter );
-        jsonWriter.name( Orm.FIELD_RANDOM ).value( this.isRandom() );
+        jsonWriter.name( Ofm.FIELD_RANDOM ).value( this.isRandom() );
 
-        jsonWriter.name( Orm.FIELD_ACTIVITIES ).beginArray();
+        jsonWriter.name( Ofm.FIELD_ACTIVITIES ).beginArray();
         for(Activity act: this.activities) {
             jsonWriter.beginObject();
             act.writeToJSON( jsonWriter );
@@ -414,19 +414,19 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
             while ( jsonReader.hasNext() ) {
                 final String NEXT_NAME = jsonReader.nextName();
 
-                if ( NEXT_NAME.equals( Orm.FIELD_RANDOM ) ) {
+                if ( NEXT_NAME.equals( Ofm.FIELD_RANDOM ) ) {
                     rnd = jsonReader.nextBoolean();
                 }
                 else
-                if ( NEXT_NAME.equals( Orm.FIELD_TYPE_ID ) ) {
+                if ( NEXT_NAME.equals( Ofm.FIELD_TYPE_ID ) ) {
                     typeId = readTypeIdFromJson( jsonReader );
                 }
                 else
-                if ( NEXT_NAME.equals( Orm.FIELD_TAG ) ) {
+                if ( NEXT_NAME.equals( Ofm.FIELD_TAG ) ) {
                     tag = new Tag( jsonReader.nextString() );
                 }
                 else
-                if ( NEXT_NAME.equals( Orm.FIELD_TIME ) ) {
+                if ( NEXT_NAME.equals( Ofm.FIELD_TIME ) ) {
                     duration = new Duration( jsonReader.nextInt() );
                 }
                 else
@@ -434,7 +434,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                     id = readIdFromJSON( jsonReader );
                 }
                 else
-                if ( NEXT_NAME.equals( Orm.FIELD_ACTIVITIES ) ) {
+                if ( NEXT_NAME.equals( Ofm.FIELD_ACTIVITIES ) ) {
                     jsonReader.beginArray();
                     while ( jsonReader.hasNext() ) {
                         ACTS.add( Activity.fromJSON( jsonReader ) );
@@ -539,6 +539,6 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
 
     private boolean random;
     private Duration timeForEachActivity;
-    private ArrayList<Activity> activities;
+    private final ArrayList<Activity> activities;
     private Experiment experiment;
 }

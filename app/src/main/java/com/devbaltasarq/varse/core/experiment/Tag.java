@@ -1,6 +1,7 @@
 package com.devbaltasarq.varse.core.experiment;
 
 import com.devbaltasarq.varse.core.PlainStringEncoder;
+import com.devbaltasarq.varse.core.ofmcache.FileCache;
 
 /** Represents a Tag.
   * Depends on FileNameAdapter, in order to adapt tags.
@@ -13,8 +14,8 @@ public class Tag {
     /** Creates a new tag. */
     public Tag(String tag)
     {
-        if ( fileNameAdapter == null ) {
-            fileNameAdapter = PlainStringEncoder.get();
+        if ( plainStringEncoder == null ) {
+            plainStringEncoder = PlainStringEncoder.get();
         }
 
         this.tag = encode( tag );
@@ -48,10 +49,14 @@ public class Tag {
     }
 
     /** @return a string formatted as a tag needs to accomplish with standards.
+      * Note that the '_' must not be allowed, it is used as a separator
+      * for file parts identifying different id's.
       * @see PlainStringEncoder , which converts the tag appropriately. */
     public String encode(String tag)
     {
-        return fileNameAdapter.encode( tag );
+        return plainStringEncoder.encode( tag ).replace(
+                                        FileCache.FILE_NAME_PART_SEPARATOR,
+                                        "_" );
     }
 
     /** @return the tag in an user-readable format. */
@@ -76,5 +81,5 @@ public class Tag {
     }
 
     private String tag;
-    private static PlainStringEncoder fileNameAdapter;
+    private static PlainStringEncoder plainStringEncoder;
 }

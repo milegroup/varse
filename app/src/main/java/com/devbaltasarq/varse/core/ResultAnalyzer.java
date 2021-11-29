@@ -13,18 +13,17 @@ import java.util.Locale;
 
 
 public class ResultAnalyzer {
-    private static String LogTag = ResultAnalyzer.class.getSimpleName();
+    private static final String LogTag = ResultAnalyzer.class.getSimpleName();
 
     public ResultAnalyzer(final Result RESULT, final int MAX_TAGS)
     {
         this.numOfTags = 0;
-        this.maxTags = MAX_TAGS;
         this.result = RESULT;
 
         this.dataRRnf = new ArrayList<>( this.result.size() );
-        this.episodesInits = new ArrayList<>( maxTags );
-        this.episodesEnds = new ArrayList<>( maxTags );
-        this.episodesType = new ArrayList<>( maxTags );
+        this.episodesInits = new ArrayList<>( MAX_TAGS );
+        this.episodesEnds = new ArrayList<>( MAX_TAGS );
+        this.episodesType = new ArrayList<>( MAX_TAGS );
     }
 
     public void analyze()
@@ -99,7 +98,7 @@ public class ResultAnalyzer {
                 }
 
                 this.episodesInits.add( TIME_IN_SECS );
-                this.episodesType.add( TAG_EVENT.getTag() );
+                this.episodesType.add( TAG_EVENT.getTag().getHumanReadable() );
                 lastTagEvent = TAG_EVENT;
                 ++this.numOfTags;
             }
@@ -470,9 +469,8 @@ public class ResultAnalyzer {
         Log.i(LogTag + ".Spec","Analysis window length: "+ analysisWindowLength +" seconds");
 
         // Five windows, length 1/3 of signal, overlap 50%
-
-        float beg[] = new float[5];
-        float end[] = new float[5];
+        float[] beg = new float[5];
+        float[] end = new float[5];
 
         beg[0] = begSegment;
         end[0] = beg[0] + analysisWindowLength;
@@ -494,11 +492,12 @@ public class ResultAnalyzer {
                 maxSegmentLength = segmentTMP.size();
         }
 
-        int paddedLength = (int) Math.pow(2,(int) Math.ceil(Math.log((double) maxSegmentLength) / Math.log(2.0)));
+        int paddedLength = (int) Math.pow( 2,
+                                           (int) Math.ceil( Math.log( maxSegmentLength )
+                                                   / Math.log( 2.0 ) ) );
 
         Log.i(LogTag + ".Spec","Max segment length: "+maxSegmentLength);
         Log.i(LogTag + ".Spec","Padded length: "+paddedLength);
-
 
         List<Float> SpectrumAvg = new ArrayList<>();
         int SpectrumLength = paddedLength/2;
@@ -815,7 +814,6 @@ public class ResultAnalyzer {
     }
 
 
-    private final int maxTags;
     private final List<Float> dataRRnf;
     private final List<Float> episodesInits;
     private final List<Float> episodesEnds;
@@ -839,15 +837,15 @@ public class ResultAnalyzer {
 
     private final Result result;
 
-    private static float freq = 4.0f;                   // Interpolation frequency in hz.
-    private static float hammingFactor = 1.586f;
+    private static final float freq = 4.0f;                   // Interpolation frequency in hz.
+    private static final float hammingFactor = 1.586f;
 
-    private static float totalPowerBeg = 0.0f;
-    private static float totalPowerEnd = 4.0f/2.0f;     // Beginning and end of total power band
+    private static final float totalPowerBeg = 0.0f;
+    private static final float totalPowerEnd = 4.0f/2.0f;     // Beginning and end of total power band
 
-    private static float LFPowerBeg = 0.05f;
-    private static float LFPowerEnd = 0.15f;            // Beginning and end of LF band
+    private static final float LFPowerBeg = 0.05f;
+    private static final float LFPowerEnd = 0.15f;            // Beginning and end of LF band
 
-    private static float HFPowerBeg = 0.15f;
-    private static float HFPowerEnd = 0.4f;             // Beginning and end of HF band
+    private static final float HFPowerBeg = 0.15f;
+    private static final float HFPowerEnd = 0.4f;             // Beginning and end of HF band
 }

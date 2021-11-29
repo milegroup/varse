@@ -7,7 +7,7 @@ import android.util.Log;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 
 import org.json.JSONException;
 
@@ -77,7 +77,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
         public void writeToJSON(JsonWriter jsonWriter) throws IOException
         {
             super.writeToJSON( jsonWriter );
-            jsonWriter.name( Orm.FIELD_TIME ).value( this.getTime().getTimeInSeconds() );
+            jsonWriter.name( Ofm.FIELD_TIME ).value( this.getTime().getTimeInSeconds() );
         }
 
         /** Creates a new manual activity, from JSON data.
@@ -95,11 +95,11 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
                 while ( jsonReader.hasNext() ) {
                     final String TOKEN = jsonReader.nextName();
 
-                    if ( TOKEN.equals( Orm.FIELD_TAG ) ) {
+                    if ( TOKEN.equals( Ofm.FIELD_TAG ) ) {
                         tag = new Tag( jsonReader.nextString() );
                     }
                     else
-                    if ( TOKEN.equals( Orm.FIELD_TIME ) ) {
+                    if ( TOKEN.equals( Ofm.FIELD_TIME ) ) {
                         duration = new Duration( jsonReader.nextInt() );
                     }
                 }

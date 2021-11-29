@@ -64,7 +64,7 @@ public class User extends Persistent {
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
         this.writeIdToJSON( jsonWriter );
-        jsonWriter.name( Orm.FIELD_NAME ).value( this.getName() );
+        jsonWriter.name( Ofm.FIELD_NAME ).value( this.getName() );
     }
 
     /** Creates a new user, from JSON data.
@@ -84,11 +84,11 @@ public class User extends Persistent {
             while ( jsonReader.hasNext() ) {
                 final String NEXT_NAME = jsonReader.nextName();
 
-                if ( NEXT_NAME.equals( Orm.FIELD_NAME ) ) {
+                if ( NEXT_NAME.equals( Ofm.FIELD_NAME ) ) {
                     name = jsonReader.nextString();
                 }
                 else
-                if ( NEXT_NAME.equals( Orm.FIELD_TYPE_ID ) ) {
+                if ( NEXT_NAME.equals( Ofm.FIELD_TYPE_ID ) ) {
                     typeId = readTypeIdFromJson( jsonReader );
                 }
                 else

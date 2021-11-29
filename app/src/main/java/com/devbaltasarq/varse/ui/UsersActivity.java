@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.ui;
 
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -11,12 +12,13 @@ import android.widget.ListView;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
-import com.devbaltasarq.varse.core.PartialObject;
+import com.devbaltasarq.varse.core.Ofm;
+import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.ui.adapters.ListViewUserArrayAdapter;
 
 import java.io.IOException;
+
 
 public class UsersActivity extends AppActivity {
     private static final String LOG_TAG = UsersActivity.class.getSimpleName();
@@ -28,7 +30,7 @@ public class UsersActivity extends AppActivity {
         Toolbar toolbar = this.findViewById( R.id.toolbar );
         setSupportActionBar(toolbar);
 
-        final FloatingActionButton FB_ADD = this.findViewById( R.id.fbAddUser);
+        final FloatingActionButton FB_ADD = this.findViewById( R.id.fbAddUser );
         final ImageButton BT_CLOSE_USERS = this.findViewById( R.id.btCloseUsers);
 
         FB_ADD.setOnClickListener( (v) -> this.addUser() );
@@ -47,7 +49,7 @@ public class UsersActivity extends AppActivity {
     private void showUsers()
     {
         try {
-            final PartialObject[] USR_LIST = Orm.get().enumerateUsers();
+            final PartialObject[] USR_LIST = Ofm.get().enumerateUsers();
             final ListView LV_USRS = this.findViewById( R.id.lvUsers);
             final User[] ENTRIES = new User[ USR_LIST.length ];
 
@@ -59,7 +61,7 @@ public class UsersActivity extends AppActivity {
             }
 
             ListViewUserArrayAdapter adapter = new ListViewUserArrayAdapter( this,
-                                            ENTRIES );
+                                                        ENTRIES );
             LV_USRS.setAdapter( adapter );
         } catch(IOException exc)
         {
@@ -76,15 +78,12 @@ public class UsersActivity extends AppActivity {
         db.setTitle( R.string.lblAddUser);
         db.setView( edId );
 
-        db.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                try {
-                    Orm.get().store( new User( Id.createFake(), edId.getText().toString() ) );
-                    UsersActivity.this.showUsers();
-                } catch(IOException exc) {
-                    activity.showStatus(LOG_TAG, activity.getString( R.string.errIO) );
-                }
+        db.setPositiveButton(android.R.string.ok, (DialogInterface dialogInterface, int i) -> {
+            try {
+                Ofm.get().store( new User( Id.createFake(), edId.getText().toString() ) );
+                UsersActivity.this.showUsers();
+            } catch(IOException exc) {
+                activity.showStatus(LOG_TAG, activity.getString( R.string.errIO) );
             }
         });
 

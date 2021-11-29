@@ -7,7 +7,6 @@ package com.devbaltasarq.varse.ui.showresult;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PointF;
-import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -56,8 +55,9 @@ public class ResultViewerActivity extends AppActivity {
         final StandardGestures GESTURES = new StandardGestures( this );
         this.chartView = findViewById( R.id.ivChartViewer );
         this.chartView.setOnTouchListener( GESTURES );
-        this.boxdata = this.findViewById( R.id.lblTextData );
-        this.boxdata.setMovementMethod( new ScrollingMovementMethod() );
+
+        final TextView BOX_DATA = this.findViewById( R.id.lblTextData );
+        BOX_DATA.setMovementMethod( new ScrollingMovementMethod() );
 
         this.resultAnalyzer = new ResultAnalyzer( result, MAX_TAGS );
         this.resultAnalyzer.analyze();
@@ -68,9 +68,9 @@ public class ResultViewerActivity extends AppActivity {
             final String REPORT = this.resultAnalyzer.buildReport();
 
             if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N ) {
-                this.boxdata.setText( Html.fromHtml( REPORT, Html.FROM_HTML_MODE_COMPACT ) );
+                BOX_DATA.setText( Html.fromHtml( REPORT, Html.FROM_HTML_MODE_COMPACT ) );
             } else {
-                this.boxdata.setText( Html.fromHtml( REPORT ) );
+                BOX_DATA.setText( Html.fromHtml( REPORT ) );
             }
         } else {
             this.showStatus( LogTag, "Empty data" );
@@ -147,18 +147,26 @@ public class ResultViewerActivity extends AppActivity {
         final String[] EPISODE_TYPES = this.resultAnalyzer.getEpisodeTypes();
         final Float[] EPISODE_INITS = this.resultAnalyzer.getEpisodeInits();
         final Float[] EPISODE_ENDS = this.resultAnalyzer.getEpisodeEnds();
-        String tag = this.getString( R.string.lblDefaultTag );
+        String toret = this.getString( R.string.lblDefaultTag );
 
-        for (int i = 0; i < EPISODE_TYPES.length; i++) {
-            if ( ( EPISODE_INITS[ i ] <= timeValue )
-              && ( EPISODE_ENDS[ i ] >= timeValue ) )
-            {
-                tag = EPISODE_TYPES[ i ];
-                break;
+        if ( timeValue < EPISODE_INITS[ 0 ] ) {
+            toret = EPISODE_TYPES[ 0 ];
+        }
+        else
+        if ( timeValue > EPISODE_ENDS[ EPISODE_ENDS.length - 1 ] ) {
+            toret = EPISODE_TYPES[ EPISODE_TYPES.length - 1 ];
+        } else {
+            for (int i = 0; i < EPISODE_TYPES.length; ++i) {
+                if ( ( timeValue >= EPISODE_INITS[ i ] )
+                  && ( timeValue <= EPISODE_ENDS[ i ] ) )
+                {
+                    toret = EPISODE_TYPES[ i ];
+                    break;
+                }
             }
         }
 
-        return tag;
+        return toret;
     }
 
     /** Plots the chart in a drawable and shows it. */
@@ -211,12 +219,11 @@ public class ResultViewerActivity extends AppActivity {
     }
 
     private ImageView chartView;
-    private TextView boxdata;
     private ResultAnalyzer resultAnalyzer;
     public static Result result;
 
     /** Manages gestures. */
-    public class StandardGestures implements View.OnTouchListener,
+    public static class StandardGestures implements View.OnTouchListener,
             ScaleGestureDetector.OnScaleGestureListener
     {
 
@@ -286,9 +293,9 @@ public class ResultViewerActivity extends AppActivity {
         {
         }
 
-        private PointF position;
+        private final PointF position;
         private View view;
-        private ScaleGestureDetector gestureScale;
+        private final ScaleGestureDetector gestureScale;
         private float scaleFactor = 1;
     }
 }

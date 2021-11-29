@@ -19,7 +19,7 @@ import android.widget.TextView;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
@@ -73,7 +73,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
 
         if ( ENTRY_ACTIVITY instanceof MediaGroup.MediaActivity ) {
             final String FILE_NAME = getAssociatedFileNameOf( ENTRY_ACTIVITY );
-            final Orm DB = Orm.get();
+            final Ofm DB = Ofm.get();
             final Experiment EXPR = ENTRY_ACTIVITY.getExperimentOwner();
             final MediaGroup MEDIA_GROUP = (MediaGroup) ENTRY_ACTIVITY.getGroup();
 
@@ -143,7 +143,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
       * @return A Bitmap object.
       * @see Bitmap
       */
-    private static Bitmap getImageThumbnail(Orm db, Experiment expr, File f)
+    private static Bitmap getImageThumbnail(Ofm db, Experiment expr, File f)
     {
         final File MEDIA_FILE = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
 
@@ -158,7 +158,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
      * @return A Bitmap object.
      * @see Bitmap
      */
-    private static Bitmap getVideoThumbnail(Orm db, Experiment expr, File f)
+    private static Bitmap getVideoThumbnail(Ofm db, Experiment expr, File f)
     {
         final File MEDIA_FILE = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
 

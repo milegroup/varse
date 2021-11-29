@@ -5,7 +5,7 @@ import android.util.JsonWriter;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +59,7 @@ public class PictureGroup extends MediaGroup {
     {
         final File F = act.getFile();
 
-        if ( !Orm.extractFileExt( F ).isEmpty() ) {
+        if ( !Ofm.extractFileExt( F ).isEmpty() ) {
             if ( !MimeTools.isPicture( act.getFile() ) ) {
                 throw new Error( act.getFile() + " not a picture." );
             }

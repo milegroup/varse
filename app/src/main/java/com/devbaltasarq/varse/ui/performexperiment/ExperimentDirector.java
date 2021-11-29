@@ -32,7 +32,7 @@ import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.core.bluetooth.BleService;
@@ -126,9 +126,9 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         private boolean stopped;
         private long startTime;
-        private Handler handler;
         private Runnable sendHR;
-        private Listener<Chronometer> eventHandler;
+        private final Handler handler;
+        private final Listener<Chronometer> eventHandler;
     }
 
     @Override
@@ -149,7 +149,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.setSupportActionBar( TOOLBAR );
 
         // Assign values
-        this.orm = Orm.get();
+        this.ofm = Ofm.get();
         this.activityIndex = 0;
         this.accumulatedTimeInSeconds = 0;
         this.askBeforeExit = true;
@@ -604,7 +604,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             final long ELAPSED_MILLIS = this.getElapsedExperimentMillis();
 
             try {
-                this.orm.store( this.resultBuilder.build( ELAPSED_MILLIS ) );
+                this.ofm.store( this.resultBuilder.build( ELAPSED_MILLIS ) );
                 this.resultBuilder = null;
                 Log.i(LOG_TAG, this.getString( R.string.msgFinishedExperiment ) );
             } catch(IOException exc) {
@@ -619,6 +619,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         DLG.setMessage( R.string.msgFinishedExperiment );
         DLG.setCancelable( false );
         DLG.setPositiveButton( R.string.lblBack, (d, i) -> {
+            d.dismiss();
             this.askBeforeExit = false;
             this.finish();
         });
@@ -751,7 +752,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void loadImage(File imgFile)
     {
-        final File DIR_EXPERIMENT = this.orm.buildMediaDirectoryFor( this.experiment );
+        final File DIR_EXPERIMENT = this.ofm.buildMediaDirectoryFor( this.experiment );
         final File MEDIA_FILE = new File( DIR_EXPERIMENT, imgFile.getPath() );
 
         if ( MEDIA_FILE.exists() ) {
@@ -767,7 +768,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void loadVideo(File videoFile)
     {
-        final File EXPERIMENT_DIR = this.orm.buildMediaDirectoryFor( this.experiment );
+        final File EXPERIMENT_DIR = this.ofm.buildMediaDirectoryFor( this.experiment );
         final File MEDIA_FILE = new File( EXPERIMENT_DIR, videoFile.getPath() );
 
         if ( MEDIA_FILE.exists() ) {
@@ -934,7 +935,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private Chronometer chrono;
     private Result.Builder resultBuilder;
-    private Orm orm;
+    private Ofm ofm;
 
     private ServiceConnectionWithStatus serviceConnection;
     private BroadcastReceiver broadcastReceiver;

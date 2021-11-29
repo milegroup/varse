@@ -9,7 +9,7 @@ import android.util.Log;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 
 import org.json.JSONException;
 
@@ -29,7 +29,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         {
             super( id, new Tag( f.getName() ) );
 
-            this.file = new File( Orm.buildMediaFileNameForDbFromMediaFileName( f.getName() ) );
+            this.file = new File( Ofm.buildMediaFileNameForDbFromMediaFileName( f.getName() ) );
         }
 
         @Override
@@ -67,7 +67,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
             if ( MEDIA_GROUP.getFormat() == Format.Picture ) {
                 toret = MEDIA_GROUP.getTimeForEachActivity();
             } else {
-                toret = new Duration( calculateVideoDuration( Orm.get(), this ) );
+                toret = new Duration( calculateVideoDuration( Ofm.get(), this ) );
             }
 
 
@@ -100,7 +100,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         public void writeToJSON(JsonWriter jsonWriter) throws IOException
         {
             this.writeIdToJSON( jsonWriter );
-            jsonWriter.name( Orm.FIELD_FILE ).value( this.getFile().getName() );
+            jsonWriter.name( Ofm.FIELD_FILE ).value( this.getFile().getName() );
         }
 
         /** Creates a new media activity, from JSON data.
@@ -117,7 +117,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
                 while ( jsonReader.hasNext() ) {
                     final String TOKEN = jsonReader.nextName();
 
-                    if ( TOKEN.equals( Orm.FIELD_FILE ) ) {
+                    if ( TOKEN.equals( Ofm.FIELD_FILE ) ) {
                         file = new File( jsonReader.nextString() );
                     }
                 }
@@ -147,16 +147,16 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         }
 
         /** @return the time in seconds for the duration of this video.
-          * @param orm The ORM object (in order to qualify the file).
+          * @param ofm The ORM object (in order to qualify the file).
           * @param mact The media activity,
           * @return the time of the video, in seconds.
-          * @see Orm
+          * @see Ofm
           */
-        public static int calculateVideoDuration(Orm orm, MediaActivity mact)
+        public static int calculateVideoDuration(Ofm ofm, MediaActivity mact)
         {
             final MediaMetadataRetriever RETRIEVER = new MediaMetadataRetriever();
             final File MEDIA_FILE = new File(
-                    orm.buildMediaDirectoryFor( mact.getExperimentOwner() ),
+                    ofm.buildMediaDirectoryFor( mact.getExperimentOwner() ),
                     mact.getFile().getName() );
             int toret = 5;
 
@@ -174,7 +174,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
             return toret;
         }
 
-        private File file;
+        private final File file;
     }
 
     /** Creates a new group with an empty list. */
@@ -279,11 +279,10 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     public File[] enumerateMediaFiles()
     {
         final MediaActivity[] ACTIVITIES = this.get();
-        final int SIZE = ACTIVITIES.length;
-        final ArrayList<File> TORET = new ArrayList<>( SIZE );
+        final ArrayList<File> TORET = new ArrayList<>( ACTIVITIES.length );
 
-        for(int i = 0; i < SIZE; ++i) {
-            TORET.addAll( Arrays.asList( ACTIVITIES[ i ].enumerateMediaFiles() ) );
+        for (MediaActivity activity : ACTIVITIES) {
+            TORET.addAll( Arrays.asList( activity.enumerateMediaFiles() ) );
         }
 
         return TORET.toArray( new File[ 0 ] );
@@ -298,5 +297,5 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     }
 
     private Tag tag;
-    private Format format;
+    private final Format format;
 }

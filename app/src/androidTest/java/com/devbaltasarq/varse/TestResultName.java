@@ -37,9 +37,9 @@ public class TestResultName {
     @Test
     public void testName()
     {
-        final String NAME = Orm.getFileNameFor( this.res );
+        final String NAME = Ofm.getFileNameFor( this.res );
 
-        Assert.assertEquals( "res", Orm.extractFileExt( NAME ) );
+        Assert.assertEquals( "res", Ofm.extractFileExt( NAME ) );
     }
 
     private Result res;
