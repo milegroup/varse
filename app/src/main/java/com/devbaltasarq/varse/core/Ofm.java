@@ -59,7 +59,6 @@ public final class Ofm {
     private static final String SETTINGS_FILE_NAME = "settings.json";
     private static final String DIR_DB = "db";
     static final String DIR_RES = "res";
-    private static final String DIR_MEDIA_PREFIX = "media";
     public static final String FIELD_NAME = "name";
 
     /** Prepares the ORM to operate. */
@@ -164,9 +163,8 @@ public final class Ofm {
         if ( typeId == Persistent.TypeId.Result ) {
             try {
                 final File RESULT_FILE = this.cache.getResults().get( id );
-                final String FILE_NAME = FileCache.removeFileNameExt( RESULT_FILE.getName() );
-                final Id EXPR_ID = new Id( EntitiesCache.parseExperimentIdFromResultFileName( FILE_NAME ) );
-                final Id USER_ID = new Id( EntitiesCache.parseUserIdFromResultFileName( FILE_NAME ) );
+                final Id EXPR_ID = new Id( EntitiesCache.parseExperimentIdFromResultFileName( RESULT_FILE ) );
+                final Id USER_ID = new Id( EntitiesCache.parseUserIdFromResultFileName( RESULT_FILE ) );
                 final User USR = this.createOrRetrieveUserById( USER_ID );
                 final Experiment EXPR = (Experiment) this.retrieve( EXPR_ID, Persistent.TypeId.Experiment );
 
@@ -261,7 +259,7 @@ public final class Ofm {
         final Experiment OWNER = p.getExperimentOwner();
         final Id ID = OWNER != null ? OWNER.getId() : p.getId();
 
-        return DIR_MEDIA_PREFIX + FileCache.FILE_NAME_PART_SEPARATOR + ID.get();
+        return FileCache.FILE_NAME_PART_MEDIA + FileCache.FILE_NAME_PART_SEPARATOR + ID.get();
     }
 
     /** @return a File pointing to the settings file. */
@@ -392,7 +390,7 @@ public final class Ofm {
     {
         try {
             for(File mediaDir: getAllFilesInDir( this.dirRes )) {
-                final Id ID = new Id( FileCache.parseIdFromFile( mediaDir ) );
+                final Id ID = new Id( FileCache.parseIdFromMediaDir( mediaDir ) );
                 final File EXPR_FILE = new File( this.dirDb,
                                           EntitiesCache.buildFileNameFor(
                                                   ID, Persistent.TypeId.Experiment ) );
@@ -593,13 +591,9 @@ public final class Ofm {
         }
 
         try {
-            final String BASE_FILE_NAME = removeFileExt( RES_FILE_NAME );
-            final String TAGS_FILE_NAME = "tags-"
-                                            + res.getUser().getName()
-                                            + "-" + BASE_FILE_NAME + ".tags.txt";
-            final String RR_FILE_NAME = "rr-"
-                                            + res.getUser().getName()
-                                            + "-" + BASE_FILE_NAME + ".rr.txt";
+            final String USR_NAME = res.getUser().getName();
+            final String TAGS_FILE_NAME = "tags-" + USR_NAME + ".tags.txt";
+            final String RR_FILE_NAME = "rr-" + USR_NAME + ".rr.txt";
 
             // Org
             final File ORG_FILE = new File( this.dirDb, RES_FILE_NAME );
@@ -640,6 +634,7 @@ public final class Ofm {
       */
     public void exportExperiment(File dir, Experiment expr) throws IOException
     {
+        final String OUTPUT_NAME = PlainStringEncoder.get().encode( expr.getName() );
         final File TEMP_FILE = this.createTempFile(
                 expr.getTypeId().toString(),
                 expr.getId().toString() );
@@ -664,7 +659,7 @@ public final class Ofm {
                 throw new IOException( "unable to create target dir" );
             }
 
-            final File OUTPUT_FILE = new File( dir, getFileNameFor( expr ) + ".zip" );
+            final File OUTPUT_FILE = new File( dir, OUTPUT_NAME + ".zip" );
             copy( TEMP_FILE, OUTPUT_FILE );
         } catch(IOException exc) {
             throw new IOException(

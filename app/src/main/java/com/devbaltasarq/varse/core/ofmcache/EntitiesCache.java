@@ -207,17 +207,9 @@ public class EntitiesCache {
     /** @return the user's id from this result, reading it from its name.
       * @param resName the file name of the result to extract the time from.
       */
-    public static long parseUserIdFromResultFileName(String resName)
+    public static long parseUserIdFromResultFileName(File f)
     {
-        return FileCache.parseIdFromFileNamePart( resName, FIELD_USER_ID );
-    }
-
-    /** @return the user's id from this result, reading it from its name.
-      * @param resName the file name of the result to extract the time from.
-      */
-    public static long parseExperimentIdFromResultFileName(String resName)
-    {
-        return FileCache.parseIdFromFileNamePart( resName, FIELD_EXPERIMENT_ID );
+        return FileCache.parseIdFromFileNamePart( f, FIELD_USER_ID );
     }
 
     private final FileCache[] caches;

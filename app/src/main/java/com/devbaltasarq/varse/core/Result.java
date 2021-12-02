@@ -526,7 +526,7 @@ public class Result extends Persistent {
     @Override
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
-        final String RESULT_NAME = buildResultName( this );
+        final String RESULT_NAME = this.buildResultName();
 
         this.writeIdToJSON( jsonWriter );
         jsonWriter.name( Ofm.FIELD_NAME ).value( RESULT_NAME );
@@ -551,6 +551,20 @@ public class Result extends Persistent {
         return this.durationInMillis;
     }
 
+    /** @return the result name (NOT the file name).
+     * This is used inside the JSON file.
+     * This name contains important info.
+     * The name structure must be made consistent with the static parse_XXX functions below.
+     */
+    public String buildResultName()
+    {
+        return Persistent.TypeId.Result.toString().toLowerCase()
+                + FileCache.FILE_NAME_PART_SEPARATOR + ID_PART + this.getId()
+                + FileCache.FILE_NAME_PART_SEPARATOR + TIME_PART + this.getTime()
+                + FileCache.FILE_NAME_PART_SEPARATOR + USER_ID_PART + this.getUser().getId()
+                + FileCache.FILE_NAME_PART_SEPARATOR + EXPERIMENT_ID_PART + this.getExperiment().getId();
+    }
+
     @Override @NonNull
     public String toString()
     {
@@ -565,21 +579,6 @@ public class Result extends Persistent {
     private static final String TIME_PART = "t";
     private static final String USER_ID_PART = "u";
     private static final String EXPERIMENT_ID_PART = "e";
-
-    /** Creates the result name (NOT the file name).
-      * This is used inside the JSON file.
-      * This name contains important info.
-      * The name structure must be made consistent with the next functions.
-      * @param res The result to build a name for.
-      */
-    public static String buildResultName(Result res)
-    {
-        return Persistent.TypeId.Result.toString().toLowerCase()
-                + FileCache.FILE_NAME_PART_SEPARATOR + ID_PART + res.getId()
-                + FileCache.FILE_NAME_PART_SEPARATOR + TIME_PART + res.getTime()
-                + FileCache.FILE_NAME_PART_SEPARATOR + USER_ID_PART + res.getUser().getId()
-                + FileCache.FILE_NAME_PART_SEPARATOR + EXPERIMENT_ID_PART + res.getExperiment().getId();
-    }
 
     /** @return the result's time - date, reading it from its name (NOT file name).
       * @param resName the name of the result to extract the time from.
@@ -619,7 +618,7 @@ public class Result extends Persistent {
         }
 
         try {
-            toret = Long.parseLong( STR_LONG.substring( 1 ) );
+            toret = Long.parseLong( STR_LONG );
         } catch(NumberFormatException exc)
         {
             throw new Error( "malformed result name looking for time: "

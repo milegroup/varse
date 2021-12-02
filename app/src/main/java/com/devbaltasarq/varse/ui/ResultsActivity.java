@@ -296,7 +296,7 @@ public class ResultsActivity extends AppActivity {
             }
         } catch(IOException exc)
         {
-            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
+            this.showStatus( LOG_TAG, this.getString( R.string.errIO) );
         }
 
         return;
