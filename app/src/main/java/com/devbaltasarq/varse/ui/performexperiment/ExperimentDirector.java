@@ -1,6 +1,6 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
-import android.app.AlertDialog;
+
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -11,9 +11,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -27,6 +24,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.R;
@@ -46,6 +50,7 @@ import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.core.experiment.Tag;
 import com.devbaltasarq.varse.ui.AppActivity;
 import com.devbaltasarq.varse.ui.adapters.ListViewActivityArrayAdapter;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,9 +58,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-
-import static android.view.View.SYSTEM_UI_FLAG_FULLSCREEN;
-import static android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
 
 
 public class ExperimentDirector extends AppActivity implements HRListenerActivity {
@@ -183,6 +185,24 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         });
     }
 
+    private void hideSystemBars()
+    {
+        WindowInsetsControllerCompat windowInsetsController =
+                ViewCompat.getWindowInsetsController( this.getWindow().getDecorView() );
+
+        if ( windowInsetsController == null ) {
+            return;
+        }
+
+        // Configure the behavior of the hidden system bars
+        windowInsetsController.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        );
+
+        // Hide both the status bar and the navigation bar
+        windowInsetsController.hide( WindowInsetsCompat.Type.systemBars() );
+    }
+
     private void setInfoVisibility()
     {
         final CardView CD_INFO = this.findViewById( R.id.cdInfo );
@@ -272,7 +292,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     @Override
     public void showStatus(String msg)
     {
-        this.showStatus(LOG_TAG, msg );
+        this.showStatus( LOG_TAG, msg );
     }
 
     private void showActivities()
@@ -544,9 +564,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.prepareGlobalUI( true );
 
         // Hide system buttons
-        this.getWindow().getDecorView().setSystemUiVisibility(
-                SYSTEM_UI_FLAG_FULLSCREEN
-                        | SYSTEM_UI_FLAG_HIDE_NAVIGATION );
+        this.hideSystemBars();
     }
 
     private void prepareGlobalUI(boolean experimentVisible)
