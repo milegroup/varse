@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -11,7 +11,7 @@
     tools:context="com.devbaltasarq.varse.ui.editexperiment.editgroup.EditManualGroupActivity"
     tools:showIn="@layout/activity_edit_manual_group">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:gravity="center_vertical"
         android:layout_gravity="center_vertical"
         android:layout_width="match_parent"
@@ -48,7 +48,7 @@
                     android:text="@string/lblActivities"
                     android:textSize="18sp"/>
 
-                <android.support.design.widget.FloatingActionButton
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/fbAddManualActivity"
                     app:fabSize="mini"
                     android:layout_gravity="bottom|end"
@@ -83,6 +83,6 @@
 
     </LinearLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

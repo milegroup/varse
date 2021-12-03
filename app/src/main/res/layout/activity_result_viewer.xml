@@ -7,12 +7,12 @@
     android:orientation="vertical"
     tools:context=".ui.showresult.ResultViewerActivity">
 
-    <android.support.design.widget.AppBarLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/AppTheme.AppBarOverlay">
 
-        <android.support.v7.widget.Toolbar
+        <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
@@ -48,8 +48,8 @@
                 android:layout_height="wrap_content"
                 android:text="@string/lblResult"/>
 
-        </android.support.v7.widget.Toolbar>
-    </android.support.design.widget.AppBarLayout>
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -76,7 +76,7 @@
 
     </LinearLayout>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:gravity="center_horizontal|center_vertical"
         android:layout_gravity="center_vertical"
         android:layout_width="match_parent"
@@ -113,5 +113,5 @@
                 </FrameLayout>
             </ScrollView>
         </LinearLayout>
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 </LinearLayout>
