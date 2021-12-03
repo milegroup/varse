@@ -1,14 +1,11 @@
 package com.devbaltasarq.varse.ui;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -20,21 +17,30 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.DropboxUsrClient;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Ofm;
-import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.Settings;
 import com.devbaltasarq.varse.core.User;
-import com.devbaltasarq.varse.ui.showresult.ResultViewerActivity;
+import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.ui.adapters.ListViewResultArrayAdapter;
+import com.devbaltasarq.varse.ui.showresult.ResultViewerActivity;
 import com.dropbox.core.DbxException;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class ResultsActivity extends AppActivity {
     private final static String LOG_TAG = ResultsActivity.class.getSimpleName();
@@ -265,13 +271,22 @@ public class ResultsActivity extends AppActivity {
         try {
             final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
             final ListView LV_RESULTS = this.findViewById( R.id.lvResultItems );
-            final PartialObject[] PO_ENTRIES = this.dataStore.enumerateResultsForExperiment( experiment.getId() );
+            final ArrayList<PartialObject> PO_ENTRIES =
+                    new ArrayList<>( Arrays.asList(
+                            this.dataStore.enumerateResultsForExperiment( experiment.getId() ) ) );
+
+            // Sort by creation time, reversed (more recent before)
+            Collections.sort( PO_ENTRIES, (po1, po2) -> Long.compare(
+                    Result.parseTimeFromName( po2.getName() ),
+                    Result.parseTimeFromName( po1.getName() ) )
+            );
 
             // Prepare the list of experiments
-            final Result[] RESULT_ENTRIES = new Result[ PO_ENTRIES.length ];
+            final int NUM_RESULT_ENTRIES = PO_ENTRIES.size();
+            final Result[] RESULT_ENTRIES = new Result[ NUM_RESULT_ENTRIES ];
 
-            for(int i = 0; i < PO_ENTRIES.length; ++i) {
-                final PartialObject PO = PO_ENTRIES[ i ];
+            for(int i = 0; i < NUM_RESULT_ENTRIES; ++i) {
+                final PartialObject PO = PO_ENTRIES.get( i );
                 final Id USR_ID = new Id( Result.parseUserIdFromName( PO.getName() ) );
                 final User USR = this.dataStore.createOrRetrieveUserById( USR_ID );
 
