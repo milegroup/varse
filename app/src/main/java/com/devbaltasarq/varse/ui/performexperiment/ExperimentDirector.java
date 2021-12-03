@@ -187,20 +187,20 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void hideSystemBars()
     {
-        WindowInsetsControllerCompat windowInsetsController =
+        final WindowInsetsControllerCompat WINDOW_INSETS_CTRL =
                 ViewCompat.getWindowInsetsController( this.getWindow().getDecorView() );
 
-        if ( windowInsetsController == null ) {
+        if ( WINDOW_INSETS_CTRL == null ) {
             return;
         }
 
         // Configure the behavior of the hidden system bars
-        windowInsetsController.setSystemBarsBehavior(
+        WINDOW_INSETS_CTRL.setSystemBarsBehavior(
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         );
 
         // Hide both the status bar and the navigation bar
-        windowInsetsController.hide( WindowInsetsCompat.Type.systemBars() );
+        WINDOW_INSETS_CTRL.hide( WindowInsetsCompat.Type.systemBars() );
     }
 
     private void setInfoVisibility()
