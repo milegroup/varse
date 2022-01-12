@@ -55,8 +55,9 @@ public class PictureGroup extends MediaGroup {
 
 
     @Override
-    public void add(MediaActivity act)
+    public void add(Activity mediaActivity)
     {
+        final MediaActivity act = (MediaActivity) mediaActivity;
         final File F = act.getFile();
 
         if ( !Ofm.extractFileExt( F ).isEmpty() ) {

@@ -1,9 +1,15 @@
 package com.devbaltasarq.varse.core;
 
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+
+import android.provider.MediaStore;
 import android.util.JsonReader;
 import android.util.Log;
 import android.util.Pair;
@@ -22,6 +28,10 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,19 +65,29 @@ public final class Ofm {
     public static final String FIELD_GROUPS = "groups";
     public static final String FIELD_TYPE_ID = Persistent.TypeId.FIELD;
     public static final String FIELD_ACTIVITIES = "activities";
+    public static final String FIELD_NAME = "name";
 
     private static final String SETTINGS_FILE_NAME = "settings.json";
     private static final String DIR_DB = "db";
     static final String DIR_RES = "res";
-    public static final String FIELD_NAME = "name";
+    private static final String TEXT_MIME_TYPE = "text/plain";
+    private static final String ZIP_MIME_TYPE = "application/zip";
+
 
     /** Prepares the ORM to operate. */
+    @SuppressWarnings("deprecation")
     private Ofm(Context context)
     {
         this.context = context;
         this.cache = new EntitiesCache();
         this.resultsPerExperiment = new ResultsPerExperiment();
-        DIR_DOWNLOADS = Environment.getExternalStoragePublicDirectory( Environment.DIRECTORY_DOWNLOADS );
+
+        DIR_DOWNLOADS = null;
+        if ( android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q )
+        {
+            DIR_DOWNLOADS = Environment.getExternalStoragePublicDirectory( Environment.DIRECTORY_DOWNLOADS );
+        }
+
         this.reset();
     }
 
@@ -84,10 +104,10 @@ public final class Ofm {
         this.removeCache();
         this.createCaches();
 
-        Log.i(LOG_TAG, "Store ready at: " + this.dirDb.getAbsolutePath() );
-        Log.i(LOG_TAG, "    #user files: " + this.cache.getUsers().count() );
-        Log.i(LOG_TAG, "    #experiment files: " + this.cache.getExperiments().count() );
-        Log.i(LOG_TAG, "    #result files: " + this.cache.getResults().count() );
+        Log.i( LOG_TAG, "Store ready at: " + this.dirDb.getAbsolutePath() );
+        Log.i( LOG_TAG, "    #user files: " + this.cache.getUsers().count() );
+        Log.i( LOG_TAG, "    #experiment files: " + this.cache.getExperiments().count() );
+        Log.i( LOG_TAG, "    #result files: " + this.cache.getResults().count() );
     }
 
     /** Creates the needed directories, if do not exist. */
@@ -577,71 +597,79 @@ public final class Ofm {
     }
 
     /** Exports a given result set.
-     * @param dir the directory to export the result set to.
-     *             If null, then Downloads is chosen.
      * @param res the result to export.
      * @throws IOException if something goes wrong, like a write fail.
      */
-    public void exportResult(File dir, Result res) throws IOException
+    public void exportResultToDownloads(Result res) throws IOException
     {
         final String RES_FILE_NAME = getFileNameFor( res );
+        final String USR_NAME = res.getUser().getName();
+        final String TAGS_FILE_NAME = USR_NAME + ".tags.txt";
+        final String RR_FILE_NAME = USR_NAME + ".rr.txt";
+        final File ORG_FILE = new File( this.dirDb, RES_FILE_NAME );
+        final File ORG_FILE_COPY = new File( this.dirTmp,
+                                        res.getUser().getName() + "."
+                                         + EntitiesCache.getFileExtFor( Persistent.TypeId.Result ) );
 
-        if ( dir == null ) {
-            dir = DIR_DOWNLOADS;
-        }
+        this.store( res );                  // Ensure it is in the db
 
         try {
-            final String USR_NAME = res.getUser().getName();
-            final String TAGS_FILE_NAME = "tags-" + USR_NAME + ".tags.txt";
-            final String RR_FILE_NAME = "rr-" + USR_NAME + ".rr.txt";
+            if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
+            {
+                final File TAGS_TEMP_FILE = new File( this.dirTmp, TAGS_FILE_NAME );
+                final File RR_TEMP_FILE = new File( this.dirTmp, RR_FILE_NAME );
+                final Writer TAGS_STREAM = openWriterFor( TAGS_TEMP_FILE );
+                final Writer BEATS_STREAM = openWriterFor( RR_TEMP_FILE );
 
-            // Org
-            final File ORG_FILE = new File( this.dirDb, RES_FILE_NAME );
-            this.store( res );
+                // Create tag and beat files in temporary dir
+                res.exportToStdTextFormat( TAGS_STREAM, BEATS_STREAM );
+                close( TAGS_STREAM );
+                close( BEATS_STREAM );
+                copy( ORG_FILE, ORG_FILE_COPY );
 
-            // Dest
-            final File OUTPUT_FILE = new File( dir, RES_FILE_NAME );
-            final File TAGS_OUTPUT_FILE = new File( dir, TAGS_FILE_NAME );
-            final File RR_OUTPUT_FILE = new File( dir, RR_FILE_NAME );
-            final Writer TAGS_STREAM = openWriterFor( TAGS_OUTPUT_FILE );
-            final Writer BEATS_STREAM = openWriterFor( RR_OUTPUT_FILE );
+                // Now save to downloads
+                this.saveToDownloads( ORG_FILE_COPY.getPath(), TEXT_MIME_TYPE );
+                this.saveToDownloads( TAGS_TEMP_FILE.getPath(), TEXT_MIME_TYPE );
+                this.saveToDownloads( RR_TEMP_FILE.getPath(), TEXT_MIME_TYPE );
 
-            if ( !createDir( dir ) ) {
-                throw new IOException( "unable to create target dir" );
+                // Clean
+                TAGS_TEMP_FILE.delete();
+                RR_TEMP_FILE.delete();
+            } else {
+                // Dest
+                final File OUTPUT_FILE = new File( DIR_DOWNLOADS, RES_FILE_NAME );
+                final File TAGS_OUTPUT_FILE = new File( DIR_DOWNLOADS, TAGS_FILE_NAME );
+                final File RR_OUTPUT_FILE = new File( DIR_DOWNLOADS, RR_FILE_NAME );
+                final Writer TAGS_STREAM = openWriterFor( TAGS_OUTPUT_FILE );
+                final Writer BEATS_STREAM = openWriterFor( RR_OUTPUT_FILE );
+
+                copy( ORG_FILE, OUTPUT_FILE );
+                res.exportToStdTextFormat( TAGS_STREAM, BEATS_STREAM );
+
+                close( TAGS_STREAM );
+                close( BEATS_STREAM );
             }
-
-            copy( ORG_FILE, OUTPUT_FILE );
-            res.exportToStdTextFormat( TAGS_STREAM, BEATS_STREAM );
-
-            close( TAGS_STREAM );
-            close( BEATS_STREAM );
         } catch(IOException exc) {
-            throw new IOException(
-                    "exporting: '"
+            throw new IOException( "exporting: '"
                             + RES_FILE_NAME
-                            + "' to '" + dir
-                            + "': " + exc.getMessage() );
+                            + "' to '/Download/': "
+                            + exc.getMessage() );
         }
 
         return;
     }
 
     /** Exports a given experiment.
-      * @param dir the directory to export the experiment to.
-     *             If null, then Downloads is chosen.
       * @param expr the experiment to export.
       * @throws IOException if something goes wrong, like a write fail.
       */
-    public void exportExperiment(File dir, Experiment expr) throws IOException
+    public void exportExperimentToDownloads(Experiment expr) throws IOException
     {
         final String OUTPUT_NAME = PlainStringEncoder.get().encode( expr.getName() );
+        final File OUTPUT_FILE = new File( this.dirTmp, OUTPUT_NAME + ".zip" );
         final File TEMP_FILE = this.createTempFile(
                 expr.getTypeId().toString(),
                 expr.getId().toString() );
-
-        if ( dir == null ) {
-            dir = DIR_DOWNLOADS;
-        }
 
         try {
             this.store( expr );
@@ -654,13 +682,14 @@ public final class Ofm {
             ZipUtil.zip(
                     FILES.toArray( new File[ 0 ] ),
                     TEMP_FILE );
-
-            if ( !createDir( dir ) ) {
-                throw new IOException( "unable to create target dir" );
-            }
-
-            final File OUTPUT_FILE = new File( dir, OUTPUT_NAME + ".zip" );
             copy( TEMP_FILE, OUTPUT_FILE );
+
+            if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
+                this.saveToDownloads( OUTPUT_FILE.getPath(), ZIP_MIME_TYPE );
+            } else {
+                final File DWNLDS_OUTPUT_FILE = new File( DIR_DOWNLOADS, OUTPUT_NAME + ".zip" );
+                copy( TEMP_FILE, DWNLDS_OUTPUT_FILE );
+            }
         } catch(IOException exc) {
             throw new IOException(
                             "exporting: '"
@@ -1131,6 +1160,39 @@ public final class Ofm {
             copy( f, new File( subDir, fileName ) );
         } else {
             throw new IOException( "unable to create target dir: " + resSubDir );
+        }
+
+        return;
+    }
+
+    private void saveToDownloads(String fn, String mimeType)
+    {
+        if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
+        {
+            final File INPUT_FILE = new File( fn );
+            final ContentValues VALUES = new ContentValues();
+            final ContentResolver FINDER = this.context.getContentResolver();
+
+            VALUES.put( MediaStore.MediaColumns.DISPLAY_NAME, INPUT_FILE.getName() );
+            VALUES.put( MediaStore.MediaColumns.MIME_TYPE, mimeType );
+            VALUES.put( MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS );
+
+            final Uri URI = FINDER.insert( MediaStore.Downloads.EXTERNAL_CONTENT_URI, VALUES );
+            final InputStream IN;
+            final OutputStream OUT;
+
+            if ( URI != null ) {
+                try {
+                    IN = INPUT_FILE.toURI().toURL().openStream();
+                    OUT = FINDER.openOutputStream( URI );
+
+                    copy( IN, OUT );
+                } catch(IOException exc) {
+                    Log.e( LOG_TAG, "saving to Downloads: " + exc.getMessage() );
+                }
+            }
+        } else {
+            throw new Error( "saveToDownloads() called from Android < Q" );
         }
 
         return;

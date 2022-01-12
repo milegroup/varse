@@ -1,7 +1,8 @@
 package com.devbaltasarq.varse.core.bluetooth;
 
+import static android.content.Context.BIND_AUTO_CREATE;
+
 import android.Manifest;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -15,15 +16,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.IBinder;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
-
-import static android.content.Context.BIND_AUTO_CREATE;
 
 
 public class BluetoothUtils {
@@ -49,6 +52,12 @@ public class BluetoothUtils {
         if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
         {
             BUILT_PERMISSIONS.add( Manifest.permission.ACCESS_BACKGROUND_LOCATION );
+        }
+
+        if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S )
+        {
+            BUILT_PERMISSIONS.add( Manifest.permission.BLUETOOTH_SCAN );
+            BUILT_PERMISSIONS.add( Manifest.permission.BLUETOOTH_CONNECT );
         }
 
         final ArrayList<String> TORET = new ArrayList<>();
@@ -304,7 +313,7 @@ public class BluetoothUtils {
     /** Turns down all services and callbacks needed to connect to the band. */
     public static void closeBluetoothConnections(HRListenerActivity activity)
     {
-        final Activity CONTEXT = (Activity) activity;
+        final AppCompatActivity CONTEXT = (AppCompatActivity) activity;
 
         Log.d(LOG_TAG, "Closing connections." );
 
@@ -340,7 +349,7 @@ public class BluetoothUtils {
     /** Turns on all services and callbacks needed to connect to the band. */
     public static void openBluetoothConnections(HRListenerActivity activity, final String CONN, final String DISCONN)
     {
-        final Activity CONTEXT = (Activity) activity;
+        final AppCompatActivity CONTEXT = (AppCompatActivity) activity;
         final Intent GATT_SERV_INTENT = new Intent( CONTEXT, BleService.class );
 
         activity.setServiceConnection( BluetoothUtils.createServiceConnectionCallBack( activity ) );

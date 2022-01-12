@@ -2,9 +2,10 @@
 
 package com.devbaltasarq.varse.core;
 
-import android.app.Activity;
 import android.util.Log;
 import android.util.Pair;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
@@ -46,7 +47,7 @@ public class DropboxUsrClient {
       * @param OWNER The activity this client is going to be used in.
       * @param USR_EMAIL The user id (the email).
       */
-    public DropboxUsrClient(final Activity OWNER, final String USR_EMAIL)
+    public DropboxUsrClient(final AppCompatActivity OWNER, final String USR_EMAIL)
     {
         this.USR_EMAIL = USR_EMAIL;
 

@@ -5,14 +5,17 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.Toolbar;
+import com.google.android.material.navigation.NavigationView;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.MimeTypeMap;
@@ -39,7 +42,6 @@ public class MainActivity extends AppActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-    private static final int RQC_PICK_FILE = 0x813;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -181,7 +183,7 @@ public class MainActivity extends AppActivity
                 toret = true;
             }
         } else {
-            Log.e(LOG_TAG, "Tried to operate in blocked app" );
+            Log.e( LOG_TAG, "Tried to operate in blocked app" );
             this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
         }
 
@@ -240,48 +242,10 @@ public class MainActivity extends AppActivity
         return false;
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult( requestCode, resultCode, data );
-
-        if ( requestCode == RQC_PICK_FILE
-          && resultCode == RESULT_OK )
-        {
-            final Uri URI = data.getData();
-
-            if ( URI != null ) {
-                final String FILE_EXTENSION = MimeTypeMap.getFileExtensionFromUrl( URI
-                        .toString().toLowerCase() );
-                final String RES_FILE_EXT = EntitiesCache.getFileExtFor( Persistent.TypeId.Result ).toLowerCase();
-
-                if ( FILE_EXTENSION.equals( "zip" )
-                  || FILE_EXTENSION.equals( RES_FILE_EXT ) )
-                {
-                    this.importFile( URI );
-                } else {
-                    this.showStatus(LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
-                }
-            } else {
-                this.showStatus(LOG_TAG, this.getString( R.string.msgFileNotFound ) );
-            }
-        }
-
-        return;
-    }
-
     /** Launch file browser. */
     private void pickFile()
     {
-        final Intent INTENT = new Intent();
-
-        // Launch
-        INTENT.setType( "*/*" );
-        INTENT.setAction( Intent.ACTION_GET_CONTENT );
-
-        this.startActivityForResult(
-                Intent.createChooser( INTENT, this.getString( R.string.lblMediaSelection ) ),
-                RQC_PICK_FILE );
+        this.SELECT_MEDIA.launch( "*/*" );
     }
 
     /** Import the experiment file. */
@@ -325,4 +289,21 @@ public class MainActivity extends AppActivity
     }
 
     private boolean block;
+    private final ActivityResultLauncher<String> SELECT_MEDIA = this.registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if ( uri != null ) {
+                    final String FILE_EXTENSION = MimeTypeMap.getFileExtensionFromUrl(
+                            uri.toString().toLowerCase() );
+                    final String RES_FILE_EXT = EntitiesCache.getFileExtFor( Persistent.TypeId.Result ).toLowerCase();
+
+                    if ( FILE_EXTENSION.equals( "zip" )
+                      || FILE_EXTENSION.equals( RES_FILE_EXT ) )
+                    {
+                        this.importFile( uri );
+                    } else {
+                        this.showStatus( LOG_TAG, this.getString( R.string.errUnsupportedFileType) );
+                    }
+                }
+            });
 }

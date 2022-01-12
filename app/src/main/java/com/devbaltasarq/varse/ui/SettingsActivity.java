@@ -1,7 +1,6 @@
 package com.devbaltasarq.varse.ui;
 
 
-import android.app.AlertDialog;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,6 +14,8 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.AppInfo;

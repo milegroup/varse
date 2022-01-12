@@ -68,7 +68,7 @@ public class PartialObject extends Persistent {
     @Override
     public String toString()
     {
-        return this.getId().toString() + ": " + this.getName();
+        return this.getName();
     }
 
     @Override

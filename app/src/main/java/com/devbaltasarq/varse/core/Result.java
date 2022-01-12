@@ -5,7 +5,7 @@ import com.devbaltasarq.varse.core.experiment.Tag;
 import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
 import com.devbaltasarq.varse.core.ofmcache.FileCache;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;

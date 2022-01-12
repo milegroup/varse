@@ -36,11 +36,11 @@ import com.dropbox.core.DbxException;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.List;
+
 
 public class ResultsActivity extends AppActivity {
     private final static String LOG_TAG = ResultsActivity.class.getSimpleName();
@@ -222,7 +222,7 @@ public class ResultsActivity extends AppActivity {
         final String LBL_RESULT = this.getString( R.string.lblResult );
 
         try {
-            this.dataStore.exportResult( null, result );
+            this.dataStore.exportResultToDownloads( result );
             this.showStatus(LOG_TAG, this.getString( R.string.msgExported ) + ": " + LBL_RESULT );
         } catch(IOException exc)
         {
@@ -240,18 +240,18 @@ public class ResultsActivity extends AppActivity {
         // Read experiments' names
         try {
             // Populate the experiments list
-            experimentsList = this.dataStore.enumerateExperiments();
+            this.experimentsList = this.dataStore.enumerateExperiments();
 
             // Spinner experiments
-            final ArrayAdapter<Persistent> ADAPTER_EXPERIMENTS =
+            final ArrayAdapter<PartialObject> ADAPTER_EXPERIMENTS =
                     new ArrayAdapter<>( this,
                                         android.R.layout.simple_spinner_item,
-                                        experimentsList );
+                                        this.experimentsList );
             ADAPTER_EXPERIMENTS.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
             CB_EXPERIMENTS.setAdapter( ADAPTER_EXPERIMENTS );
             CB_EXPERIMENTS.setSelection( 0, false );
 
-            if ( experimentsList.length > 0 ) {
+            if ( this.experimentsList.length > 0 ) {
                 experiment = experimentsList[ 0 ];
             }
         } catch(IOException exc) {
@@ -329,7 +329,7 @@ public class ResultsActivity extends AppActivity {
     private boolean backupFinished;
     private HandlerThread handlerThread;
     private Handler handler;
-    private Persistent[] experimentsList;
+    private PartialObject[] experimentsList;
     private Ofm dataStore;
 
     static Persistent experiment;

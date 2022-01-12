@@ -53,26 +53,23 @@ public abstract class EditGroupActivity extends AppActivity {
 
     public abstract void editActivity(Group.Activity act);
 
-    @SuppressWarnings("unchecked")
     public void deleteActivity(Group.Activity act)
     {
         group.remove( act );
         this.showActivities();
     }
 
-    @SuppressWarnings("unchecked")
     public void sortActivityUp(Group.Activity act)
     {
         group.sortActivityUp( act );
         this.showActivities();
     }
 
-    @SuppressWarnings("unchecked")
     public void sortActivityDown(Group.Activity act)
     {
         group.sortActivityDown( act );
         this.showActivities();
     }
 
-    public static Group group;
+    public static Group<? extends Group.Activity> group;
 }

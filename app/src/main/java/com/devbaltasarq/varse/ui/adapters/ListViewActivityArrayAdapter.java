@@ -1,14 +1,12 @@
 package com.devbaltasarq.varse.ui.adapters;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.v7.content.res.AppCompatResources;
 import android.util.Log;
+import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +14,10 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.content.res.AppCompatResources;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
@@ -26,6 +28,7 @@ import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.ui.editexperiment.editgroup.EditGroupActivity;
 
 import java.io.File;
+import java.io.IOException;
 
 /** Represents an adapter of the special items for the ListView of media files. */
 public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
@@ -161,9 +164,18 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
     private static Bitmap getVideoThumbnail(Ofm db, Experiment expr, File f)
     {
         final File MEDIA_FILE = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
+        Bitmap toret = null;
 
-        return ThumbnailUtils.createVideoThumbnail( MEDIA_FILE.getAbsolutePath(),
-                                             MediaStore.Images.Thumbnails.MICRO_KIND );
+        try {
+            toret = ThumbnailUtils.createVideoThumbnail(
+                                    MEDIA_FILE,
+                                    Size.parseSize( "256x256" ),
+                                    null );
+        } catch(IOException exc) {
+            Log.e( LOG_TAG, "creating thumbail for: " + f.getName() );
+        }
+
+        return toret;
     }
 
     /** Gets the name of the file for a given activity,

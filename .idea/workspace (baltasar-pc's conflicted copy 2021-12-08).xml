@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AndroidLayouts">
+    <shared>
+      <config />
+    </shared>
+  </component>
+  <component name="AndroidLogFilters">
+    <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="Show only selected application" />
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="AvailableLibraryUpdateStorage">
+    <library-updates>
+      <library-update>
+        <group-id>com.android.support</group-id>
+        <name>support-annotations</name>
+        <version>28.0.0</version>
+        <repository>Google,Android Repository</repository>
+      </library-update>
+      <library-update>
+        <group-id>com.android.support</group-id>
+        <name>support-vector-drawable</name>
+        <version>28.0.0</version>
+        <repository>Google,Android Repository</repository>
+      </library-update>
+      <library-update>
+        <group-id>com.android.support</group-id>
+        <name>appcompat-v7</name>
+        <version>28.0.0</version>
+        <repository>Google,Android Repository</repository>
+      </library-update>
+      <library-update>
+        <group-id>com.android.support</group-id>
+        <name>design</name>
+        <version>28.0.0</version>
+        <repository>Google,Android Repository</repository>
+      </library-update>
+      <library-update>
+        <group-id>com.android.support</group-id>
+        <name>cardview-v7</name>
+        <version>28.0.0</version>
+        <repository>Google,Android Repository</repository>
+      </library-update>
+      <library-update>
+        <group-id>com.android.support</group-id>
+        <name>support-v4</name>
+        <version>28.0.0</version>
+        <repository>Google,Android Repository</repository>
+      </library-update>
+      <library-update>
+        <group-id>com.android.support.constraint</group-id>
+        <name>constraint-layout</name>
+        <version>2.0.0-alpha5</version>
+        <repository>Google</repository>
+      </library-update>
+      <library-update>
+        <group-id>junit</group-id>
+        <name>junit</name>
+        <version>4.13-beta-2</version>
+        <repository>JCenter</repository>
+      </library-update>
+      <library-update>
+        <group-id>com.android.support.test</group-id>
+        <name>runner</name>
+        <version>1.0.2</version>
+        <repository>Google,Android Repository</repository>
+      </library-update>
+      <library-update>
+        <group-id>com.android.support.test.espresso</group-id>
+        <name>espresso-core</name>
+        <version>3.0.2</version>
+        <repository>Google,Android Repository</repository>
+      </library-update>
+    </library-updates>
+    <last-search-timestamp>1556791096384</last-search-timestamp>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="007de038-f9c3-4f2a-8d5b-7629477604a5" name="Default Changelist" comment="">
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/.idea/jarRepositories.xml" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/.idea/jarRepositories.xml" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/.idea/misc.xml" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/androidTest/java/com/devbaltasarq/varse/TestResultName.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/androidTest/java/com/devbaltasarq/varse/TestResultName.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/AppInfo.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/AppInfo.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/DropboxUsrClient.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/DropboxUsrClient.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/Experiment.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/Experiment.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/MailClient.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/MailClient.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/Ofm.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/Ofm.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/Result.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/Result.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/Template.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/Template.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/bluetooth/BluetoothDeviceWrapper.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/bluetooth/BluetoothDeviceWrapper.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/bluetooth/BluetoothUtils.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core/bluetooth/BluetoothUtils.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/AppActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/AppActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/ExperimentsActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/ExperimentsActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/IconListAlertDialog.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/IconListAlertDialog.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/MainActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/MainActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/SettingsActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/SettingsActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/TemplatesActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/TemplatesActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/UsersActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/UsersActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewActivityArrayAdapter.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewActivityArrayAdapter.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewExperimentArrayAdapter.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewExperimentArrayAdapter.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewGroupArrayAdapter.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewGroupArrayAdapter.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewResultArrayAdapter.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewResultArrayAdapter.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewUserArrayAdapter.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewUserArrayAdapter.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/EditExperimentActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/EditExperimentActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditManualEntryActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditManualEntryActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditManualGroupActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditManualGroupActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditMediaGroupActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditMediaGroupActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/performexperiment/PerformExperimentActivity.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/performexperiment/PerformExperimentActivity.java" afterDir="false" />
+      <change beforePath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/showresult/LineChart.java" beforeDir="false" afterPath="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/showresult/LineChart.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/androidTest/java/com/devbaltasarq/varse/TestResultName.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/androidTest/java/com/devbaltasarq/varse/TestResultName.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/AppInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/AppInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/DropboxUsrClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/DropboxUsrClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/Experiment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/Experiment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/MailClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/MailClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/Ofm.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/Ofm.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/Result.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/Result.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/Template.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/Template.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/bluetooth/BluetoothDeviceWrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/bluetooth/BluetoothDeviceWrapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/bluetooth/BluetoothUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/core/bluetooth/BluetoothUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/AppActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/AppActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/ExperimentsActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/ExperimentsActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/IconListAlertDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/IconListAlertDialog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/MainActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/SettingsActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/SettingsActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/TemplatesActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/TemplatesActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/UsersActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/UsersActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewActivityArrayAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewActivityArrayAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewExperimentArrayAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewExperimentArrayAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewGroupArrayAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewGroupArrayAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewResultArrayAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewResultArrayAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewUserArrayAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/adapters/ListViewUserArrayAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/EditExperimentActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/EditExperimentActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditManualEntryActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditManualEntryActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditManualGroupActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditManualGroupActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditMediaGroupActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/editexperiment/editgroup/EditMediaGroupActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/performexperiment/PerformExperimentActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/performexperiment/PerformExperimentActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/showresult/LineChart.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/devbaltasarq/varse/ui/showresult/LineChart.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[/home/baltasarq/.android/avd/Nexus_S_API_28.avd]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$">
+          <activation />
+        </task>
+        <projects_view />
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="resourceFile" />
+        <option value="Class" />
+        <option value="valueResourceFile" />
+      </list>
+    </option>
+  </component>
+  <component name="GenerateSignedApkSettings">
+    <option name="EXPORT_PRIVATE_KEY" value="false" />
+    <option name="KEY_STORE_PATH" value="$USER_HOME$/Dropbox/Personal/firmas/devbaltasarq-upload-key.ks" />
+    <option name="KEY_ALIAS" value="baltasarq" />
+    <option name="REMEMBER_PASSWORDS" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$USER_HOME$/Dropbox/Prys/Android/varse" />
+  </component>
+  <component name="ProjectId" id="1Ykr5MZE4lIfBmdVxGagNdJx02E" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="ApkExportedModule" value="varse.app" />
+    <property name="BundleExportedModule" value="varse.app" />
+    <property name="DeviceAndSnapshotComboBoxAction.selectedDevice" value="Pixel_XL_API_30" />
+    <property name="DeviceAndSnapshotComboBoxAction.selectionTime" value="2021-04-23T08:54:59.418Z" />
+    <property name="ExportApk.ApkPath" value="$USER_HOME$/Dropbox/Prys/Android/varse/app" />
+    <property name="ExportApk.BuildVariants" value="release" />
+    <property name="ExportApk.SignV1" value="true" />
+    <property name="ExportApk.SignV2" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="android.project.structure.last.selected" value="app" />
+    <property name="android.project.structure.proportion" value="0.15" />
+    <property name="android.sdk.path" value="$USER_HOME$/bin/android-sdk" />
+    <property name="com.intellij.openapi.externalSystem.service.settings.ExternalSystemGroupConfigurable" value="ALL" />
+    <property name="device.picker.selection" value="Nexus_5X_API_21" />
+    <property name="last_directory_selection" value="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Desktop" />
+    <property name="memory.settings.postsync.last.time.stamp" value="1637312522915" />
+    <property name="project.structure.last.edited" value="SDK Location" />
+    <property name="project.structure.proportion" value="0.17" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.project.gradle" />
+  </component>
+  <component name="PsdUISettings">
+    <option name="MODULE_TAB" value="Default Config" />
+    <option name="LAST_EDITED_BUILD_TYPE" value="release" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/res/drawable" />
+      <recent name="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/res/" />
+      <recent name="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/res/layout" />
+      <recent name="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/res/drawable-xhdpi" />
+      <recent name="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/core" />
+    </key>
+    <key name="android.template.packageName">
+      <recent name="com.devbaltasarq.varse" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.devbaltasarq.varse.core.templates" />
+      <recent name="com.devbaltasarq.varse.ui" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/res/drawable" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Android App.app">
+    <configuration default="true" type="AndroidJUnit" factoryName="Android JUnit">
+      <option name="TEST_OBJECT" value="class" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="IdTests" type="AndroidJUnit" factoryName="Android JUnit" nameIsGenerated="true">
+      <module name="varse.app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.devbaltasarq.varse.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.devbaltasarq.varse" />
+      <option name="MAIN_CLASS_NAME" value="com.devbaltasarq.varse.IdTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="TestJsonConversionTests" type="AndroidJUnit" factoryName="Android JUnit">
+      <module name="varse.app" />
+      <useClassPathOnly />
+      <option name="PACKAGE_NAME" value="com.devbaltasarq.varse" />
+      <option name="MAIN_CLASS_NAME" value="com.devbaltasarq.varse.TestJsonConversionTests" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
+      <module name="varse.app" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="SKIP_NOOP_APK_INSTALLATIONS" value="true" />
+      <option name="FORCE_STOP_RUNNING_APP" value="true" />
+      <option name="TARGET_SELECTION_MODE" value="SHOW_DIALOG" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+      </Hybrid>
+      <Java />
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Sample Java Methods" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FileNameParsingTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests &quot;com.devbaltasarq.varse.FileNameParsingTest&quot;" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":app:cleanTestDebugUnitTest" />
+            <option value=":app:testDebugUnitTest" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="FileNameParsingTest.TestResultParseParts" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests &quot;com.devbaltasarq.varse.FileNameParsingTest.TestResultParseParts&quot;" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":app:cleanTestDebugUnitTest" />
+            <option value=":app:testDebugUnitTest" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="ResultNamePartsTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests &quot;com.devbaltasarq.varse.ResultNamePartsTest&quot;" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":app:cleanTestDebugUnitTest" />
+            <option value=":app:testDebugUnitTest" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="ResultNamePartsTest.testResultPartNameId" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests &quot;com.devbaltasarq.varse.ResultNamePartsTest.testResultPartNameId&quot;" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":app:cleanTestDebugUnitTest" />
+            <option value=":app:testDebugUnitTest" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="ResultNamePartsTest.testResultPartUserId" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests &quot;com.devbaltasarq.varse.ResultNamePartsTest.testResultPartUserId&quot;" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":app:cleanTestDebugUnitTest" />
+            <option value=":app:testDebugUnitTest" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Android App.app" />
+      <item itemvalue="Gradle.FileNameParsingTest" />
+      <item itemvalue="Gradle.FileNameParsingTest.TestResultParseParts" />
+      <item itemvalue="Gradle.ResultNamePartsTest" />
+      <item itemvalue="Gradle.ResultNamePartsTest.testResultPartNameId" />
+      <item itemvalue="Gradle.ResultNamePartsTest.testResultPartUserId" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Gradle.ResultNamePartsTest" />
+        <item itemvalue="Gradle.ResultNamePartsTest.testResultPartUserId" />
+        <item itemvalue="Gradle.ResultNamePartsTest.testResultPartNameId" />
+        <item itemvalue="Gradle.FileNameParsingTest" />
+        <item itemvalue="Gradle.FileNameParsingTest.TestResultParseParts" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="007de038-f9c3-4f2a-8d5b-7629477604a5" name="Default Changelist" comment="" />
+      <created>1553678182377</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1553678182377</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.res" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list />
+          </value>
+        </entry>
+        <entry key="User">
+          <value>
+            <list />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Fix: tags now are exported encoded" />
+    <MESSAGE value="Fix: sometimes appeared an unexisting &quot;default&quot; tag" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix: sometimes appeared an unexisting &quot;default&quot; tag" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="java-line">
+          <url>file://$USER_HOME$/Dropbox/Prys/Android/varse/app/src/main/java/com/devbaltasarq/varse/ui/performexperiment/TestHRDevice.java</url>
+          <line>77</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="app">
+        <watch expression="NameStructure.values()" language="JAVA" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/varse$IdTests.ic" NAME="IdTests Coverage Results" MODIFIED="1612526734303" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>com.devbaltasarq.varse.*</FILTER>
+    </SUITE>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ProjectJDKs.UI">
+        <settings>
+          <last-edited>1.8</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>

@@ -1,11 +1,14 @@
 package com.devbaltasarq.varse.ui.editexperiment.editgroup;
 
+
 import android.content.ContentResolver;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.ContextCompat;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -34,7 +37,6 @@ import java.io.InputStream;
 
 public class EditMediaGroupActivity extends EditGroupActivity {
     private static final String LOG_TAG = EditMediaGroupActivity.class.getSimpleName();
-    private final int RQC_PICK_MEDIA = 111;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,26 +160,6 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         this.showActivities();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if ( requestCode == RQC_PICK_MEDIA
-          && resultCode == RESULT_OK )
-        {
-            final Uri URI = data.getData();
-
-            if ( URI != null ) {
-                this.storeMedia( URI );
-            } else {
-                this.showStatus(LOG_TAG, this.getString( R.string.msgFileNotFound ) );
-            }
-        }
-
-        return;
-    }
-
     /** Writes the duration time into the object. */
     private void writeDurationToPictureGroup()
     {
@@ -196,8 +178,6 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     /** Launch file browser. */
     private void openMedia()
     {
-        final Intent INTENT_OPEN = new Intent();
-
         // Choose the intent type, video or image
         String intentTypeStr = "image/*";
 
@@ -205,13 +185,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
             intentTypeStr = "video/*";
         }
 
-        // Launch
-        INTENT_OPEN.setType( intentTypeStr );
-        INTENT_OPEN.setAction( Intent.ACTION_GET_CONTENT );
-
-        this.startActivityForResult(
-                Intent.createChooser( INTENT_OPEN, this.getString( R.string.lblMediaSelection ) ),
-                RQC_PICK_MEDIA);
+        this.LAUNCH_PICKER.launch( intentTypeStr );
     }
 
     /** Stores the media in the db, and creates the media activity
@@ -298,7 +272,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
             try {
                 DB.deleteMedia( OWNER, FILE_NAME );
             } catch(IOException exc) {
-                this.showStatus(LOG_TAG, exc.getMessage() );
+                this.showStatus( LOG_TAG, exc.getMessage() );
             }
         }
 
@@ -310,4 +284,15 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     {
         // Nothing to do here, media files cannot be edited.
     }
+
+    private final ActivityResultLauncher<String> LAUNCH_PICKER =
+            this.registerForActivityResult(
+                    new ActivityResultContracts.GetContent(),
+                    uri -> {
+                        if ( uri != null ) {
+                            this.storeMedia( uri );
+                        } else {
+                            this.showStatus( LOG_TAG, this.getString( R.string.msgFileNotFound ) );
+                        }
+                    });
 }

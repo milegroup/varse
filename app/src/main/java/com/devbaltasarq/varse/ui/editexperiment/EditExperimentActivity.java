@@ -1,7 +1,8 @@
 package com.devbaltasarq.varse.ui.editexperiment;
 
 import android.content.Intent;
-import android.support.design.widget.FloatingActionButton;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -10,6 +11,9 @@ import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
@@ -25,9 +29,6 @@ import com.devbaltasarq.varse.ui.editexperiment.editgroup.EditMediaGroupActivity
 import com.devbaltasarq.varse.ui.IconListAlertDialog;
 
 public class EditExperimentActivity extends AppActivity {
-    private final int RQC_ADD_GROUP = 112;
-    private final int RQC_EDIT_GROUP = 113;
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -76,27 +77,6 @@ public class EditExperimentActivity extends AppActivity {
         this.showGroups();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult( requestCode, resultCode, data );
-
-        if ( resultCode == RSC_SAVE_DATA ) {
-            if ( requestCode == RQC_EDIT_GROUP ) {
-                experiment.substituteGroup( selectedGroup );
-            }
-            else
-            if ( requestCode == RQC_ADD_GROUP ) {
-                experiment.addGroup( selectedGroup );
-            }
-
-            this.showGroups();
-        }
-
-        selectedGroup = null;
-        return;
-    }
-
     /** Fills the data in the fields. */
     private void fillInData()
     {
@@ -109,7 +89,7 @@ public class EditExperimentActivity extends AppActivity {
 
     private void showGroups()
     {
-        final Group[] GROUPS = experiment.getGroups();
+        final Group<? extends Group.Activity>[] GROUPS = experiment.getGroups();
         final int NUM_ENTRIES = GROUPS.length;
         final ListView LV_EXPERIMENT_MEDIA = this.findViewById( R.id.lvExperimentMedia );
         final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
@@ -129,7 +109,7 @@ public class EditExperimentActivity extends AppActivity {
         return;
     }
 
-    public void deleteGroup(Group m)
+    public void deleteGroup(Group<? extends Group.Activity> m)
     {
         selectedGroup = null;
         experiment.removeGroup( m );
@@ -161,29 +141,29 @@ public class EditExperimentActivity extends AppActivity {
                                 EditManualGroupActivity.class );
                         selectedGroup =
                                 EditManualGroupActivity.group =
-                                        new ManualGroup( Id.createFake(), this.experiment );
+                                        new ManualGroup( Id.createFake(), experiment );
                     }
                     else
                     if ( op == 1 ) {
                         selectedGroup =
                                 EditMediaGroupActivity.group =
-                                        new PictureGroup( Id.createFake(), this.experiment );
+                                        new PictureGroup( Id.createFake(), experiment );
                     }
                     else
                     if ( op == 2 ) {
                         selectedGroup =
                                 EditMediaGroupActivity.group =
-                                        new VideoGroup( Id.createFake(), this.experiment );
+                                        new VideoGroup( Id.createFake(), experiment );
                     }
 
                     NEW_GROUP_DLG.dismiss();
-                    EditExperimentActivity.this.startActivityForResult( launchData, RQC_ADD_GROUP) ;
+                    this.LAUNCH_ADD.launch( launchData );
         });
 
         NEW_GROUP_DLG.show();
     }
 
-    public void editGroup(Group group)
+    public void editGroup(Group<? extends Group.Activity> group)
     {
         Intent launchData;
 
@@ -195,16 +175,16 @@ public class EditExperimentActivity extends AppActivity {
             launchData = new Intent( this, EditMediaGroupActivity.class );
         }
 
-        this.startActivityForResult( launchData, RQC_EDIT_GROUP );
+        this.LAUNCH_EDIT.launch( launchData );
     }
 
-    public void sortGroupUp(Group g)
+    public void sortGroupUp(Group<? extends Group.Activity> g)
     {
         experiment.sortGroupUp( g );
         this.showGroups();
     }
 
-    public void sortGroupDown(Group g)
+    public void sortGroupDown(Group<? extends Group.Activity> g)
     {
         experiment.sortGroupDown( g );
         this.showGroups();
@@ -232,6 +212,28 @@ public class EditExperimentActivity extends AppActivity {
         return;
     }
 
+    private final ActivityResultLauncher<Intent> LAUNCH_ADD =
+            this.registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if ( result.getResultCode() == RSC_SAVE_DATA ) {
+                            experiment.addGroup( selectedGroup );
+                            this.showGroups();
+                            selectedGroup = null;
+                        }
+                    });
+
+    private final ActivityResultLauncher<Intent> LAUNCH_EDIT =
+            this.registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if ( result.getResultCode() == RSC_SAVE_DATA ) {
+                            experiment.substituteGroup( selectedGroup );
+                            this.showGroups();
+                            selectedGroup = null;
+                        }
+                    });
+
     public static Experiment experiment;
-    public static Group selectedGroup;
+    public static Group<? extends Group.Activity> selectedGroup;
 }

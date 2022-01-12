@@ -14,7 +14,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.PictureGroup;

@@ -2,7 +2,7 @@ package com.devbaltasarq.varse;
 
 
 import java.util.Calendar;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

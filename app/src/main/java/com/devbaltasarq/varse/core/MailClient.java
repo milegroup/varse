@@ -2,12 +2,13 @@
 
 package com.devbaltasarq.varse.core;
 
-import android.app.Activity;
 import android.os.Debug;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.devbaltasarq.varse.R;
 
@@ -43,7 +44,7 @@ public class MailClient {
         }
     }
 
-    public MailClient(Activity owner,
+    public MailClient(AppCompatActivity owner,
                       String smtpServer, int port,
                       String toList, String subject, String txtBody)
     {
@@ -79,7 +80,7 @@ public class MailClient {
 
         // Call the doSend() method in a different thread.
         this.handler.post( () -> {
-            final Activity OWNER = MailClient.this.owner;
+            final AppCompatActivity OWNER = MailClient.this.owner;
 
             try {
                 this.doSend();
@@ -220,7 +221,7 @@ public class MailClient {
     private String subject;
     private String from;
     private String txtBody;
-    private Activity owner;
+    private AppCompatActivity owner;
     private Handler handler;
     private HandlerThread handlerThread;
     private boolean authenticationRequired = false;

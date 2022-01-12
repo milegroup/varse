@@ -1,6 +1,6 @@
 package com.devbaltasarq.varse.core;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
@@ -54,7 +54,7 @@ public class Experiment extends Persistent {
         toret += 17 * Boolean.valueOf( this.isRandom() ).hashCode();
 
         int grpsHashCode = 0;
-        for(Group grp: this.groups) {
+        for(Group<? extends Group.Activity> grp: this.groups) {
             grpsHashCode += grp.hashCode();
         }
 
@@ -68,7 +68,7 @@ public class Experiment extends Persistent {
 
         if ( o instanceof Experiment ) {
             final Experiment EXPR = (Experiment) o;
-            final Group[] EXPR_GROUPS = EXPR.getGroups();
+            final Group<? extends Group.Activity>[] EXPR_GROUPS = EXPR.getGroups();
 
             toret = this.getName().equals( EXPR.getName() )
                  && this.isRandom() == EXPR.isRandom()
@@ -93,7 +93,7 @@ public class Experiment extends Persistent {
     {
         super.updateIds();
 
-        for(Group grp: this.groups) {
+        for(Group<? extends Group.Activity> grp: this.groups) {
             grp.updateIds();
         }
 
@@ -105,7 +105,7 @@ public class Experiment extends Persistent {
     {
         int toret = 0;
 
-        for(Group g: this.groups) {
+        for(Group<? extends Group.Activity> g: this.groups) {
             toret += g.size();
         }
 
@@ -119,40 +119,40 @@ public class Experiment extends Persistent {
     }
 
     /** @return The media groups involved in the experiment. */
-    public Group[] getGroups()
+    public Group<? extends Group.Activity>[] getGroups()
     {
-        return this.groups.toArray( new Group[ this.groups.size() ]);
+        return (Group<? extends Group.Activity>[]) this.groups.toArray( new Group[ 0 ]);
     }
 
     /** Replaces the media groups of the experiments with new ones. */
-    public void replaceGroups(Group[] files)
+    public void replaceGroups(Group<? extends Group.Activity>[] files)
     {
-        for(Group grp: this.groups) {
+        for(Group<? extends Group.Activity> grp: this.groups) {
             this.removeGroup( grp );
         }
 
         this.groups.clear();
         this.groups.addAll( Arrays.asList( files ) );
 
-        for(Group grp: this.groups) {
+        for(Group<? extends Group.Activity> grp: this.groups) {
             grp.setExperiment( this );
         }
     }
 
     /** Removes a given group from the media group list. */
-    public void removeGroup(Group grp)
+    public void removeGroup(Group<? extends Group.Activity> grp)
     {
         this.groups.remove( grp );
     }
 
     /** Swaps a given media file with the previous one. */
-    public void sortGroupUp(Group g)
+    public void sortGroupUp(Group<? extends Group.Activity> g)
     {
         final int POS = this.groups.indexOf( g );
 
         // Nothing to do if not found or is the first one.
         if ( POS >= 1 ) {
-            Group backUp = this.groups.get( POS - 1 );
+            Group<? extends Group.Activity> backUp = this.groups.get( POS - 1 );
             this.groups.set( POS - 1, this.groups.get( POS ) );
             this.groups.set( POS, backUp );
         }
@@ -161,14 +161,14 @@ public class Experiment extends Persistent {
     }
 
     /** Swaps a given media file with the previous one. */
-    public void sortGroupDown(Group g)
+    public void sortGroupDown(Group<? extends Group.Activity> g)
     {
         final int LENGTH = this.groups.size();
         final int POS = this.groups.indexOf( g );
 
         // Nothing to do if not found or is the last one.
         if ( POS < ( LENGTH - 1 ) ) {
-            Group backUp = this.groups.get( POS + 1 );
+            Group<? extends Group.Activity> backUp = this.groups.get( POS + 1 );
             this.groups.set( POS + 1, this.groups.get( POS ) );
             this.groups.set( POS, backUp );
         }
@@ -181,7 +181,7 @@ public class Experiment extends Persistent {
     {
         MediaGroup toret = null;
 
-        for(Group g: this.groups) {
+        for(Group<? extends Group.Activity> g: this.groups) {
             if ( g instanceof MediaGroup ) {
                 MediaGroup mg = (MediaGroup) g;
 
@@ -205,7 +205,7 @@ public class Experiment extends Persistent {
         MediaGroup.MediaActivity toret = null;
 
         SEARCH:
-        for(Group g: this.groups) {
+        for(Group<? extends Group.Activity> g: this.groups) {
             if ( g instanceof MediaGroup ) {
                 final MediaGroup MG = (MediaGroup) g;
 
@@ -224,7 +224,7 @@ public class Experiment extends Persistent {
     }
 
     /** Adds a new group to the groups list. */
-    public void addGroup(Group group)
+    public void addGroup(Group<? extends Group.Activity> group)
     {
         this.groups.add( group );
         group.setExperiment( this );
@@ -233,7 +233,7 @@ public class Experiment extends Persistent {
     /** Substitute a given group.
      * @param group The group to substitute.
      */
-    public void substituteGroup(Group group)
+    public void substituteGroup(Group<? extends Group.Activity> group)
     {
         for(int i = 0; i < this.groups.size(); ++i) {
             if ( this.groups.get( i ).getId().equals( group.getId() ) ) {
@@ -279,14 +279,14 @@ public class Experiment extends Persistent {
     {
         int toret = 0;
 
-        for (Group g: this.groups) {
+        for (Group<? extends Group.Activity> g: this.groups) {
             toret += g.calculateTimeNeeded().getTimeInSeconds();
         }
 
         return new Duration( toret );
     }
 
-    @Override
+    @Override @NonNull
     public String toString()
     {
         return this.getName();
@@ -297,7 +297,7 @@ public class Experiment extends Persistent {
     {
         ArrayList<File> toret = new ArrayList<>();
 
-        for(Group grp: this.getGroups()) {
+        for(Group<? extends Group.Activity> grp: this.getGroups()) {
             toret.addAll( Arrays.asList( grp.enumerateMediaFiles() ) );
         }
 
@@ -312,7 +312,7 @@ public class Experiment extends Persistent {
         jsonWriter.name( Ofm.FIELD_RANDOM ).value( this.isRandom() );
 
         jsonWriter.name( Ofm.FIELD_GROUPS ).beginArray();
-        for(Group grp: this.groups) {
+        for(Group<? extends Group.Activity> grp: this.groups) {
             jsonWriter.beginObject();
             grp.writeToJSON( jsonWriter );
             jsonWriter.endObject();
@@ -331,7 +331,7 @@ public class Experiment extends Persistent {
         Id id = null;
         boolean rnd = false;
         JsonReader jsonReader = new JsonReader( rd );
-        ArrayList<Group> groups = new ArrayList<>();
+        ArrayList<Group<? extends Group.Activity>> groups = new ArrayList<>();
 
         // Load data
         try {
@@ -385,7 +385,7 @@ public class Experiment extends Persistent {
         }
 
         final Experiment TORET = new Experiment( id, name, rnd );
-        TORET.replaceGroups( groups.toArray( new Group[ groups.size() ] ) );
+        TORET.replaceGroups( groups.toArray( new Group[ 0 ] ) );
         return TORET;
     }
 
@@ -405,10 +405,10 @@ public class Experiment extends Persistent {
     /** Copies the activities in this group.
      * @return a new vector with copied activities.
      */
-    public Group[] copyGroups()
+    public Group<? extends Group.Activity>[] copyGroups()
     {
-        final Group[] MY_GROUPS = this.getGroups();
-        final Group[] TORET = new Group[ MY_GROUPS.length ];
+        final Group<? extends Group.Activity>[] MY_GROUPS = this.getGroups();
+        final Group<? extends Group.Activity>[] TORET = new Group[ MY_GROUPS.length ];
 
         for(int i = 0; i < TORET.length; ++i) {
             TORET[ i ] = MY_GROUPS[ i ].copy();
@@ -417,7 +417,7 @@ public class Experiment extends Persistent {
         return TORET;
     }
 
-    private ArrayList<Group> groups;
+    private final ArrayList<Group<? extends Group.Activity>> groups;
     private boolean random;
     private String name;
 }

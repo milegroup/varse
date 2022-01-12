@@ -1,21 +1,16 @@
 package com.devbaltasarq.varse.ui.performexperiment;
 
-import android.app.AlertDialog;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,10 +25,16 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Ofm;
-import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
@@ -41,8 +42,9 @@ import com.devbaltasarq.varse.core.bluetooth.BluetoothHRFiltering;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
 import com.devbaltasarq.varse.core.bluetooth.DemoBluetoothDevice;
 import com.devbaltasarq.varse.core.bluetooth.ScannerUI;
+import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.ui.AppActivity;
-
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,10 +52,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
 public class PerformExperimentActivity extends AppActivity implements ScannerUI {
     private final String LOG_TAG = PerformExperimentActivity.class.getSimpleName();
-    private static final int RQC_ENABLE_BT = 367;
-    private static final int RQC_TEST_BT_DEVICE = 378;
     private static final int RQC_ASK_CLEARANCE_FOR_BLUETOOTH = 389;
     private static final int MAX_SCAN_PERIOD = 20000;
 
@@ -227,7 +228,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             try {
                 this.unregisterReceiver( this.actionDeviceDiscovery );
             } catch(IllegalArgumentException exc) {
-                Log.e(LOG_TAG, "the receiver for device discovery was not registered." );
+                Log.e( LOG_TAG, "the receiver for device discovery was not registered." );
             }
         }
 
@@ -280,33 +281,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult( requestCode, resultCode, data );
-
-        switch ( requestCode ) {
-            case RQC_TEST_BT_DEVICE:
-            case RQC_ENABLE_BT:
-                this.configBtLaunched = false;
-                this.initBluetooth();
-
-                if ( this.bluetoothAdapter == null ) {
-                    this.setBluetoothUnavailable();
-                }
-                break;
-            default:
-                final String MSG = "unknown request code was not managed: " + requestCode;
-
-                Log.e(LOG_TAG, MSG );
-                throw new InternalError( MSG );
-
-        }
-
-        return;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
     {
         super.onRequestPermissionsResult( requestCode, permissions, grantResults );
 
@@ -326,12 +301,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                     final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
 
                     DLG.setMessage( R.string.errNoBluetoothPermissions);
-                    DLG.setPositiveButton(R.string.lblBack, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-
-                        }
-                    });
+                    DLG.setPositiveButton( R.string.lblBack, null );
 
                     DLG.create().show();
                     this.setBluetoothUnavailable();
@@ -340,7 +310,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             default:
                 final String MSG = "unknown permission request code was not managed" + requestCode;
 
-                Log.e(LOG_TAG, MSG );
+                Log.e( LOG_TAG, MSG );
                 throw new InternalError( MSG );
         }
 
@@ -558,8 +528,8 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             PerformExperimentActivity.this.runOnUiThread( () -> {
                 this.showStatus( this.getString( R.string.lblActivateBluetooth ) );
 
-                final Intent ENABLE_BT_INTENT = new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE );
-                this.startActivityForResult( ENABLE_BT_INTENT, RQC_ENABLE_BT );
+                this.LAUNCH_ENABLE_BT.launch(
+                        new Intent( BluetoothAdapter.ACTION_REQUEST_ENABLE ) );
             });
         }
 
@@ -573,8 +543,9 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
         this.showStatus( "Test " + this.getString(  R.string.lblDevice ) + ": " + chosenBtDevice.getName() );
 
-        final Intent ENABLE_BT_INTENT = new Intent( this, TestHRDevice.class );
-        this.startActivityForResult( ENABLE_BT_INTENT, RQC_TEST_BT_DEVICE);
+        LAUNCH_DEVICE_TESTER.launch(
+                new Intent( this, TestHRDevice.class )
+        );
     }
 
     /** @return whether the device is looking for (scanning and filtering), hrDevices or not. */
@@ -853,7 +824,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             } catch(IOException exc)
             {
                 Log.d(LOG_TAG, exc.getMessage()
-                        + "\n\tlooking for or creating user: " + userName.toString() );
+                        + "\n\tlooking for or creating user: " + userName );
             }
         }
 
@@ -911,6 +882,30 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     private boolean btDefinitelyNotAvailable;
 
     private PartialObject[] experimentsList;
+
+    private final ActivityResultLauncher<Intent> LAUNCH_ENABLE_BT =
+            this.registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        this.configBtLaunched = false;
+                        this.initBluetooth();
+
+                        if ( this.bluetoothAdapter == null ) {
+                            this.setBluetoothUnavailable();
+                        }
+                    });
+
+    private final ActivityResultLauncher<Intent> LAUNCH_DEVICE_TESTER =
+            this.registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        this.configBtLaunched = false;
+                        this.initBluetooth();
+
+                        if ( this.bluetoothAdapter == null ) {
+                            this.setBluetoothUnavailable();
+                        }
+                    });
 
     public static BluetoothDeviceWrapper chosenBtDevice;
     public static BluetoothDeviceWrapper demoDevice;

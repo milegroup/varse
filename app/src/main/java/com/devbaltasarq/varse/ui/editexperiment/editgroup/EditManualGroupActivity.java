@@ -2,8 +2,12 @@ package com.devbaltasarq.varse.ui.editexperiment.editgroup;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.widget.ImageButton;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.experiment.Group;
@@ -11,9 +15,6 @@ import com.devbaltasarq.varse.core.experiment.ManualGroup;
 
 
 public class EditManualGroupActivity extends EditGroupActivity {
-    private static final int RQC_EDIT_ACTIVITY = 801;
-    private static final int RQC_ADD_ACTIVITY = 802;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,34 +40,12 @@ public class EditManualGroupActivity extends EditGroupActivity {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult( requestCode, resultCode, data );
-
-        if ( resultCode == RSC_SAVE_DATA ) {
-            if ( requestCode == RQC_EDIT_ACTIVITY ) {
-                group.substituteActivity( EditManualEntryActivity.manualActivity );
-            }
-            else
-            if ( requestCode == RQC_ADD_ACTIVITY ) {
-                group.add( EditManualEntryActivity.manualActivity );
-            }
-
-            this.showActivities();
-        }
-
-        return;
-    }
-
-    @Override
     public void addActivity()
     {
         EditManualEntryActivity.manualActivity = new ManualGroup.ManualActivity();
 
-        this.startActivityForResult(
-                new Intent( this, EditManualEntryActivity.class ),
-                RQC_ADD_ACTIVITY );
+        this.LAUNCH_ADD.launch(
+                new Intent( this, EditManualEntryActivity.class ) );
     }
 
     @Override
@@ -74,8 +53,28 @@ public class EditManualGroupActivity extends EditGroupActivity {
     {
         EditManualEntryActivity.manualActivity = (ManualGroup.ManualActivity) act.copy();
 
-        this.startActivityForResult(
-                new Intent( this, EditManualEntryActivity.class ),
-                RQC_EDIT_ACTIVITY );
+        this.LAUNCH_EDIT.launch(
+                new Intent( this, EditManualEntryActivity.class ) );
     }
+
+    private final ActivityResultLauncher<Intent> LAUNCH_ADD =
+            this.registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if ( result.getResultCode() == RSC_SAVE_DATA ) {
+                            group.add( EditManualEntryActivity.manualActivity );
+                            this.showActivities();
+                        }
+                    });
+
+    private final ActivityResultLauncher<Intent> LAUNCH_EDIT =
+            this.registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if ( result.getResultCode() == RSC_SAVE_DATA ) {
+                            group.substituteActivity( EditManualEntryActivity.manualActivity );
+                            this.showActivities();
+                        }
+                    });
+
 }

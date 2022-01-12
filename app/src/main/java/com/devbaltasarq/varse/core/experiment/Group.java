@@ -199,9 +199,9 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     }
 
     /** Removes the given activity.
-      * @param act The activity.
-      */
-    public void remove(T act)
+     * @param act The activity.
+     */
+    public void remove(Activity act)
     {
         this.activities.remove( act );
     }
@@ -209,7 +209,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     /** Removes the given activity.
      * @param act The activity.
      */
-    public void add(T act)
+    public void add(Activity act)
     {
         act.group = this;
         this.activities.add( act );
@@ -265,8 +265,9 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         return this.activities.toArray( new Activity[ 0 ] );
     }
 
-    /** Swaps a given media file with the previous one. */
-    public void sortActivityUp(T act)
+    /** Swaps a given media file with the previous one.
+     * @param act*/
+    public void sortActivityUp(Activity act)
     {
         final int POS = this.activities.indexOf( act );
 
@@ -280,8 +281,10 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         return;
     }
 
-    /** Swaps a given media file with the previous one. */
-    public void sortActivityDown(T act)
+    /** Swaps a given media file with the previous one.
+      * @param act the activity to swap.
+      */
+    public void sortActivityDown(Activity act)
     {
         final int LENGTH = this.activities.size();
         final int POS = this.activities.indexOf( act );
