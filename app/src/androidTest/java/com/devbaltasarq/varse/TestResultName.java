@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.User;
 
