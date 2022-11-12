@@ -12,7 +12,6 @@ import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Result;
-import com.devbaltasarq.varse.core.User;
 
 
 @RunWith(AndroidJUnit4.class)
@@ -37,7 +36,7 @@ public class TestResultName {
     @Test
     public void testName()
     {
-        final String NAME = Ofm.getFileNameFor( this.res );
+        final String NAME = Ofm.buildFileNameFor( this.res );
 
         Assert.assertEquals( "res", Ofm.extractFileExt( NAME ) );
     }

@@ -16,7 +16,7 @@ public abstract class Persistent implements Identifiable {
     private static final String LOG_TAG = Persistent.class.getSimpleName();
 
     public enum TypeId {
-            User, Result, Experiment,
+            Result, Experiment,
             PictureGroup, VideoGroup, ManualGroup,
             MediaActivity, ManualActivity;
 
@@ -75,7 +75,7 @@ public abstract class Persistent implements Identifiable {
 
     /** Writes the common properties of a persistent object to JSON.
      * @param wrt The writer to write to.
-     * @throws IOException throws it when there are problems with the stream.
+     * @throws JSONException throws it when there are problems with the stream.
      */
     public void toJSON(Writer wrt) throws JSONException
     {
@@ -88,7 +88,7 @@ public abstract class Persistent implements Identifiable {
             jsonWriter.endObject();
         } catch(IOException exc)
         {
-            Log.e(LOG_TAG, ErrorMessage + exc.getMessage() );
+            Log.e( LOG_TAG, ErrorMessage + exc.getMessage() );
             throw new JSONException( exc.getMessage() );
         } finally {
             try {
@@ -159,10 +159,6 @@ public abstract class Persistent implements Identifiable {
     {
         Persistent toret = null;
 
-        if ( id == TypeId.User ) {
-            toret = User.fromJSON( reader );
-        }
-        else
         if ( id == TypeId.Experiment ) {
             toret = Experiment.fromJSON( reader );
         }

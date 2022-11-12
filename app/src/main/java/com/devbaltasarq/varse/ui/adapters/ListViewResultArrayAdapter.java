@@ -63,7 +63,7 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
         return String.format( Locale.getDefault(),
                         "%04d-%02d-%02d %02d:%02d:%02d "
                         + " " + context.getString( R.string.lblRecord )
-                        + ": " + result.getUser().getName(),
+                        + ": " + result.getRec(),
                         LOCAL_DATE.get( Calendar.YEAR ),
                         LOCAL_DATE.get( Calendar.MONTH ) + 1,
                         LOCAL_DATE.get( Calendar.DAY_OF_MONTH ),

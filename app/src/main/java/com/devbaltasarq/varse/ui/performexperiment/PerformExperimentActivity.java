@@ -19,7 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -33,10 +33,10 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 
 import com.devbaltasarq.varse.R;
+import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
-import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothHRFiltering;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
@@ -48,6 +48,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -186,7 +187,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         super.onResume();
 
         // Read data from ORM
-        this.obtainData();
+        this.loadExperimentsSpinner();
 
         // Initialize background tasks
         this.bkgrnd = new HandlerThread( "PEA-bckgrnd" );
@@ -719,134 +720,192 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         return;
     }
 
-    /** Reads the data from the Ofm. */
-    private void obtainData()
+    /** Reads the data from the Ofm in order to load spinner's content. */
+    private void loadExperimentsSpinner()
     {
-        final FloatingActionButton FB_LAUNCH_EXPR = this.findViewById( R.id.fbPerformExperiment );
-
-        // Read experiment's and user's names
         try {
             final Ofm DB = Ofm.get();
 
+            // Read experiment's names
             this.experimentsList = DB.enumerateExperiments();
-
-            // Read user's names and experiment's names
-            final String[] USR_NAMES = DB.enumerateUserNames();
-            final String[] EXPR_NAMES = DB.enumerateObjNames( this.experimentsList );
-
-            // Spinner users
-            final AutoCompleteTextView CB_USRS = this.findViewById( R.id.cbUsers);
-            final ArrayAdapter<String> ADAPTER_USRS = new ArrayAdapter<>( this,
-                    android.R.layout.simple_spinner_item,
-                    USR_NAMES );
-            ADAPTER_USRS.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
-            CB_USRS.setAdapter( ADAPTER_USRS );
-
-            if ( USR_NAMES.length > 0 ) {
-                CB_USRS.setText( USR_NAMES[ 0 ] );
-                CB_USRS.setSelection( 0, USR_NAMES[ 0 ].length() );
-            }
+            final ArrayList<String> EXPR_NAMES = new ArrayList<>(
+                    Arrays.asList( DB.enumerateObjNames( this.experimentsList ) ) );
 
             // Spinner experiments
             final Spinner CB_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
             final ArrayAdapter<String> ADAPTER_EXPR = new ArrayAdapter<>( this,
                     android.R.layout.simple_spinner_item,
                     EXPR_NAMES );
+            ADAPTER_EXPR.add( this.getString( R.string.lblNewExperiment ) );
             ADAPTER_EXPR.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
             CB_EXPERIMENTS.setAdapter( ADAPTER_EXPR );
 
             // Select chosen experiment
             if ( chosenExperiment != null ) {
-                int i = 0;
-                for(String exprName: EXPR_NAMES) {
-                    if ( chosenExperiment.getName().equals( exprName ) ) {
-                        break;
-                    }
-
-                    ++i;
-                }
-
-                if ( i < EXPR_NAMES.length ) {
-                    CB_EXPERIMENTS.setSelection( i );
-                }
+                int pos = lookForExperimentSpinnerByName( chosenExperiment.getName() );
+                CB_EXPERIMENTS.setSelection( pos );
             }
         } catch(IOException exc) {
             this.disableFurtherScan();
-            this.showStatus( this.getString( R.string.errIO) );
-        } finally {
-            // Determine whether to allow to launch experiments or not
-            FB_LAUNCH_EXPR.setEnabled( this.experimentsList.length > 0 );
+            this.showStatus( this.getString( R.string.errIO ) );
         }
+
+        return;
     }
 
-    /** The experiment should always previously exist. */
+    /** Looks for the name of an experiment in the experiment's spinner.
+      * @param NAME the name of the experiment
+      * @return the position of the experiment in the spinner options if found, otherwise -1.
+      */
+    private int lookForExperimentSpinnerByName(final String NAME)
+    {
+        final Ofm DB = Ofm.get();
+        final String[] EXPR_NAMES = DB.enumerateObjNames( this.experimentsList );
+        int toret = -1;
+
+        int i = 0;
+        for(String exprName: EXPR_NAMES) {
+            if ( NAME.equals( exprName ) ) {
+                break;
+            }
+
+            ++i;
+        }
+
+        if ( i < EXPR_NAMES.length ) {
+            toret = i;
+        }
+
+        return toret;
+    }
+
+    /** Check the chosen experiment.
+      * The experiment should always previously exist,
+      * unless it is the last one, which means we should
+      * create a new one before launching the new experiment (not here).
+      * We don't return anything, we just set the static
+      * attribute chosenExperiment.
+      * @param pos the position of the chosen position in the experiment
+      *            list. It could be one position beyond: that'd be a new
+      *            experiment, and then chosenExperiment is set to null.
+      */
     private void onExperimentChosen(int pos)
     {
+        chosenExperiment = null;
+
         if ( pos >= 0
           && pos < this.experimentsList.length )
         {
             final Ofm DB = Ofm.get();
+            Experiment expr = null;
+
             final PartialObject PARTIAL_EXPERIMENT = this.experimentsList[ pos ];
-            Experiment experiment = null;
 
             try {
-                experiment = (Experiment) DB.retrieve(
+                expr = (Experiment) DB.retrieve(
                                                 PARTIAL_EXPERIMENT.getId(),
                                                 Persistent.TypeId.Experiment );
             } catch(IOException exc)
             {
-                Log.d(LOG_TAG, exc.getMessage()
+                Log.e( LOG_TAG, exc.getMessage()
                                 + "\n\tretrieving experiment: " + PARTIAL_EXPERIMENT.toString() );
             }
 
             // Assign the chosen experiment
-            if ( experiment != null ) {
-                chosenExperiment = experiment;
-                Log.d(LOG_TAG, "Experiment chosen: " + chosenExperiment );
+            if ( expr != null ) {
+                chosenExperiment = expr;
+                Log.d( LOG_TAG, "Experiment chosen: " + chosenExperiment );
             }
+        }
+        else
+        if ( pos == experimentsList.length ) {
+            Log.d( LOG_TAG, "will be a new experiment with pos: " + pos );
+        } else {
+            Log.e( LOG_TAG, "experiment set with invalid pos: " + pos );
         }
 
         return;
     }
 
     /** The user can previously exist or not. */
-    private void onUserChosen(String userName)
+    private void onRecordSet(String record)
     {
-        User usr = null;
-
-        if ( userName != null
-          && !userName.trim().isEmpty() )
+        if ( record != null
+          && !record.trim().isEmpty() )
         {
-            userName = userName.trim();
-
-            try {
-                usr = Ofm.get().createOrRetrieveUserByName( userName );
-            } catch(IOException exc)
-            {
-                Log.d(LOG_TAG, exc.getMessage()
-                        + "\n\tlooking for or creating user: " + userName );
-            }
-        }
-
-        // Assign the chosen experiment
-        if ( usr != null ) {
-            chosenUser = usr;
-            Log.d(LOG_TAG, "Chosen user: " + usr );
+            PerformExperimentActivity.rec = record.trim();
+            Log.d(LOG_TAG, "Chosen user: " + record );
         }
 
         return;
+    }
+
+    // Launches the create new experiment dialog
+    private void askForNewExperimentDuration()
+    {
+        final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
+        DLG.setView( R.layout.dialog_performexperiment );
+        DLG.setNegativeButton( R.string.lblCancel, null );
+        DLG.setPositiveButton( R.string.lblSave, (v, i) -> {
+            final AlertDialog D = (AlertDialog) v;
+            final EditText ED_MINS = D.findViewById( R.id.edNewExperimentMins );
+            final EditText ED_SECS = D.findViewById( R.id.edNewExperimentSecs );
+            int mins;
+            int secs;
+
+            try {
+                mins = Integer.parseInt( ED_MINS.getText().toString() );
+                secs = Integer.parseInt( ED_SECS.getText().toString() );
+            } catch(NumberFormatException exc) {
+                mins = secs = 0;
+            }
+
+            if ( mins > 0
+              || secs > 0 )
+            {
+                D.dismiss();
+                this.launchWithNewExperiment( new Duration( mins, secs ) );
+            }
+        });
+
+        DLG.create().show();
+    }
+
+    private void launchWithNewExperiment(final Duration DT)
+    {
+        final Ofm DB = Ofm.get();
+        final Experiment EXPR = Experiment.createSimpleExperiment( DT );
+
+        try {
+            DB.store( EXPR );
+            this.loadExperimentsSpinner();
+        } catch(IOException exc) {
+            Log.e( LOG_TAG, "saving new experiment: " + exc.getMessage() );
+        }
+
+        chosenExperiment = EXPR;
+        Log.d( LOG_TAG, "Experiment created: " + chosenExperiment );
+
+        this.launchExperimentActivity();
+    }
+
+    private void launchExperimentActivity()
+    {
+        final Intent CFG_LAUNCH_EXPR = new Intent( this, ExperimentDirector.class );
+
+        this.startActivity( CFG_LAUNCH_EXPR );
     }
 
     // Launches the experiment
     private void performExperiment()
     {
         final Spinner CB_EXPERIMENT = this.findViewById( R.id.cbExperiments );
-        final TextView ED_USERS = this.findViewById( R.id.cbUsers );
+        final TextView ED_USERS = this.findViewById( R.id.edUsers);
         final String USR_NAME = ED_USERS.getText().toString();
 
-        this.onUserChosen( USR_NAME );
+        this.onRecordSet( USR_NAME );
 
-        if ( chosenUser == null) {
+        if ( rec == null) {
            this.showStatus( LOG_TAG, this.getString( R.string.errNoUsr ) );
            return;
         }
@@ -854,12 +913,12 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         this.onExperimentChosen( CB_EXPERIMENT.getSelectedItemPosition() );
 
         if ( chosenExperiment == null ) {
-           this.showStatus( LOG_TAG, this.getString( R.string.errNoExperiment ) );
-           return;
+            this.askForNewExperimentDuration();
+        } else {
+            this.launchExperimentActivity();
         }
 
-        final Intent CFG_LAUNCH_EXPR = new Intent( this, ExperimentDirector.class );
-        this.startActivity( CFG_LAUNCH_EXPR );
+        return;
     }
 
     @Override
@@ -910,5 +969,5 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     public static BluetoothDeviceWrapper chosenBtDevice;
     public static BluetoothDeviceWrapper demoDevice;
     public static Experiment chosenExperiment;
-    public static User chosenUser;
+    public static String rec;
 }

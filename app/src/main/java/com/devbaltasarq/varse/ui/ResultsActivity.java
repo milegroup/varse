@@ -23,12 +23,12 @@ import androidx.core.content.ContextCompat;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.DropboxUsrClient;
+import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.Settings;
-import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.ui.adapters.ListViewResultArrayAdapter;
 import com.devbaltasarq.varse.ui.showresult.ResultViewerActivity;
@@ -36,10 +36,10 @@ import com.dropbox.core.DbxException;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 
 public class ResultsActivity extends AppActivity {
@@ -164,19 +164,31 @@ public class ResultsActivity extends AppActivity {
 
         this.handler.post( () -> {
                 try {
-                    final Result RES = (Result) Ofm.get().retrieve( res.getId(), Persistent.TypeId.Result );
+                    final Result RES = (Result) OFM.retrieve( res.getId(), Persistent.TypeId.Result );
+                    final Experiment EXPR = RES.getExperiment();
 
                     // Collect files
-                    File[] allFiles = new File[] {
-                            OFM.getFileById( RES.getId(), Persistent.TypeId.Result ),
-                            OFM.getFileById( RES.getExperiment().getId(), Persistent.TypeId.Experiment )
+                    File[] DATA_FILES = new File[] {
+                            OFM.getFileFor( Persistent.TypeId.Result, RES.getId() ),
+                            OFM.getFileFor( Persistent.TypeId.Experiment, EXPR.getId() ),
                     };
 
-                    // Upload them
-                    for(File f: allFiles) {
+                    // Upload data
+                    for(File f: DATA_FILES) {
                         DBOX_SERVICE.uploadDataFile( f );
                     }
 
+                    // Upload exported files
+                    final File EXPORT_FILE =
+                            OFM.createTempFile( Id.FILE_NAME_PART
+                                                + "_"
+                                                + RES.getId() + "_",
+                                                "_" + Ofm.FIELD_REC + "_"
+                                                + RES.getRec() );
+                    final Writer WRITER = Ofm.openWriterFor( EXPORT_FILE );
+                    RES.exportToStdTextFormat( null, WRITER );
+                    WRITER.close();
+                    DBOX_SERVICE.uploadExportFile( EXPORT_FILE, RES.getId().get(), RES.getTime(), RES.getRec() );
                     SELF.runOnUiThread( () -> SELF.showStatus(LOG_TAG, SELF.getString( R.string.msgFinishedBackup ) ) );
                 } catch (IOException | DbxException exc)
                 {
@@ -209,7 +221,7 @@ public class ResultsActivity extends AppActivity {
                 this.dataStore.remove( RESULT );
                 this.loadResults();
             } catch(IOException exc) {
-                Log.e(LOG_TAG, this.getString( R.string.errDeleting) + ": " + exc.getMessage() );
+                Log.e( LOG_TAG, this.getString( R.string.errDeleting) + ": " + exc.getMessage() );
                 this.showStatus(LOG_TAG, this.getString( R.string.errDeleting) );
             }
         });
@@ -223,10 +235,10 @@ public class ResultsActivity extends AppActivity {
 
         try {
             this.dataStore.exportResultToDownloads( result );
-            this.showStatus(LOG_TAG, this.getString( R.string.msgExported ) + ": " + LBL_RESULT );
+            this.showStatus( LOG_TAG, this.getString( R.string.msgExported ) + ": " + LBL_RESULT );
         } catch(IOException exc)
         {
-            this.showStatus(LOG_TAG, this.getString( R.string.errExport) + ": " + LBL_RESULT );
+            this.showStatus( LOG_TAG, this.getString( R.string.errExport) + ": " + LBL_RESULT );
         }
 
         return;
@@ -287,18 +299,24 @@ public class ResultsActivity extends AppActivity {
 
             for(int i = 0; i < NUM_RESULT_ENTRIES; ++i) {
                 final PartialObject PO = PO_ENTRIES.get( i );
-                final Id USR_ID = new Id( Result.parseUserIdFromName( PO.getName() ) );
-                final User USR = this.dataStore.createOrRetrieveUserById( USR_ID );
+                String rec = "";
+
+                try {
+                    rec = Result.parseRecFromName( PO.getName() );
+                } catch(Error e) {
+                    // The record could not be parsed.
+                    rec = "{rec}";
+                }
 
                 RESULT_ENTRIES[ i ] =
                             new Result( PO.getId(),
                                         Result.parseTimeFromName( PO.getName() ),
                                         0,
-                                        USR, null, new Result.Event[ 0 ] );
+                                        rec,
+                                        null, new Result.Event[ 0 ] );
             }
 
             // Prepare the list view
-            LV_RESULTS.setAdapter( new ListViewResultArrayAdapter(this, new Result[]{} ) );
             LV_RESULTS.setAdapter( new ListViewResultArrayAdapter(this, RESULT_ENTRIES ) );
 
             // Show the experiments list (or maybe not).

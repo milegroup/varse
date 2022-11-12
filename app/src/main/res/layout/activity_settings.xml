@@ -34,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:contentDescription="@string/action_settings"
                 android:padding="10dp"
-                android:tint="#ffffffff"
+                app:tint="#ffffffff"
                 app:srcCompat="@drawable/ic_wrench" />
 
             <TextView
@@ -83,8 +83,12 @@
                     android:layout_weight=".8"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Link to backup"
+                    android:text="@string/lblLink"
                     android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+
+                <CheckBox       android:id="@+id/chkLink"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
 
                 <ImageButton android:id="@+id/btResetVerification"
                     android:visibility="gone"
@@ -96,14 +100,15 @@
 
             </LinearLayout>
 
-            <LinearLayout
+            <LinearLayout       android:id="@+id/lyEdEmail"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:visibility="gone">
 
                 <TextView   android:id="@+id/lblEmail"
                     android:layout_marginEnd="5dp"
-                    android:text="E.mail"
+                    android:text="@string/lblEmail"
                     android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
@@ -114,12 +119,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
-                <ImageButton android:id="@+id/btSendVerificationEmail"
+                <ImageButton android:id="@+id/btObtainEmail"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     app:srcCompat="@drawable/ic_chk_email"
                     android:backgroundTint="#00000000"
-                    android:contentDescription="Send verification email" />
+                    android:contentDescription="@string/lblLink" />
             </LinearLayout>
 
             <LinearLayout   android:id="@+id/lyVerificationCode"
@@ -158,10 +163,11 @@
             android:layout_height="2dp"
             android:background="#c0c0c0" />
 
-        <LinearLayout
+        <LinearLayout       android:id="@+id/lyBackup"
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:visibility="gone">
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -203,10 +209,11 @@
             android:layout_height="2dp"
             android:background="#c0c0c0" />
 
-        <LinearLayout
+        <LinearLayout       android:id="@+id/lyRecover"
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:visibility="gone">
 
             <ImageView
                 android:layout_width="wrap_content"

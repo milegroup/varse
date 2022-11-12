@@ -4,7 +4,6 @@ package com.devbaltasarq.varse;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Result;
-import com.devbaltasarq.varse.core.User;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;

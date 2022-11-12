@@ -68,6 +68,7 @@
     <string name="lblRR">rr</string>
     <string name="lblYes">Yes</string>
     <string name="lblNo">No</string>
+    <string name="lblSave">Save</string>
     <string name="lblCancel">Cancel</string>
     <string name="lblDefaultTag">default</string>
     <string name="lblUpload">Cloud backup</string>
@@ -81,6 +82,9 @@
     <string name="lblPleasant">Pleasant</string>
     <string name="lblUnpleasant">Unpleasant</string>
     <string name="lblNeutral">Neutral</string>
+    <string name="lblNewExperiment">+ create new experiment</string>
+    <string name="lblLink">Link to cloud</string>
+    <string name="lblEmail">e.Mail</string>
 
     <string name="msgAreYouSure">Are you sure?</string>
     <string name="msgResettingSettings">Resetting settings</string>
@@ -131,6 +135,8 @@
     <string name="errUnableToShowActivity">Unable to show activity</string>
     <string name="errNotEnoughActivities">Not enough activities</string>
     <string name="errInitializingSettings">Initializing settings</string>
+    <string name="errCloudEmailNotSet">e.Mail is not set</string>
+    <string name="errAnotherCloudOpRunning">Another cloud operation is running</string>
 
     <!-- Choices for time units -->
     <string name="lblMinutes">Minutes</string>

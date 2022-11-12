@@ -38,7 +38,6 @@ import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Result;
-import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.core.bluetooth.BleService;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
@@ -147,6 +146,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final TextView LBL_RECORD = this.findViewById( R.id.lblRecord );
         final TextView LBL_DEVICE_NAME = this.findViewById( R.id.lblDeviceName );
         final FrameLayout FL_CONTAINER = this.findViewById( R.id.flContainer );
+        final String REC = PerformExperimentActivity.rec;
 
         this.setSupportActionBar( TOOLBAR );
 
@@ -158,7 +158,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.onExperiment = false;
         this.btDevice = PerformExperimentActivity.chosenBtDevice;
         this.experiment = PerformExperimentActivity.chosenExperiment;
-        this.user = PerformExperimentActivity.chosenUser;
 
         this.buildActivitiesToPlay();
 
@@ -176,7 +175,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.chrono = new Chronometer( this::onCronoUpdate );
         FB_LAUNCH_NOW.setOnClickListener( (v) -> this.launchExperiment() );
         FB_SKIP.setOnClickListener( (v) -> this.skipCurrentActivity() );
-        LBL_RECORD.setText( this.user.getName() );
+        LBL_RECORD.setText( REC );
         LBL_DEVICE_NAME.setText( this.btDevice.getName() );
         LBL_EXPERIMENT.setText( this.experiment.getName() );
         FL_CONTAINER.setOnLongClickListener( (v) -> {
@@ -258,7 +257,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         this.getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
 
         if ( BluetoothUtils.fixBluetoothNeededPermissions( this ).length > 0 ) {
-            Toast.makeText( this, "Insufficient permissions", Toast.LENGTH_SHORT ).show();
+            Log.d( LOG_TAG, "Insufficient permissions" );
         }
 
         BluetoothUtils.openBluetoothConnections( this,
@@ -685,6 +684,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         if ( this.groupsToPlay.length > 0 ) {
             final TextView LBL_MAX_TIME = this.findViewById( R.id.lblMaxTime );
             final Duration TIME_NEEDED = this.experiment.calculateTimeNeeded();
+            final String REC = PerformExperimentActivity.rec;
 
             // Prevent screen rotation
             this.scrOrientationOnExperiment = this.getRequestedOrientation();
@@ -699,7 +699,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             this.groupIndex = 0;
             this.activityIndex = -1;
             this.calculateNextIndexes();
-            this.resultBuilder = new Result.Builder( this.user, this.experiment, System.currentTimeMillis() );
+            this.resultBuilder = new Result.Builder( REC, this.experiment, System.currentTimeMillis() );
             this.addToResult( new Result.ActivityChangeEvent( 0, this.inferTag() ) );
 
             // Start counting time
@@ -943,7 +943,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private int activityIndex;
     private int groupIndex;
     private int accumulatedTimeInSeconds;
-    private User user;
     private Experiment experiment;
     private Group.Activity[] activitiesToPlay;
     private Group[] groupsToPlay;

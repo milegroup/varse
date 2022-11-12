@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.devbaltasarq.varse"
     android:installLocation="preferExternal">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -8,6 +7,7 @@
     <uses-permission android:name="android.permission.WRITE_INTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
@@ -45,10 +45,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.UsersActivity"
-            android:label="@string/lblUsers"
-            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".ui.ExperimentsActivity"
             android:label="@string/lblExperiments"

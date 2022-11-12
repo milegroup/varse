@@ -3,9 +3,8 @@ package com.devbaltasarq.varse;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Orm;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Result;
-import com.devbaltasarq.varse.core.User;
 import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
@@ -32,7 +31,6 @@ public class TestJsonConversionTests {
     @BeforeClass
     public static void init()
     {
-        usr1 = new User( Id.createFake(), "Baltasar" );
         expr1 = new Experiment( Id.createFake(), "expr1", true );
 
         // Experiment 2
@@ -56,7 +54,7 @@ public class TestJsonConversionTests {
         event4 = new Result.ActivityChangeEvent( time += 1000, act2.getTag() );
 
         // Result 1
-        res1 = new Result( Id.createFake(), time, 10000, usr1, expr2,
+        res1 = new Result( Id.createFake(), time, 10000, expr2,
                            new Result.Event[] { event1, event2, event3, event4 } );
     }
 
@@ -235,7 +233,6 @@ public class TestJsonConversionTests {
         final String RESULT_DESC_FMT = "{\"" + Id.FIELD + "\":$29871,\""
                 + Ofm.FIELD_TYPE_ID + "\":\"" + res1.getTypeId().toString() + "\","
                 + "\"" + Ofm.FIELD_EXPERIMENT_ID + "\":$29874,"
-                + "\"" + Ofm.FIELD_USER_ID + "\":$29875,\""
                 + Ofm.FIELD_DATE + "\":$29872,"
                 + "\"" + Ofm.FIELD_EVENTS + "\":[$29873]}";
 
@@ -285,7 +282,6 @@ public class TestJsonConversionTests {
         final String RESULT_DESC_FMT = "{\"" + Id.FIELD + "\":$29871,\""
                 + Ofm.FIELD_TYPE_ID + "\":\"" + res1.getTypeId().toString() + "\","
                 + "\"" + Ofm.FIELD_EXPERIMENT_ID + "\":$29874,"
-                + "\"" + Ofm.FIELD_USER_ID + "\":$29875,\""
                 + Ofm.FIELD_DATE + "\":$29872,"
                 + "\"" + Ofm.FIELD_EVENTS + "\":[$29873]}";
 
@@ -671,7 +667,6 @@ public class TestJsonConversionTests {
     private static Result.ActivityChangeEvent event3;
     private static Result.ActivityChangeEvent event4;
 
-    private static User usr1;
     private static Experiment expr1;
     private static Experiment expr2;
     private static ManualGroup grp1;

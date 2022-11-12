@@ -28,16 +28,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/lblRecord"
-                android:labelFor="@id/cbUsers"
+                android:labelFor="@id/edUsers"
                 android:layout_margin="10dp" />
 
-            <AutoCompleteTextView
-                android:id="@+id/cbUsers"
+            <EditText       android:id="@+id/edUsers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="20dp"
                 android:layout_margin="10dp" />
-
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

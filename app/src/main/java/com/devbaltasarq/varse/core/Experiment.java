@@ -6,6 +6,7 @@ import android.util.JsonWriter;
 import android.util.Log;
 
 import com.devbaltasarq.varse.core.experiment.Group;
+import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.core.experiment.Tag;
 
@@ -414,6 +415,25 @@ public class Experiment extends Persistent {
             TORET[ i ] = MY_GROUPS[ i ].copy();
         }
 
+        return TORET;
+    }
+
+    public static Experiment createSimpleExperiment(final Duration DT)
+    {
+        final String EXPR_NAME = "simple manual " + DT.getTimeInSeconds();
+        final Experiment TORET = new Experiment( Id.create(), EXPR_NAME, false );
+
+        final ManualGroup.ManualActivity MANUAL_ACTIVITY =
+                new ManualGroup.ManualActivity( Id.create(),
+                                                new Tag( "manual " + DT.getTimeInSeconds() ),
+                                                DT );
+        final ManualGroup MANUAL_GRP =
+                new ManualGroup( Id.create(),
+                            false,
+                                TORET,
+                                new ManualGroup.ManualActivity[]{ MANUAL_ACTIVITY } );
+
+        TORET.groups.add( MANUAL_GRP );
         return TORET;
     }
 

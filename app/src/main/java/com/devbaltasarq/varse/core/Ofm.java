@@ -28,10 +28,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,6 +62,7 @@ public final class Ofm {
     public static final String FIELD_TYPE_ID = Persistent.TypeId.FIELD;
     public static final String FIELD_ACTIVITIES = "activities";
     public static final String FIELD_NAME = "name";
+    public static final String FIELD_REC = "rec";
 
     private static final String SETTINGS_FILE_NAME = "settings.json";
     private static final String DIR_DB = "db";
@@ -75,7 +72,6 @@ public final class Ofm {
 
 
     /** Prepares the ORM to operate. */
-    @SuppressWarnings("deprecation")
     private Ofm(Context context)
     {
         this.context = context;
@@ -94,7 +90,7 @@ public final class Ofm {
     /** Forces a reset of the ORM, so the contents of the store is reflected
       *  in the internal data structures.
       */
-    public final void reset()
+    public void reset()
     {
         Log.i( LOG_TAG, "Preparing store..." );
 
@@ -105,7 +101,6 @@ public final class Ofm {
         this.createCaches();
 
         Log.i( LOG_TAG, "Store ready at: " + this.dirDb.getAbsolutePath() );
-        Log.i( LOG_TAG, "    #user files: " + this.cache.getUsers().count() );
         Log.i( LOG_TAG, "    #experiment files: " + this.cache.getExperiments().count() );
         Log.i( LOG_TAG, "    #result files: " + this.cache.getResults().count() );
     }
@@ -148,7 +143,7 @@ public final class Ofm {
     private void updateCaches(Persistent p, File f)
     {
         if ( f == null ) {
-            f = new File( this.dirDb, getFileNameFor( p ) );
+            f = new File( this.dirDb, buildFileNameFor( p ) );
         }
 
         this.cache.get( p.getTypeId() ).add( f );
@@ -167,46 +162,20 @@ public final class Ofm {
     {
         final Persistent.TypeId TYPE_ID = EntitiesCache.getTypeIdForExt( f );
 
-        this.cache.get( TYPE_ID ).add( f );
+        if ( TYPE_ID != null ) {
+            this.cache.get( TYPE_ID ).add( f );
 
-        if ( TYPE_ID == Persistent.TypeId.Result ) {
-            final Id EXPR_ID = new Id( EntitiesCache.parseExperimentIdFromResultFileName( f ) );
-            this.resultsPerExperiment.add( EXPR_ID, f );
-        }
-    }
-
-    /** @return the appropriate data file name for this object. */
-    private String getFileNameFor(Id id, Persistent.TypeId typeId)
-    {
-        String toret = "";
-
-        if ( typeId == Persistent.TypeId.Result ) {
-            try {
-                final File RESULT_FILE = this.cache.getResults().get( id );
-                final Id EXPR_ID = new Id( EntitiesCache.parseExperimentIdFromResultFileName( RESULT_FILE ) );
-                final Id USER_ID = new Id( EntitiesCache.parseUserIdFromResultFileName( RESULT_FILE ) );
-                final User USR = this.createOrRetrieveUserById( USER_ID );
-                final Experiment EXPR = (Experiment) this.retrieve( EXPR_ID, Persistent.TypeId.Experiment );
-
-                toret = EntitiesCache.buildFileNameForResult( id,
-                        EXPR_ID,
-                        USER_ID,
-                        USR.getName(),
-                        EXPR.getName() );
-            } catch(IOException exc) {
-                final String ERROR_MESSAGE = "building result name file for id: " + id.get() + ": "
-                        + exc.getMessage();
-                throw new Error( ERROR_MESSAGE );
+            if ( TYPE_ID == Persistent.TypeId.Result ) {
+                final Id EXPR_ID = new Id( EntitiesCache.parseExperimentIdFromResultFileName( f ) );
+                this.resultsPerExperiment.add( EXPR_ID, f );
             }
-        } else {
-            toret = EntitiesCache.buildFileNameFor( id, typeId );
         }
-
-        return toret;
     }
 
-    /** @return the appropriate data file name for this object. */
-    public static String getFileNameFor(Persistent p)
+    /** @return the file name this object will be saved with.
+      * @param p The data object to build the file name for.
+      */
+    public static String buildFileNameFor(Persistent p)
     {
         final Persistent.TypeId TYPE_ID = p.getTypeId();
         String toret;
@@ -217,9 +186,8 @@ public final class Ofm {
             toret = EntitiesCache.buildFileNameForResult(
                     RES.getId(),
                     RES.getExperiment().getId(),
-                    RES.getUser().getId(),
-                    RES.getUser().getName(),
-                    RES.getExperiment().getName() );
+                    RES.getExperiment().getName(),
+                    RES.getRec() );
         } else {
             toret = EntitiesCache.buildFileNameFor( p.getId(), p.getTypeId() );
         }
@@ -254,7 +222,7 @@ public final class Ofm {
         }
 
         // Remove main object
-        final File REMOVE_FILE = new File( this.dirDb, getFileNameFor( p ) );
+        final File REMOVE_FILE = new File( this.dirDb, buildFileNameFor( p ) );
 
         this.cache.get( p.getTypeId() ).remove( REMOVE_FILE );
 
@@ -452,35 +420,35 @@ public final class Ofm {
         final File TEMP_FILE = this.createTempFile(
                                     p.getTypeId().toString(),
                                     p.getId().toString() );
-        final File DATA_FILE = new File( dir, getFileNameFor( p ) );
+        final File DATA_FILE = new File( dir, buildFileNameFor( p ) );
         Writer writer = null;
 
         try {
-            Log.i(LOG_TAG, "Storing: " + p.toString() + " to: " + DATA_FILE.getAbsolutePath() );
+            Log.i( LOG_TAG, "Storing: " + p + " to: " + DATA_FILE.getAbsolutePath() );
             writer = openWriterFor( TEMP_FILE );
             p.toJSON( writer );
             close( writer );
             if ( !TEMP_FILE.renameTo( DATA_FILE ) ) {
-                Log.d(LOG_TAG, "Unable to move: " + DATA_FILE );
-                Log.d(LOG_TAG, "Trying to copy: " + TEMP_FILE + " to: " + DATA_FILE );
+                Log.d( LOG_TAG, "Unable to move: " + DATA_FILE );
+                Log.d( LOG_TAG, "Trying to copy: " + TEMP_FILE + " to: " + DATA_FILE );
                 copy( TEMP_FILE, DATA_FILE );
             }
             this.updateCaches( p, DATA_FILE );
-            Log.i(LOG_TAG, "Finished storing." );
+            Log.i( LOG_TAG, "Finished storing." );
         } catch(IOException exc) {
             final String ERROR_MSG = "I/O error writing: "
-                            + DATA_FILE.toString() + ": " + exc.getMessage();
-            Log.e(LOG_TAG, ERROR_MSG );
+                            + DATA_FILE + ": " + exc.getMessage();
+            Log.e( LOG_TAG, ERROR_MSG );
             throw new IOException( ERROR_MSG );
         } catch(JSONException exc) {
             final String ERROR_MSG = "error creating JSON for: "
-                            + DATA_FILE.toString() + ": " + exc.getMessage();
-            Log.e(LOG_TAG, ERROR_MSG );
+                            + DATA_FILE + ": " + exc.getMessage();
+            Log.e( LOG_TAG, ERROR_MSG );
             throw new IOException( ERROR_MSG );
         } finally {
           close( writer );
           if ( !TEMP_FILE.delete() ) {
-              Log.e(LOG_TAG, "Error removing file: " + TEMP_FILE );
+              Log.e( LOG_TAG, "Error removing file: " + TEMP_FILE );
           }
         }
     }
@@ -602,13 +570,14 @@ public final class Ofm {
      */
     public void exportResultToDownloads(Result res) throws IOException
     {
-        final String RES_FILE_NAME = getFileNameFor( res );
-        final String USR_NAME = res.getUser().getName();
-        final String TAGS_FILE_NAME = USR_NAME + ".tags.txt";
-        final String RR_FILE_NAME = USR_NAME + ".rr.txt";
+        final PlainStringEncoder ENC = PlainStringEncoder.get();
+        final String ENCODED_REC = ENC.encode( res.getRec() );
+        final String RES_FILE_NAME = buildFileNameFor( res );
+        final String TAGS_FILE_NAME = ENCODED_REC + ".tags.txt";
+        final String RR_FILE_NAME = ENCODED_REC + ".rr.txt";
         final File ORG_FILE = new File( this.dirDb, RES_FILE_NAME );
         final File ORG_FILE_COPY = new File( this.dirTmp,
-                                        res.getUser().getName() + "."
+                                        ENCODED_REC + "."
                                          + EntitiesCache.getFileExtFor( Persistent.TypeId.Result ) );
 
         this.store( res );                  // Ensure it is in the db
@@ -677,7 +646,7 @@ public final class Ofm {
                     new ArrayList<>(
                             Arrays.asList( this.collectMediaFilesFor( expr ) ) );
 
-            FILES.add( new File( this.dirDb, getFileNameFor( expr ) ) );
+            FILES.add( new File( this.dirDb, buildFileNameFor( expr ) ) );
 
             ZipUtil.zip(
                     FILES.toArray( new File[ 0 ] ),
@@ -704,71 +673,14 @@ public final class Ofm {
         return;
     }
 
-    /** Retrieves the user from the database or just creates (and stores) it.
-     * @param usrName The name of the user to retrieve.
-     * @return The user (retrieved or created).
-     * @throws IOException IF something goes wrong retrieving or creating the user.
+    /** Retrieves a file name from the cache of data files.
+     * @param typeId the type of the object in the file (result, experiment...)
+     * @param id the id of the object in the file.
+     * @return the File object, null if not found.
      */
-    public User createOrRetrieveUserByName(String usrName) throws IOException
+    public File getFileFor(Persistent.TypeId typeId, Id id)
     {
-        User toret = null;
-
-        // Retrieve it, if possible
-        try {
-            toret = this.lookForUserByName( usrName );
-        } catch(IOException exc)  {
-            Log.d(LOG_TAG, "unable to find user: " + usrName + ", creating it." );
-        }
-
-        // Create it
-        if ( toret == null ) {
-            toret = this.createNewUser( Id.create(), usrName );
-        }
-
-        return toret;
-    }
-
-    public User createOrRetrieveUserById(Id userId) throws IOException
-    {
-        User toret = null;
-
-        // Retrieve it, if possible
-        try {
-            toret = (User) this.retrieve( userId, Persistent.TypeId.User );
-        } catch(IOException exc)
-        {
-            Log.d(LOG_TAG, "unable to find user: " + userId + ", creating it." );
-        }
-
-        // Create it
-        if ( toret == null ) {
-            toret = this.createNewUser( userId, null );
-        }
-
-        return toret;
-    }
-
-    /** Call by the createOrRetrieveUser... *Important* should not exist yet.
-      * @param userId The user id, as an Id object.
-      * @param name The name of the user.
-      */
-    private User createNewUser(Id userId, String name) throws IOException
-    {
-        if ( name == null
-          || name.trim().isEmpty() )
-        {
-            name = EntitiesCache.FIELD_USER_ID + userId;
-        }
-
-        final User USR = new User( userId, name );
-
-        this.store( USR );
-        return USR;
-    }
-
-    public File getFileById(Id id, Persistent.TypeId typeId)
-    {
-        return new File( this.dirDb, this.getFileNameFor( id, typeId ) );
+        return this.cache.get( typeId ).get( id );
     }
 
     /** Retrieves a single object from a table, given its id.
@@ -779,9 +691,9 @@ public final class Ofm {
      */
     public Persistent retrieve(Id id, Persistent.TypeId typeId) throws IOException
     {
-        Persistent toret;
-        final File DATA_FILE = this.getFileById( id, typeId );
+        final File DATA_FILE = this.getFileFor( typeId, id );
         Reader reader = null;
+        Persistent toret;
 
         try {
             reader = openReaderFor( DATA_FILE );
@@ -891,24 +803,6 @@ public final class Ofm {
         return toret;
     }
 
-    public User lookForUserByName(String name) throws IOException
-    {
-        final PartialObject USR = this.lookForObjByName( name, Persistent.TypeId.User );
-        User toret = null;
-
-        if ( USR != null ) {
-            toret = (User) this.retrieve( USR.getId(), Persistent.TypeId.User );
-        }
-
-        return toret;
-    }
-
-    /** Enumerates all users, getting a vector containing their id's and names. */
-    public PartialObject[] enumerateUsers() throws IOException
-    {
-        return enumerateObjects( Persistent.TypeId.User );
-    }
-
     /** Enumerates all experiments, getting a vector containing their id's and names. */
     public PartialObject[] enumerateExperiments() throws IOException
     {
@@ -937,12 +831,6 @@ public final class Ofm {
     public String[] enumerateExperimentNames() throws IOException
     {
         return enumerateObjNames( Persistent.TypeId.Experiment );
-    }
-
-    /** Enumerates all users, getting an array containing their names. */
-    public String[] enumerateUserNames() throws IOException
-    {
-        return enumerateObjNames( Persistent.TypeId.User );
     }
 
     /** @return the partial object loaded from file f. */

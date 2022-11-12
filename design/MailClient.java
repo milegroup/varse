@@ -178,9 +178,13 @@ public class MailClient {
         MSG.setSubject( this.subject );
         MSG.setContent( mp );
 
-        // Send it
-        MSG.saveChanges();
-        javax.mail.Transport.send( MSG );
+        try {
+            // Send it
+            MSG.saveChanges();
+            javax.mail.Transport.send( MSG );
+        } catch(VerifyError exc) {
+            throw new MessagingException( exc.getMessage() );
+        }
     }
 
     public String getToList() {

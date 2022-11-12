@@ -1,13 +1,25 @@
+// VARSE 2019/22 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.ui;
 
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Pair;
+import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -16,11 +28,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.devbaltasarq.varse.R;
-import com.devbaltasarq.varse.core.AppInfo;
 import com.devbaltasarq.varse.core.DropboxUsrClient;
-import com.devbaltasarq.varse.core.MailClient;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Settings;
@@ -30,13 +42,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
+import java.util.regex.Pattern;
 
 
 public class SettingsActivity extends AppActivity {
     public final static String LOG_TAG = SettingsActivity.class.getSimpleName();
-
-    // TODO: it is needed to backup and recover resource files as well...
+    private static final int REQ_READ_CONTACTS = 991;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -46,26 +57,15 @@ public class SettingsActivity extends AppActivity {
 
         final EditText ED_EMAIL = this.findViewById( R.id.edEmail );
         final ImageButton BT_CLOSE = this.findViewById( R.id.btCloseSettings );
-        final ImageButton BT_SEND_EMAIL = this.findViewById( R.id.btSendVerificationEmail );
-        final ImageButton BT_VERIFY = this.findViewById( R.id.btVerifyEmail );
-        final ImageButton BT_RESET = this.findViewById( R.id.btResetVerification );
         final ImageButton BT_FORCE_BACKUP = this.findViewById( R.id.btForceBackup );
         final ImageButton BT_RECOVERY = this.findViewById( R.id.btRecovery );
+        final ImageButton BT_OBTAIN_EMAIL = this.findViewById( R.id.btObtainEmail );
         final TextView LBL_BACKUP = this.findViewById( R.id.lblBackup );
         final TextView LBL_RECOVERY = this.findViewById( R.id.lblRecovery );
+        final CheckBox CHK_LINK = this.findViewById( R.id.chkLink );
 
         // Listeners
         BT_CLOSE.setOnClickListener( (v) -> SettingsActivity.this.close() );
-
-        BT_SEND_EMAIL.setOnClickListener( (v) -> {
-                final String EMAIL = ED_EMAIL.getText().toString();
-
-                SettingsActivity.this.sendVerificationEMail( EMAIL );
-        });
-
-        BT_VERIFY.setOnClickListener( (v) -> SettingsActivity.this.verifyEmail() );
-
-        BT_RESET.setOnClickListener( (v) -> SettingsActivity.this.resetVerification() );
 
         View.OnClickListener backupListener = (v) -> SettingsActivity.this.forceBackup();
 
@@ -85,6 +85,34 @@ public class SettingsActivity extends AppActivity {
 
         LBL_RECOVERY.setOnClickListener( recoveryListener );
         BT_RECOVERY.setOnClickListener( recoveryListener );
+        BT_OBTAIN_EMAIL.setOnClickListener( (v) -> this.askUserForEmailAccountAccess() );
+        CHK_LINK.setOnCheckedChangeListener( (bt, isChk) -> {
+            this.turnCloudOptions( isChk );
+        });
+
+        ED_EMAIL.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2)
+            {}
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2)
+            {}
+
+            @Override
+            public void afterTextChanged(Editable editable)
+            {
+                final String TXT_PROBABLE_EMAIL = ED_EMAIL.getText().toString();
+                final Settings SETTINGS = Settings.get();
+
+                if ( Patterns.EMAIL_ADDRESS.matcher( TXT_PROBABLE_EMAIL ).matches() )
+                {
+                    SETTINGS.setEmail( TXT_PROBABLE_EMAIL );
+                } else {
+                    SETTINGS.setEmail( "" );
+                }
+            }
+        });
 
         // Initialize
         this.cloudOperationFinished = true;
@@ -100,15 +128,13 @@ public class SettingsActivity extends AppActivity {
         super.onResume();
 
         final Settings SETTINGS = Settings.get();
-        final ImageButton BT_FORCE_BACKUP = this.findViewById( R.id.btForceBackup );
 
-        BT_FORCE_BACKUP.setEnabled( false );
-
+        this.hideCloudOptions();
         if ( SETTINGS.isEmailSet() ) {
             final EditText ED_EMAIL = this.findViewById( R.id.edEmail );
 
             ED_EMAIL.setText( SETTINGS.getEmail() );
-            this.showAsEmailVerified();
+            this.showCloudOptions();
         }
 
         return;
@@ -140,6 +166,31 @@ public class SettingsActivity extends AppActivity {
         this.finish();
     }
 
+    private void hideCloudOptions()
+    {
+        this.turnCloudOptions( false );
+    }
+
+    private void showCloudOptions()
+    {
+        this.turnCloudOptions( true );
+    }
+
+    private void turnCloudOptions(boolean on)
+    {
+        final LinearLayout LY_BACKUP = this.findViewById( R.id.lyBackup );
+        final LinearLayout LY_RECOVER = this.findViewById( R.id.lyRecover );
+        final LinearLayout LY_ED_EMAIL = this.findViewById( R.id.lyEdEmail );
+        final CheckBox CHK_CLOUD = this.findViewById( R.id.chkLink );
+        int status = on? View.VISIBLE : View.GONE;
+
+        LY_BACKUP.setVisibility( status );
+        LY_RECOVER.setVisibility( status );
+        LY_ED_EMAIL.setVisibility( status );
+        CHK_CLOUD.setChecked( on );
+    }
+
+    /*
     private void showAsEmailVerified()
     {
         final LinearLayout LY_VERIFY_CODE = this.findViewById( R.id.lyVerificationCode );
@@ -154,6 +205,7 @@ public class SettingsActivity extends AppActivity {
         LY_VERIFY_CODE.setVisibility( View.GONE );
         BT_FORCE_BACKUP.setEnabled( true );
     }
+
 
     private void sendVerificationEMail(String targetAddress)
     {
@@ -237,7 +289,6 @@ public class SettingsActivity extends AppActivity {
 
     /** Create a verification code.
       * @return A verification code, as a string.
-      */
     private String createVerificationCode()
     {
         final int RND_NUM_DIGITS = 6;
@@ -252,14 +303,21 @@ public class SettingsActivity extends AppActivity {
 
         return toret.toString();
     }
-
+*/
     /** Recovery from the cloud. **/
     private void recovery()
     {
+        final Settings SETTINGS = Settings.get();
+
         Log.d( LOG_TAG, "Starting recovery..." );
 
+        if ( !SETTINGS.isEmailSet() ) {
+            this.showStatus( LOG_TAG, this.getString( R.string.errCloudEmailNotSet ) );
+            return;
+        }
+
         if ( !this.cloudOperationFinished ) {
-            Log.d( LOG_TAG, "Recovery: previous operation unfinished, bouncing out." );
+            this.showStatus( LOG_TAG, this.getString( R.string.errAnotherCloudOpRunning ) );
             return;
         }
 
@@ -338,10 +396,17 @@ public class SettingsActivity extends AppActivity {
     /** Backup all now. */
     private void forceBackup()
     {
+        final Settings SETTINGS = Settings.get();
+
         Log.d( LOG_TAG, "Starting backup..." );
 
+        if ( !SETTINGS.isEmailSet() ) {
+            this.showStatus( LOG_TAG, this.getString( R.string.errCloudEmailNotSet ) );
+            return;
+        }
+
         if ( !this.cloudOperationFinished ) {
-            Log.d( LOG_TAG, "Backup: previous operation unfinished, bouncing out." );
+            this.showStatus( LOG_TAG, this.getString( R.string.errAnotherCloudOpRunning ) );
             return;
         }
 
@@ -349,7 +414,7 @@ public class SettingsActivity extends AppActivity {
         final ProgressBar PB_PROGRESS = this.findViewById( R.id.pbProgressCompleteBackup );
         final SettingsActivity SELF = this;
         final Ofm OFM = Ofm.get();
-        final String USR_EMAIL = Settings.get().getEmail();
+        final String USR_EMAIL = SETTINGS.getEmail();
 
         BT_FORCE_BACKUP.setEnabled( false );
 
@@ -361,12 +426,13 @@ public class SettingsActivity extends AppActivity {
         this.handler.post( () -> {
                 try {
                     final DropboxUsrClient DBOX_SERVICE = new DropboxUsrClient( this, USR_EMAIL );
+                    final Persistent.TypeId[] TYPES = { Persistent.TypeId.Experiment, Persistent.TypeId.Result };
 
                     // Collect files
                     final ArrayList<File> DATA_FILES = new ArrayList<>();
                     final List<Pair<String, File[]>> RES_FILES = OFM.enumerateResFiles();
 
-                    for(Persistent.TypeId typeId: Persistent.TypeId.values()) {
+                    for(Persistent.TypeId typeId: TYPES) {
                         DATA_FILES.addAll( Arrays.asList( OFM.enumerateFiles( typeId ) ) );
                     }
 
@@ -413,6 +479,63 @@ public class SettingsActivity extends AppActivity {
                     });
                 }
         });
+
+        return;
+    }
+
+    private void askUserForEmailAccountAccess()
+    {
+        int permissionResult = ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.GET_ACCOUNTS );
+
+        if ( permissionResult != PackageManager.PERMISSION_GRANTED ) {
+            // Should we show an explanation?
+            boolean needShowExplanation =
+                    ActivityCompat.shouldShowRequestPermissionRationale(
+                            this,
+                            android.Manifest.permission.GET_ACCOUNTS );
+
+            if ( needShowExplanation ) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{ android.Manifest.permission.GET_ACCOUNTS },
+                        REQ_READ_CONTACTS );
+
+                this.obtainEmailFromUser();
+            }
+        } else {
+            this.obtainEmailFromUser();
+        }
+    }
+
+    private void obtainEmailFromUser()
+    {
+        final Pattern EMAIL_PATTERN = Patterns.EMAIL_ADDRESS;
+        final Account[] ACCOUNTS = AccountManager.get( this ).getAccounts();
+        final EditText ED_EMAIL = this.findViewById( R.id.edEmail );
+        String email = "";
+
+        for (final Account ACCOUNT : ACCOUNTS) {
+            final String POSSIBLE_EMAIL = ACCOUNT.name;
+
+            if ( EMAIL_PATTERN.matcher( POSSIBLE_EMAIL ).matches() ) {
+                email = POSSIBLE_EMAIL;
+                ED_EMAIL.setText( POSSIBLE_EMAIL );
+                this.showStatus( LOG_TAG,
+                                 this.getString( R.string.lblEmail ) + ": " + POSSIBLE_EMAIL );
+                break;
+            }
+        }
+
+        if ( email.length() == 0 ) {
+            this.showStatus( LOG_TAG, this.getString( R.string.errCloudEmailNotSet ) );
+        }
 
         return;
     }

@@ -12,11 +12,13 @@ import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
 import com.dropbox.core.DbxDownloader;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
+import com.dropbox.core.util.DumpWriter;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.FolderMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
+import com.dropbox.core.v2.files.WriteMode;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,7 +28,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -40,6 +44,7 @@ import java.util.List;
 public class DropboxUsrClient {
     public static final String TAG = DropboxUsrClient.class.getSimpleName();
     private static final String RES_DIR_NAME = Ofm.DIR_RES;
+    private static final String EXPORT_DIR_NAME = "export";
 
     private enum ListMode{ NO_DIRS, INCLUDE_DIRS }
 
@@ -74,7 +79,7 @@ public class DropboxUsrClient {
         return TORET.toArray( new String[ 0 ] );
     }
 
-    /** Lists all user's resource file.
+    /** Lists all user's resource files.
       * @return A list of pairs (subdir, array of files inside it).
       * @throws DbxException if comms go wrong with remote.
       */
@@ -235,11 +240,24 @@ public class DropboxUsrClient {
 
     /** Uploads a data file.
       * @param f the file to upload, containing data (experiment, result...)
-      * @throws DbxException if the comms go wrong
+      * @throws DbxException if comms go wrong
       */
     public void uploadDataFile(File f) throws DbxException
     {
         this.uploadFile( f, this.buildPathForDataFile( f.getName() ) );
+    }
+
+    /** Uploads an export file.
+      * @param f the file to upload
+      * @param time the time of when the result was created
+      * @throws DbxException if comms go wrong
+      */
+    public void uploadExportFile(File f, long id, long time, String rec) throws DbxException
+    {
+        final PlainStringEncoder ENCODER = PlainStringEncoder.get();
+        String fileName = "id_" + id + "_rec_" + ENCODER.encode( rec ) + ".txt";
+
+        this.uploadFile( f, this.buildPathForExportFile( time, fileName ) );
     }
 
     /** Uploads a file.
@@ -251,7 +269,10 @@ public class DropboxUsrClient {
     {
         // Upload file to Dropbox
         try (InputStream in = new FileInputStream( fin ) ) {
-            this.DBOX_CLIENT.files().uploadBuilder( toPath ).uploadAndFinish( in );
+            this.DBOX_CLIENT.files()
+                    .uploadBuilder( toPath )
+                    .withMode( WriteMode.OVERWRITE )
+                    .uploadAndFinish( in );
         } catch(IOException exc)
         {
             throw new DbxException( exc.getMessage() );
@@ -264,35 +285,63 @@ public class DropboxUsrClient {
         return this.buildBaseDirUsr() + fileName;
     }
 
+    /** @return the complete path to the export file, given the user id in dropbox. */
+    private String buildPathForExportFile(long time, String fileName)
+    {
+        final Calendar DATE = Calendar.getInstance();
+        String toret = this.buildExportDirUsr();
+
+        DATE.setTimeInMillis( time );
+
+        // Add the date to the path: /usr/export/2022_11_12/file.txt
+        toret += String.format( Locale.getDefault(),
+                                "%04d_%02d_%02d%s",
+                                DATE.get( Calendar.YEAR ),
+                                DATE.get( Calendar.MONTH ) + 1,
+                                DATE.get( Calendar.DAY_OF_MONTH ),
+                                DROPBOX_DIR_SEPARATOR);
+        return toret + fileName;
+    }
+
     /** @return the complete path to the resource file, given the user id in dropbox. */
     private String buildPathForResFile(String subDir, String fileName)
     {
         return this.buildResDirUsr()
                     + subDir
-                    + DropboxDirectorySeparator
+                    + DROPBOX_DIR_SEPARATOR
                     + fileName;
     }
 
-    /** @return the base directory for this user, with an ending slash. */
+    /** @return the resources directory for this user, with an ending slash. */
     private String buildResDirUsr()
     {
-        return DropboxDirectorySeparator
+        return DROPBOX_DIR_SEPARATOR
                 + this.USR_EMAIL
-                + DropboxDirectorySeparator
+                + DROPBOX_DIR_SEPARATOR
                 + RES_DIR_NAME
-                + DropboxDirectorySeparator;
+                + DROPBOX_DIR_SEPARATOR;
+    }
+
+    /** @return the resources directory for this user, with an ending slash. */
+    private String buildExportDirUsr()
+    {
+        return DROPBOX_DIR_SEPARATOR
+                + this.USR_EMAIL
+                + DROPBOX_DIR_SEPARATOR
+                + EXPORT_DIR_NAME
+                + DROPBOX_DIR_SEPARATOR;
     }
 
     /** @return the base directory for this user, with an ending slash. */
     private String buildBaseDirUsr()
     {
-        return DropboxDirectorySeparator
+        return DROPBOX_DIR_SEPARATOR
                 + this.USR_EMAIL
-                + DropboxDirectorySeparator;
+                + DROPBOX_DIR_SEPARATOR;
     }
 
     private final String USR_EMAIL;
     private final DbxClientV2 DBOX_CLIENT;
 
-    private static final String DropboxDirectorySeparator = "/";
+    private static final String DROPBOX_DIR_SEPARATOR = "/";
 }
