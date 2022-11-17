@@ -19,7 +19,7 @@ public class PlainStringEncoder {
      */
     public String encode(String initialTag)
     {
-        final String BASIC_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789-_";
+        final String BASIC_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789_";
         final StringBuilder TORET = new StringBuilder();
 
         if ( initialTag.trim().isEmpty() ) {
@@ -33,7 +33,9 @@ public class PlainStringEncoder {
                 TORET.append( ch );
             }
             else
-            if ( ch == ' ' ) {
+            if ( ch == ' '
+              || ch == '-' )
+            {
                 TORET.append( '_' );
             }
         }

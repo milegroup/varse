@@ -4,6 +4,7 @@ import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Ofm;
+import com.devbaltasarq.varse.core.PlainStringEncoder;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
@@ -11,9 +12,12 @@ import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.core.experiment.PictureGroup;
 import com.devbaltasarq.varse.core.experiment.Tag;
 import com.devbaltasarq.varse.core.experiment.VideoGroup;
+import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
 
 import android.util.JsonReader;
 import android.util.JsonWriter;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -31,10 +35,13 @@ public class TestJsonConversionTests {
     @BeforeClass
     public static void init()
     {
+        Ofm.init( ApplicationProvider.getApplicationContext(),
+                    PlainStringEncoder.get() );
+
         expr1 = new Experiment( Id.createFake(), "expr1", true );
 
         // Experiment 2
-        expr2 = new Experiment( Id.createFake(), "expr2", false );
+        expr2 = new Experiment( Id.create(), "expr2", false );
         grp1 = new ManualGroup( Id.createFake(), true, expr2 );
         act1 = new ManualGroup.ManualActivity( Id.createFake(), new Tag( "tag1" ), new Duration( 3 ) );
         grp1.replaceActivities( new ManualGroup.ManualActivity[] { act1 } );
@@ -54,7 +61,7 @@ public class TestJsonConversionTests {
         event4 = new Result.ActivityChangeEvent( time += 1000, act2.getTag() );
 
         // Result 1
-        res1 = new Result( Id.createFake(), time, 10000, expr2,
+        res1 = new Result( Id.createFake(), time, 10000, "rec_tests", expr2,
                            new Result.Event[] { event1, event2, event3, event4 } );
     }
 
@@ -232,8 +239,11 @@ public class TestJsonConversionTests {
         final StringWriter STR_OUT = new StringWriter();
         final String RESULT_DESC_FMT = "{\"" + Id.FIELD + "\":$29871,\""
                 + Ofm.FIELD_TYPE_ID + "\":\"" + res1.getTypeId().toString() + "\","
-                + "\"" + Ofm.FIELD_EXPERIMENT_ID + "\":$29874,"
-                + Ofm.FIELD_DATE + "\":$29872,"
+                + "\"" + Ofm.FIELD_NAME + "\":\"$29876\","
+                + "\"" + Ofm.FIELD_DATE + "\":$29872,"
+                + "\"" + Ofm.FIELD_TIME + "\":$29877,"
+                + "\"" + EntitiesCache.FIELD_EXPERIMENT_ID + "\":$29874,"
+                + "\"" + Ofm.FIELD_REC + "\":\"$29875\","
                 + "\"" + Ofm.FIELD_EVENTS + "\":[$29873]}";
 
         final String BEAT_EVENT_DESC_FMT = "{\""
@@ -261,12 +271,16 @@ public class TestJsonConversionTests {
                         .replace( "$1023", event4.getTag().toString() );
 
         try {
+            final String EXPECTED_JSON = RESULT_DESC_FMT.replace( "$29871", res1.getId().toString() )
+                    .replace( "$29872", Long.toString( res1.getTime() ) )
+                    .replace( "$29873", EVENTS_DESC_FMT )
+                    .replace( "$29874", res1.getExperiment().getId().toString() )
+                    .replace( "$29875", res1.getRec() )
+                    .replace( "$29876", res1.buildResultName() )
+                    .replace( "$29877", Long.toString( res1.getDurationInMillis() ) );
+
             res1.toJSON( STR_OUT );
-            Assert.assertEquals( RESULT_DESC_FMT.replace( "$29871", res1.getId().toString() )
-                            .replace( "$29872", Long.toString( res1.getTime() ) )
-                            .replace( "$29873", EVENTS_DESC_FMT )
-                            .replace( "$29874", res1.getExperiment().getId().toString() )
-                            .replace( "$29875", res1.getUser().getId().toString() ),
+            Assert.assertEquals( EXPECTED_JSON,
                     STR_OUT.toString() );
         } catch(JSONException exc)
         {
@@ -281,8 +295,11 @@ public class TestJsonConversionTests {
     {
         final String RESULT_DESC_FMT = "{\"" + Id.FIELD + "\":$29871,\""
                 + Ofm.FIELD_TYPE_ID + "\":\"" + res1.getTypeId().toString() + "\","
-                + "\"" + Ofm.FIELD_EXPERIMENT_ID + "\":$29874,"
-                + Ofm.FIELD_DATE + "\":$29872,"
+                + "\"" + Ofm.FIELD_NAME + "\":\"$29876\","
+                + "\"" + Ofm.FIELD_DATE + "\":$29872,"
+                + "\"" + Ofm.FIELD_TIME + "\":$29877,"
+                + "\"" + EntitiesCache.FIELD_EXPERIMENT_ID + "\":$29874,"
+                + "\"" + Ofm.FIELD_REC + "\":\"$29875\","
                 + "\"" + Ofm.FIELD_EVENTS + "\":[$29873]}";
 
         final String BEAT_EVENTS_DESC_FMT = "{\""
@@ -313,54 +330,22 @@ public class TestJsonConversionTests {
                 .replace( "$29872", Long.toString( res1.getTime() ) )
                 .replace( "$29873", EVENTS_DESC_FMT )
                 .replace( "$29874", res1.getExperiment().getId().toString() )
-                .replace( "$29875", res1.getUser().getId().toString() );
+                .replace( "$29875", res1.getRec() )
+                .replace( "$29876", res1.buildResultName() )
+                .replace( "$29877", Long.toString( res1.getDurationInMillis() ) );
 
         final StringReader STR_IN = new StringReader( RES_DESC );
 
         try {
-            final Result RETRIEVED_USR = Result.fromJSON( STR_IN );
-
-            Assert.assertEquals( res1, RETRIEVED_USR );
-        } catch(JSONException exc)
-        {
-            Assert.fail( exc.getMessage() );
-        }
-    }
-
-    @Test
-    public void testUserJsonDump()
-    {
-        final StringWriter STR_OUT = new StringWriter();
-        final String USR_DESC_FMT = "{\"" + Id.FIELD + "\":$1,\""
-                                    + Ofm.FIELD_TYPE_ID + "\":\"$87\",\""
-                                    + Ofm.FIELD_NAME + "\":\"$2\"}";
-
-        try {
-            usr1.toJSON( STR_OUT );
-            Assert.assertEquals( USR_DESC_FMT.replace( "$1", usr1.getId().toString() )
-                                .replace( "$87", usr1.getTypeId().toString() )
-                                .replace( "$2", usr1.getName() ),
-                          STR_OUT.toString() );
-        } catch(JSONException exc)
-        {
+            Ofm.get().store( expr2 );
+        } catch(IOException exc) {
             Assert.fail( exc.getMessage() );
         }
 
-        return;
-    }
-
-    @Test
-    public void testUserJsonLoad()
-    {
-        final String USR_DESC = "{\"" + Id.FIELD + "\":" + usr1.getId().get()
-                + ",\"" + Ofm.FIELD_TYPE_ID + "\":\"" + usr1.getTypeId().toString() + "\""
-                + ",\"" + Ofm.FIELD_NAME + "\":\"" + usr1.getName() + "\"}";
-        final StringReader STR_IN = new StringReader( USR_DESC );
-
         try {
-            final User RETRIEVED_USR = User.fromJSON( STR_IN );
+            final Result RETRIEVED_RES = Result.fromJSON( STR_IN );
 
-            Assert.assertEquals( usr1, RETRIEVED_USR );
+            Assert.assertEquals( res1, RETRIEVED_RES );
         } catch(JSONException exc)
         {
             Assert.fail( exc.getMessage() );

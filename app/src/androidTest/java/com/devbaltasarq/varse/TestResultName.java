@@ -25,7 +25,7 @@ public class TestResultName {
                 Id.create(),
                 DATE_TIME.getTimeInMillis(),
                 20000,
-                new User( Id.create(), "r1" ),
+                "r1",
                 new Experiment( Id.create(), "expr1" ),
                 new Result.Event[ 0 ]
         );
