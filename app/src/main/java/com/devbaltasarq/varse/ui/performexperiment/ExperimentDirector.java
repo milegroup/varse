@@ -708,13 +708,13 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             // Start counting time
             this.chrono.reset();
             this.chrono.start();
-            Log.i(LOG_TAG, "Starting..." );
+            Log.i( LOG_TAG, "Starting..." );
 
             // Prepare first activity
             this.accumulatedTimeInSeconds = 0;
             this.showActivity();
         } else {
-            this.showStatus(LOG_TAG, this.getString( R.string.errNotEnoughActivities) );
+            this.showStatus( LOG_TAG, this.getString( R.string.errNotEnoughActivities) );
         }
 
         return;
