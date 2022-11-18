@@ -22,7 +22,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.VideoView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -273,13 +272,17 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         super.onPause();
 
         this.setAbleToLaunch( false );
-        this.chrono.stop();
-        this.stopExperiment();
 
-        this.getWindow().clearFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
+        if ( this.onExperiment ) {
+            this.chrono.stop();
 
-        BluetoothUtils.closeBluetoothConnections( this );
-        Log.d( LOG_TAG, "Director finished, stopped chrono, closed connections." );
+            this.stopExperiment();
+
+            this.getWindow().clearFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
+
+            BluetoothUtils.closeBluetoothConnections( this );
+            Log.d( LOG_TAG, "Director finished, stopped chrono, closed connections." );
+        }
     }
 
     @Override
@@ -688,7 +691,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
             // Prevent screen rotation
             this.scrOrientationOnExperiment = this.getRequestedOrientation();
-            this.setRequestedOrientation( ActivityInfo.SCREEN_ORIENTATION_NOSENSOR );
+            this.setRequestedOrientation( ActivityInfo.SCREEN_ORIENTATION_LOCKED );
 
             // Prepare the UI
             this.prepareUIForExperiment();
@@ -822,7 +825,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void showActivity()
     {
-        this.showActivity( this.groupIndex, this.activityIndex);
+        this.showActivity( this.groupIndex, this.activityIndex );
     }
 
     private void showActivity(int i, int j)
