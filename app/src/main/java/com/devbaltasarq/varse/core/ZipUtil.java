@@ -83,46 +83,51 @@ public final class ZipUtil {
      */
     public static void unzip(InputStream zipFileIn, File targetDir) throws IOException
     {
+        final String EXPECTED_TARGET_PATH = targetDir.getCanonicalPath() + File.separator;
         Log.i( LOG_TAG_UNZIP, "starting unzipping from stream" );
 
         targetDir.mkdirs();
 
         if ( targetDir.exists() ) {
-            try {
-                ZipInputStream zin = new ZipInputStream( zipFileIn );
-                ZipEntry ze = null;
+            ZipInputStream zin = new ZipInputStream( zipFileIn );
+            ZipEntry ze = null;
 
-                while ( ( ze = zin.getNextEntry() ) != null ) {
-                    // Create dir if required while unzipping
-                    if ( ze.isDirectory() ) {
-                        if ( !new File( ze.getName() ).mkdirs() ) {
-                            final String MSG_ERROR = "could not create directory: " + ze.getName();
+            while ( ( ze = zin.getNextEntry() ) != null ) {
+                // Create dir if required while unzipping
+                if ( ze.isDirectory() ) {
+                    if ( !new File( ze.getName() ).mkdirs() ) {
+                        final String MSG_ERROR = "unzip: could not create directory: " + ze.getName();
 
-                            Log.e( LOG_TAG_UNZIP, MSG_ERROR );
-                            throw new IOException( MSG_ERROR );
-                        }
-                    } else {
-                        FileOutputStream fout = new FileOutputStream(
-                                                    new File( targetDir, ze.getName() ) );
-                        int count;
-
-                        while ( ( count = zin.read( BUFFER, 0, MAX_BUFFER ) ) != -1 ) {
-                            fout.write( BUFFER, 0, count );
-                        }
-
-                        zin.closeEntry();
-                        fout.close();
+                        Log.e( LOG_TAG_UNZIP, MSG_ERROR );
+                        throw new IOException( MSG_ERROR );
                     }
+                } else {
+                    // Chk CVE Zip traversal
+                    final File OUT_FILE = new File( targetDir, ze.getName() );
+                    final String OUT_PATH = OUT_FILE.getCanonicalPath();
+
+                    if ( !OUT_PATH.startsWith( EXPECTED_TARGET_PATH ) ) {
+                        final String MSG_ERROR = "unzip: illegal name: " + OUT_FILE;
+
+                        Log.e( LOG_TAG_UNZIP, MSG_ERROR );
+                        throw new IOException( MSG_ERROR );
+                    }
+
+                    // Unzip
+                    final FileOutputStream FOUT = new FileOutputStream( OUT_FILE );
+                    int count;
+
+                    while ( ( count = zin.read( BUFFER, 0, MAX_BUFFER ) ) != -1 ) {
+                        FOUT.write( BUFFER, 0, count );
+                    }
+
+                    zin.closeEntry();
+                    FOUT.close();
                 }
-
-                zin.close();
-                Log.i( LOG_TAG_UNZIP, "finished unzipping." );
-            } catch (IOException exc) {
-                final String MSG_ERROR = "error unzipping: " + exc.getMessage();
-
-                Log.e( LOG_TAG_UNZIP, MSG_ERROR );
-                throw new IOException( MSG_ERROR );
             }
+
+            zin.close();
+            Log.i( LOG_TAG_UNZIP, "finished unzipping." );
         } else {
             final String MSG_ERROR = "could not create directory: " + targetDir.getAbsolutePath();
 
