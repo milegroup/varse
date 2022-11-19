@@ -118,13 +118,6 @@
                     android:layout_weight=".8"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
-
-                <ImageButton android:id="@+id/btObtainEmail"
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
-                    app:srcCompat="@drawable/ic_chk_email"
-                    android:backgroundTint="#00000000"
-                    android:contentDescription="@string/lblLink" />
             </LinearLayout>
 
             <LinearLayout   android:id="@+id/lyVerificationCode"
