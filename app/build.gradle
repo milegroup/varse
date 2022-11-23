@@ -11,7 +11,7 @@ android {
     defaultConfig {
         applicationId "com.devbaltasarq.varse"
         minSdkVersion 21
-        targetSdk 30
+        targetSdk 31
         vectorDrawables.useSupportLibrary = true
         versionCode 22
         versionName '1.8.2'
