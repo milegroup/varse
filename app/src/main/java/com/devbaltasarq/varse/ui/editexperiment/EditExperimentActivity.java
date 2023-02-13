@@ -28,6 +28,9 @@ import com.devbaltasarq.varse.ui.editexperiment.editgroup.EditManualGroupActivit
 import com.devbaltasarq.varse.ui.editexperiment.editgroup.EditMediaGroupActivity;
 import com.devbaltasarq.varse.ui.IconListAlertDialog;
 
+import java.util.List;
+
+
 public class EditExperimentActivity extends AppActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -89,8 +92,8 @@ public class EditExperimentActivity extends AppActivity {
 
     private void showGroups()
     {
-        final Group<? extends Group.Activity>[] GROUPS = experiment.getGroups();
-        final int NUM_ENTRIES = GROUPS.length;
+        final List<Group<? extends Group.Activity>> GROUPS = experiment.getGroups();
+        final int NUM_ENTRIES = GROUPS.size();
         final ListView LV_EXPERIMENT_MEDIA = this.findViewById( R.id.lvExperimentMedia );
         final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
 

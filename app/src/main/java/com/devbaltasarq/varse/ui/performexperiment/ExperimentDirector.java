@@ -27,7 +27,7 @@ import android.widget.VideoView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
-import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
@@ -54,6 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -186,11 +187,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private void hideSystemBars()
     {
         final WindowInsetsControllerCompat WINDOW_INSETS_CTRL =
-                ViewCompat.getWindowInsetsController( this.getWindow().getDecorView() );
-
-        if ( WINDOW_INSETS_CTRL == null ) {
-            return;
-        }
+                WindowCompat.getInsetsController( this.getWindow(), this.getWindow().getDecorView() );
 
         // Configure the behavior of the hidden system bars
         WINDOW_INSETS_CTRL.setSystemBarsBehavior(
@@ -728,8 +725,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private void buildActivitiesToPlay()
     {
         final ArrayList<Group.Activity> ACTIVITIES = new ArrayList<>( this.experiment.getNumActivities() );
-        final Group[] GROUPS_IN_EXPERIMENT = this.experiment.getGroups();
-        final int NUM_GROUPS = GROUPS_IN_EXPERIMENT.length;
+        final List<Group<? extends Group.Activity>> GROUPS_IN_EXPERIMENT = this.experiment.getGroups();
+        final int NUM_GROUPS = GROUPS_IN_EXPERIMENT.size();
         final int[] SEQUENCE_OF_GROUPS = createSequence( NUM_GROUPS, this.experiment.isRandom() );
 
         int pos = 0;
@@ -738,8 +735,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         // Run over all groups honoring randomness of experiment, and gather their activities
         for(int i: SEQUENCE_OF_GROUPS) {
             // Retrieve the activities from groups, also honoring their own randomness
-            final Group GROUP = GROUPS_IN_EXPERIMENT[ i ].copy();
-            final Group.Activity[] GROUP_ACTIVITIES = GROUPS_IN_EXPERIMENT[ i ].getActivities();
+            final Group GROUP = GROUPS_IN_EXPERIMENT.get( i ).copy();
+            final Group.Activity[] GROUP_ACTIVITIES = GROUPS_IN_EXPERIMENT.get( i ).getActivities();
             final int[] SEQUENCE_OF_ACTIVITIES = createSequence( GROUP.size(), GROUP.isRandom() );
 
             // Append all activities in this group, randomly or not

@@ -394,17 +394,17 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                               * this.getTimeForEachActivity().getTimeInSeconds() );
     }
 
-    public static Group fromJSON(Reader rd) throws JSONException
+    public static Group<? extends Activity> fromJSON(Reader rd) throws JSONException
     {
         final JsonReader JSON_READER = new JsonReader( rd );
 
         return fromJSON( JSON_READER );
     }
 
-    public static Group fromJSON(JsonReader jsonReader) throws JSONException
+    public static Group<? extends Activity> fromJSON(JsonReader jsonReader) throws JSONException
     {
         final ArrayList<Activity> ACTS = new ArrayList<>();
-        Group toret;
+        Group<? extends Activity> toret;
         TypeId typeId = null;
         Tag tag = null;
         Duration duration = null;
@@ -514,7 +514,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     }
 
     /** @return a copy of this group, with the same id. */
-    public Group copy()
+    public Group<? extends Activity> copy()
     {
         return this.copy( this.getId().copy() );
     }
@@ -523,7 +523,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
      * @param id A new id for the copy of the group.
      * @see Id
      */
-    public abstract Group copy(Id id);
+    public abstract Group<? extends Activity> copy(Id id);
 
     /** Copies the activities in this group.
       * @return a new vector with copied activities.

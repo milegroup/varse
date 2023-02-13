@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 
 /** Represents experiments.
@@ -69,16 +70,16 @@ public class Experiment extends Persistent {
 
         if ( o instanceof Experiment ) {
             final Experiment EXPR = (Experiment) o;
-            final Group<? extends Group.Activity>[] EXPR_GROUPS = EXPR.getGroups();
+            final List<Group<? extends Group.Activity>> EXPR_GROUPS = EXPR.getGroups();
 
             toret = this.getName().equals( EXPR.getName() )
                  && this.isRandom() == EXPR.isRandom()
-                 && this.groups.size() == EXPR_GROUPS.length;
+                 && this.groups.size() == EXPR_GROUPS.size();
 
 
             if ( toret ) {
-                for(int i = 0; i < EXPR_GROUPS.length; ++i) {
-                    if ( !this.groups.get( i ).equals( EXPR_GROUPS[ i ] ) ) {
+                for(int i = 0; i < EXPR_GROUPS.size(); ++i) {
+                    if ( !this.groups.get( i ).equals( EXPR_GROUPS.get( i ) ) ) {
                         toret = false;
                         break;
                     }
@@ -120,20 +121,20 @@ public class Experiment extends Persistent {
     }
 
     /** @return The media groups involved in the experiment. */
-    public Group<? extends Group.Activity>[] getGroups()
+    public List<Group<? extends Group.Activity>> getGroups()
     {
-        return (Group<? extends Group.Activity>[]) this.groups.toArray( new Group[ 0 ]);
+        return new ArrayList<>( this.groups );
     }
 
     /** Replaces the media groups of the experiments with new ones. */
-    public void replaceGroups(Group<? extends Group.Activity>[] files)
+    public void replaceGroups(List<Group<? extends Group.Activity>> files)
     {
         for(Group<? extends Group.Activity> grp: this.groups) {
             this.removeGroup( grp );
         }
 
         this.groups.clear();
-        this.groups.addAll( Arrays.asList( files ) );
+        this.groups.addAll( files );
 
         for(Group<? extends Group.Activity> grp: this.groups) {
             grp.setExperiment( this );
@@ -386,7 +387,7 @@ public class Experiment extends Persistent {
         }
 
         final Experiment TORET = new Experiment( id, name, rnd );
-        TORET.replaceGroups( groups.toArray( new Group[ 0 ] ) );
+        TORET.replaceGroups( groups );
         return TORET;
     }
 
@@ -399,23 +400,8 @@ public class Experiment extends Persistent {
     {
         Experiment toret = new Experiment( id, this.getName(), this.isRandom() );
 
-        toret.replaceGroups( this.copyGroups() );
+        toret.replaceGroups( this.getGroups() );
         return toret;
-    }
-
-    /** Copies the activities in this group.
-     * @return a new vector with copied activities.
-     */
-    public Group<? extends Group.Activity>[] copyGroups()
-    {
-        final Group<? extends Group.Activity>[] MY_GROUPS = this.getGroups();
-        final Group<? extends Group.Activity>[] TORET = new Group[ MY_GROUPS.length ];
-
-        for(int i = 0; i < TORET.length; ++i) {
-            TORET[ i ] = MY_GROUPS[ i ].copy();
-        }
-
-        return TORET;
     }
 
     public static Experiment createSimpleExperiment(final Duration DT)

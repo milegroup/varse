@@ -16,11 +16,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -139,7 +137,6 @@ public class BluetoothUtils {
     // Invoke this when trying to discover the services of a given device.
     // device.connectGatt(context,false,bluetoothGattCallback);
     public static BluetoothGattCallback createGattServiceFilteringCallback(
-                                                    Context cntxt,
                                                     final GattServiceConsumer HR_SERV_DISCOVERED,
                                                     final GattServiceConsumer HR_SERVICE_NOT_AVAIL)
     {
@@ -215,7 +212,6 @@ public class BluetoothUtils {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                final BluetoothAdapter BT_ADAPTER = getBluetoothAdapter( context );
                 String action = intent.getAction();
 
                 if ( BluetoothDevice.ACTION_FOUND.equals( action ) ) {

@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 
 /** Tests the JSON conversion mechanisms. */
@@ -35,6 +37,7 @@ public class TestJsonConversionTests {
     @BeforeClass
     public static void init()
     {
+        final ArrayList<Group<? extends Group.Activity>> GRPS = new ArrayList<>( 3 );
         Ofm.init( ApplicationProvider.getApplicationContext(),
                     PlainStringEncoder.get() );
 
@@ -51,7 +54,11 @@ public class TestJsonConversionTests {
         act3 = new MediaGroup.MediaActivity( Id.createFake(), new File( "video1.ogg" ) );
         grp2.replaceActivities( new MediaGroup.MediaActivity[]{ act2 } );
         grp3.replaceActivities( new MediaGroup.MediaActivity[]{ act3 } );
-        expr2.replaceGroups( new Group[] { grp1, grp2, grp3 } );
+
+        GRPS.add( grp1 );
+        GRPS.add( grp2 );
+        GRPS.add( grp3 );
+        expr2.replaceGroups( GRPS );
 
         // Events
         long time = System.currentTimeMillis();

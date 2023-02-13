@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class BluetoothHRFiltering {
     private static final String LOG_TAG = BluetoothHRFiltering.class.getSimpleName();
-    private static int MAX_FILTERING_PERIOD = 25000;
+    private static final int MAX_FILTERING_PERIOD = 25000;
 
     public BluetoothHRFiltering(ScannerUI ui)
     {
@@ -240,7 +240,6 @@ public class BluetoothHRFiltering {
             final BluetoothGatt BT_GATT = btDevice.connectGatt(
                     this.ui.getContext(),false,
                     BluetoothUtils.createGattServiceFilteringCallback(
-                            this.ui.getContext(),
                             ( device, gattChr ) -> this.filterInDevice( btDevice ),
                             ( device, gattChr ) -> this.filterOutDevice( btDevice )
                     ));
@@ -252,7 +251,7 @@ public class BluetoothHRFiltering {
     }
 
     private HashMap<BluetoothDevice, BluetoothGatt> openConnections;
-    private ScannerUI ui;
+    private final ScannerUI ui;
     private boolean filtering;
     private BluetoothDevice[] btDevices;
     private ArrayList<BluetoothDevice> acceptedDevices;

@@ -1,5 +1,6 @@
 package com.devbaltasarq.varse.ui.adapters;
 
+import java.util.List;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.appcompat.content.res.AppCompatResources;
@@ -17,9 +18,10 @@ import com.devbaltasarq.varse.core.experiment.ManualGroup;
 import com.devbaltasarq.varse.core.experiment.VideoGroup;
 import com.devbaltasarq.varse.ui.editexperiment.EditExperimentActivity;
 
+
 /** Represents an adapter of the special items for the ListView of groups inside experiments. */
-public class ListViewGroupArrayAdapter extends ArrayAdapter<Group> {
-    public ListViewGroupArrayAdapter(Context cntxt, Group[] entries)
+public class ListViewGroupArrayAdapter extends ArrayAdapter<Group<? extends Group.Activity>> {
+    public ListViewGroupArrayAdapter(Context cntxt, List<Group<? extends Group.Activity>> entries)
     {
         super( cntxt, 0, entries );
     }
@@ -29,7 +31,7 @@ public class ListViewGroupArrayAdapter extends ArrayAdapter<Group> {
     {
         final EditExperimentActivity CONTEXT = (EditExperimentActivity) this.getContext();
         final LayoutInflater LAYOUT_INFLATER = LayoutInflater.from( this.getContext() );
-        final Group GROUP = this.getItem( position );
+        final Group<? extends Group.Activity> GROUP = this.getItem( position );
 
         if ( GROUP == null ) {
             throw new Error( "Group adapter: group is null" );

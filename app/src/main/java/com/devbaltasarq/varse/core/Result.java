@@ -15,13 +15,11 @@ import org.json.JSONException;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.function.Consumer;
 
 
 /** Represents the results of a given experiment. */

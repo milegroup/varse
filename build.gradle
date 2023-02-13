@@ -16,7 +16,10 @@ buildscript {
 }
 
 allprojects {
-    tasks.withType(JavaCompile) { options.deprecation = true }
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked"
+        options.deprecation = true
+    }
 
     repositories {
         mavenCentral()
