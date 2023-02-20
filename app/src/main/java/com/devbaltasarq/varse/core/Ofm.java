@@ -42,6 +42,8 @@ import com.devbaltasarq.varse.core.ofmcache.FileCache;
 import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.core.ofmcache.ResultsPerExperiment;
 
+import javax.activation.MimeType;
+
 
 /** OFM (Object-File Mapper): Relates the database of JSON files to objects. */
 public final class Ofm {
@@ -597,9 +599,9 @@ public final class Ofm {
                 copy( ORG_FILE, ORG_FILE_COPY );
 
                 // Now save to downloads
-                this.saveToDownloads( ORG_FILE_COPY.getPath(), TEXT_MIME_TYPE );
-                this.saveToDownloads( TAGS_TEMP_FILE.getPath(), TEXT_MIME_TYPE );
-                this.saveToDownloads( RR_TEMP_FILE.getPath(), TEXT_MIME_TYPE );
+                this.saveToDownloads( ORG_FILE_COPY, TEXT_MIME_TYPE );
+                this.saveToDownloads( TAGS_TEMP_FILE, TEXT_MIME_TYPE );
+                this.saveToDownloads( RR_TEMP_FILE, TEXT_MIME_TYPE );
 
                 // Clean
                 TAGS_TEMP_FILE.delete();
@@ -653,12 +655,7 @@ public final class Ofm {
                     TEMP_FILE );
             copy( TEMP_FILE, OUTPUT_FILE );
 
-            if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
-                this.saveToDownloads( OUTPUT_FILE.getPath(), ZIP_MIME_TYPE );
-            } else {
-                final File DWNLDS_OUTPUT_FILE = new File( DIR_DOWNLOADS, OUTPUT_NAME + ".zip" );
-                copy( TEMP_FILE, DWNLDS_OUTPUT_FILE );
-            }
+            this.saveToDownloads( OUTPUT_FILE, ZIP_MIME_TYPE );
         } catch(IOException exc) {
             throw new IOException(
                             "exporting: '"
@@ -1053,16 +1050,31 @@ public final class Ofm {
         return;
     }
 
-    private void saveToDownloads(String fn, String mimeType)
+    public void saveToDownloads(File file, String mimeTypeName) throws IOException
+    {
+        final String FILE_NAME = file.getPath();
+
+        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
+            this.saveToDownloadsModern( FILE_NAME, mimeTypeName );
+        } else {
+            final File DWNLDS_OUTPUT_FILE = new File( DIR_DOWNLOADS, FILE_NAME + ".zip" );
+            copy( file, DWNLDS_OUTPUT_FILE );
+        }
+
+        return;
+    }
+
+    private void saveToDownloadsModern(String fn, String mimeTypeName)
     {
         if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
         {
+            //final String EXT = "." + mimeTypeName.substring( mimeTypeName.length() - 3 );
             final File INPUT_FILE = new File( fn );
             final ContentValues VALUES = new ContentValues();
             final ContentResolver FINDER = this.context.getContentResolver();
 
             VALUES.put( MediaStore.MediaColumns.DISPLAY_NAME, INPUT_FILE.getName() );
-            VALUES.put( MediaStore.MediaColumns.MIME_TYPE, mimeType );
+            VALUES.put( MediaStore.MediaColumns.MIME_TYPE, mimeTypeName );
             VALUES.put( MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS );
 
             final Uri URI = FINDER.insert( MediaStore.Downloads.EXTERNAL_CONTENT_URI, VALUES );
