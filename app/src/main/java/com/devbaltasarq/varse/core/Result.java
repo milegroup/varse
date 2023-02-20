@@ -480,6 +480,7 @@ public class Result extends Persistent {
                 BEATS_STREAM.write( Long.toString( ( (BeatEvent) EVT ).getTimeOfNewHeartBeat() ) );
                 BEATS_STREAM.write( '\n' );
             }
+            else
             if ( EVT instanceof ActivityChangeEvent
               && TAGS_STREAM != null )
             {

@@ -1,3 +1,6 @@
+// VARSE 2019/23 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.ui.performexperiment;
 
 
@@ -8,9 +11,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -61,76 +61,6 @@ import java.util.Set;
 
 public class ExperimentDirector extends AppActivity implements HRListenerActivity {
     public static final String LOG_TAG = ExperimentDirector.class.getSimpleName();
-
-    /** Interface for listeners. */
-    private interface Listener<T> {
-        void handle(T sender);
-    }
-
-    /** Represents a chronometer. */
-    private static class Chronometer {
-        /** Creates a new chronometer with an event handler. */
-        public Chronometer(Listener<Chronometer> eventHandler)
-        {
-            this.handler = new Handler( Looper.getMainLooper() );
-            this.eventHandler = eventHandler;
-            this.startTime = 0;
-            this.stopped = false;
-        }
-
-        /** @return the starting time. */
-        public long getBase()
-        {
-            return this.startTime;
-        }
-
-        /** @return the elapsed duration, in milliseconds. */
-        public long getMillis()
-        {
-            return SystemClock.elapsedRealtime() - this.startTime;
-        }
-
-        /** Resets the current elapsed time with the current real time. */
-        public void reset()
-        {
-            this.reset( SystemClock.elapsedRealtime() );
-        }
-
-        /** Resets the current elapsed time with the given time. */
-        public void reset(long time)
-        {
-            this.startTime = time;
-        }
-
-        /** Starts the chronometer */
-        public void start()
-        {
-            this.stopped = false;
-
-            this.sendHR = () -> {
-                if ( ! this.stopped ) {
-                    this.eventHandler.handle( this );
-                    this.handler.postDelayed( this.sendHR,1000);
-                }
-            };
-
-            this.handler.post( this.sendHR );
-        }
-
-        /** Eliminates the daemon so the crono is stopped. */
-        public void stop()
-        {
-            this.stopped = true;
-            this.handler.removeCallbacks( this.sendHR );
-            this.handler.removeCallbacksAndMessages( null );
-        }
-
-        private boolean stopped;
-        private long startTime;
-        private Runnable sendHR;
-        private final Handler handler;
-        private final Listener<Chronometer> eventHandler;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -230,7 +160,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         }
 
         // Check whether there is something to play
-        if ( this.groupsToPlay.length == 0 ) {
+        if ( this.groupsToPlay.size() == 0 ) {
             isAble = false;
         }
 
@@ -298,7 +228,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     {
         final ListView LV_ACTS = this.findViewById( R.id.lvExperimentActivities );
         final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
-        final int NUM_ENTRIES = this.groupsToPlay.length;
+        final int NUM_ENTRIES = this.groupsToPlay.size();
 
         Log.i( LOG_TAG, "starting showActivities()..." );
         Log.i( LOG_TAG, "entries: " + NUM_ENTRIES );
@@ -376,8 +306,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     {
         final TextView LBL_CRONO = this.findViewById( R.id.lblCrono );
         final int ELAPSED_TIME_SECONDS = this.getElapsedExperimentSeconds();
-        Log.d(LOG_TAG, "Current activity index: " + this.activityIndex);
-        Log.d(LOG_TAG, "Accumulated time: " + this.accumulatedTimeInSeconds);
+        Log.d( LOG_TAG, "Current activity index: " + this.activityIndex );
+        Log.d( LOG_TAG, "Accumulated time: " + this.accumulatedTimeInSeconds );
 
         LBL_CRONO.setText( new Duration( ELAPSED_TIME_SECONDS ).toChronoString() );
 
@@ -388,8 +318,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
         // Now evaluate
         if ( this.onExperiment ) {
-            final Group GROUP = this.groupsToPlay[ this.groupIndex];
-            final Group.Activity ACTIVITY = GROUP.getActivities()[ this.activityIndex];
+            final Group<? extends Group.Activity> GROUP = this.groupsToPlay.get( this.groupIndex );
+            final Group.Activity ACTIVITY = GROUP.get().get( this.activityIndex );
             final int MAX_TIME_SPENT_IN_ACT = ACTIVITY.getTime().getTimeInSeconds();
             final int SECONDS = ELAPSED_TIME_SECONDS - this.accumulatedTimeInSeconds;
 
@@ -429,14 +359,14 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         Tag toret = null;
 
         if ( this.onExperiment ) {
-            final Group GROUP = this.groupsToPlay[ this.groupIndex ];
+            final Group<? extends Group.Activity> GROUP = this.groupsToPlay.get( this.groupIndex );
 
             if ( GROUP instanceof MediaGroup ) {
                 toret = ( (MediaGroup) GROUP ).getTag();
             }
             else
             if ( GROUP instanceof ManualGroup ) {
-                final Group.Activity ACTIVITY = GROUP.getActivities()[ this.activityIndex ];
+                final Group.Activity ACTIVITY = GROUP.get().get( this.activityIndex );
 
                 toret = ACTIVITY.getTag();
             } else {
@@ -452,9 +382,9 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private void skipCurrentActivity()
     {
         if ( this.onExperiment
-          && this.groupIndex < this.groupsToPlay.length )
+          && this.groupIndex < this.groupsToPlay.size() )
         {
-            final Group GROUP = this.groupsToPlay[ this.groupIndex ];
+            final Group<? extends Group.Activity> GROUP = this.groupsToPlay.get( this.groupIndex );
 
             if ( this.activityIndex < GROUP.size() ) {
                 final long ELAPSED_TIME = this.getElapsedExperimentMillis();
@@ -464,7 +394,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 this.accumulatedTimeInSeconds += SECONDS_IN_ACT;
 
                 if ( this.onExperiment ) {
-                    final Group NEW_GROUP = this.groupsToPlay[ this.groupIndex ];
+                    final Group<? extends Group.Activity> NEW_GROUP = this.groupsToPlay.get( this.groupIndex );
 
                     if ( changedGroup
                       || ( NEW_GROUP instanceof ManualGroup ) )
@@ -497,33 +427,21 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final TextView LBL_INSTANT_BPM = this.findViewById( R.id.lblInstantBpm );
         final int HR = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
         final int MEAN_RR = intent.getIntExtra( BleService.MEAN_RR_TAG, -1 );
+        long time = this.getElapsedExperimentMillis();
         int[] rrs = intent.getIntArrayExtra( BleService.RR_TAG );
 
         LBL_INSTANT_BPM.setText( HR + this.getString( R.string.lblBpm ) );
 
+        // Log, if needed
         if ( BuildConfig.DEBUG ) {
-            if ( HR >= 0 ) {
-                Log.d(LOG_TAG, "HR received: " + HR + "bpm" );
-            }
+            final BluetoothDeviceWrapper.BeatInfo BEAT_INFO = new BluetoothDeviceWrapper.BeatInfo();
 
-            if ( MEAN_RR >= 0 ) {
-                Log.d(LOG_TAG, "Mean RR received: " + MEAN_RR + "millisecs" );
-            }
+            BEAT_INFO.set( BluetoothDeviceWrapper.BeatInfo.Info.TIME, time );
+            BEAT_INFO.set( BluetoothDeviceWrapper.BeatInfo.Info.HR, HR );
+            BEAT_INFO.set( BluetoothDeviceWrapper.BeatInfo.Info.MEAN_RR, MEAN_RR );
+            BEAT_INFO.setRRs( rrs );
 
-            if ( rrs != null ) {
-                final StringBuilder STR_RR = new StringBuilder();
-
-                Log.d(LOG_TAG, "RR's received: " + rrs.length );
-
-                for(int rr: rrs) {
-                    STR_RR.append( rr );
-                    STR_RR.append( ' ' );
-                }
-
-                Log.d(LOG_TAG, "RR's: { " + STR_RR.toString() + "}" );
-            } else {
-                Log.d(LOG_TAG, "No RR's received." );
-            }
+            Log.d( LOG_TAG, BEAT_INFO.toString() );
         }
 
         if ( HR >= 0 ) {
@@ -538,8 +456,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
             if ( !this.readyToLaunch ) {
                 this.setAbleToLaunch( true );
             } else {
-                long time = this.getElapsedExperimentMillis();
-
                 for(int rr: rrs) {
                     this.addToResult( new Result.BeatEvent( time, rr ) );
 
@@ -650,28 +566,27 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
       */
     private boolean calculateNextIndexes()
     {
-        final Group[] GROUPS = this.groupsToPlay;
+        final ArrayList<Group<? extends Group.Activity>> GROUPS = this.groupsToPlay;
         boolean toret = false;
 
-        if ( this.groupIndex < GROUPS.length ) {
-            final Group.Activity[] ACTIVITIES = GROUPS[ this.groupIndex ].getActivities();
-
+        if ( this.groupIndex < GROUPS.size() ) {
             ++this.activityIndex;
 
-            if ( this.activityIndex >= ACTIVITIES.length ) {
+            if ( this.activityIndex >= GROUPS.get( this.groupIndex ).get().size() )
+            {
                 toret = true;
                 this.activityIndex = 0;
                 ++this.groupIndex;
 
-                while( this.groupIndex < GROUPS.length
-                   &&  this.groupsToPlay[ this.groupIndex].getActivities().length == 0 )
+                while( this.groupIndex < GROUPS.size()
+                   &&  this.groupsToPlay.get( this.groupIndex ).get().size() == 0 )
                 {
                     ++this.groupIndex;
                 }
             }
         }
 
-        if ( this.groupIndex >= GROUPS.length ) {
+        if ( this.groupIndex >= GROUPS.size() ) {
             this.onExperiment = false;
         }
 
@@ -681,7 +596,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     /** Launches the experiment. */
     private void launchExperiment()
     {
-        if ( this.groupsToPlay.length > 0 ) {
+        if ( this.groupsToPlay.size() > 0 ) {
             final TextView LBL_MAX_TIME = this.findViewById( R.id.lblMaxTime );
             final Duration TIME_NEEDED = this.experiment.calculateTimeNeeded();
             final String REC = PerformExperimentActivity.rec;
@@ -721,7 +636,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
       * divided in groups, and another one with a sequential collection of activities.
       * Honors the random attribute.
       */
-    @SuppressWarnings("unchecked")
     private void buildActivitiesToPlay()
     {
         final ArrayList<Group.Activity> ACTIVITIES = new ArrayList<>( this.experiment.getNumActivities() );
@@ -730,29 +644,32 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final int[] SEQUENCE_OF_GROUPS = createSequence( NUM_GROUPS, this.experiment.isRandom() );
 
         int pos = 0;
-        this.groupsToPlay = new Group[ NUM_GROUPS ];
+        this.groupsToPlay = new ArrayList<>( NUM_GROUPS );
 
         // Run over all groups honoring randomness of experiment, and gather their activities
         for(int i: SEQUENCE_OF_GROUPS) {
             // Retrieve the activities from groups, also honoring their own randomness
-            final Group GROUP = GROUPS_IN_EXPERIMENT.get( i ).copy();
-            final Group.Activity[] GROUP_ACTIVITIES = GROUPS_IN_EXPERIMENT.get( i ).getActivities();
+            final Group<? extends Group.Activity> GROUP = GROUPS_IN_EXPERIMENT.get( i ).copy();
+            final List<? extends Group.Activity> GROUP_ACTIVITIES = GROUP.get();
             final int[] SEQUENCE_OF_ACTIVITIES = createSequence( GROUP.size(), GROUP.isRandom() );
 
             // Append all activities in this group, randomly or not
             GROUP.clear();
             for(int j: SEQUENCE_OF_ACTIVITIES) {
-                final Group.Activity ACTIVITY = GROUP_ACTIVITIES[ j ].copy();
+                final Group.Activity ACTIVITY = GROUP_ACTIVITIES.get( j ).copy();
 
-                GROUP.add( ACTIVITY );
+                // We are just adding the same activitties it had
+                @SuppressWarnings("unchecked")
+                Group<Group.Activity> ROOT_GROUP = (Group<Group.Activity>) GROUP;
+                ROOT_GROUP.add( ACTIVITY );
                 ACTIVITIES.add( ACTIVITY );
             }
 
-            this.groupsToPlay[ pos ] = GROUP;
+            this.groupsToPlay.set( pos, GROUP );
             ++pos;
         }
 
-        this.activitiesToPlay = ACTIVITIES.toArray( new Group.Activity[ 0 ] );
+        this.activitiesToPlay = ACTIVITIES;
     }
 
     private void abortDueToMissingFile(File f)
@@ -828,8 +745,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private void showActivity(int i, int j)
     {
         final TextView LBL_MAX_ACT_TIME = this.findViewById( R.id.lblMaxActTime );
-        final Group.Activity ACT = this.groupsToPlay[ i ].getActivities()[ j ];
-        final Group GRP = ACT.getGroup();
+        final Group.Activity ACT = this.groupsToPlay.get( i ).get().get( j );
+        final Group<? extends Group.Activity> GRP = ACT.getGroup();
 
         if ( ACT instanceof MediaGroup.MediaActivity ) {
             final MediaGroup.MediaActivity MEDIA_ACT = (MediaGroup.MediaActivity) ACT;
@@ -854,7 +771,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final Duration DURATION_DELTA = new Duration( ACT.getTime().getTimeInSeconds() );
         LBL_MAX_ACT_TIME.setText( DURATION_DELTA.add( TOTAL_SECS ).toChronoString() );
 
-        Log.i(LOG_TAG, "Starting activity: '" + ACT.getTag() + "'"
+        Log.i( LOG_TAG, "Starting activity: '" + ACT.getTag() + "'"
                         + "\n\tCurrent time: " + TOTAL_SECS + "s"
                         + "\n\tActivity time: " + ACT.getTime().getTimeInSeconds() + "s"
                         + "\n\tActivity ends at max: " + DURATION_DELTA + "s" );
@@ -944,8 +861,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     private int groupIndex;
     private int accumulatedTimeInSeconds;
     private Experiment experiment;
-    private Group.Activity[] activitiesToPlay;
-    private Group[] groupsToPlay;
+    private List<Group.Activity> activitiesToPlay;
+    private ArrayList<Group<? extends Group.Activity>> groupsToPlay;
     private boolean askBeforeExit;
     private boolean readyToLaunch;
     private boolean onExperiment;

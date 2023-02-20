@@ -1,4 +1,8 @@
+// VARSE 2019/23 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.ui.performexperiment;
+
 
 import android.content.BroadcastReceiver;
 import android.content.Intent;
@@ -10,6 +14,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.devbaltasarq.varse.R;
+import com.devbaltasarq.varse.core.Duration;
+import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.bluetooth.BleService;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
@@ -17,11 +23,20 @@ import com.devbaltasarq.varse.core.bluetooth.HRListenerActivity;
 import com.devbaltasarq.varse.core.bluetooth.ServiceConnectionWithStatus;
 import com.devbaltasarq.varse.ui.AppActivity;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Calendar;
+import java.util.Locale;
+
 
 /** Shows an activity in which the user can see the obtained bpm data.
   * The device is taken from the static attribute PerformExperimentActivity. */
 public class TestHRDevice extends AppActivity implements HRListenerActivity {
-    private static String LogTag = TestHRDevice.class.getSimpleName();
+    private final static String LOG_TAG = TestHRDevice.class.getSimpleName();
+    private final static String CSV_MIME_TYPE = "text/csv";
+    private enum Status {  INACTIVE, RECORDING, CANNOT_RECORD }
+    private enum Finish{ EXIT, SAVE_AND_EXIT };
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -31,19 +46,25 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         this.setTitle( "" );
 
         final ImageButton BT_CLOSE_TEST_DEVICE = this.findViewById( R.id.btCloseTestDevice );
+        final ImageButton BT_SAVE = this.findViewById( R.id.btSave );
         final TextView LBL_DEVICE_NAME = this.findViewById( R.id.lblDeviceName );
 
         // Events
-        BT_CLOSE_TEST_DEVICE.setOnClickListener( (view) -> this.finish() );
+        BT_CLOSE_TEST_DEVICE.setOnClickListener( (view) -> this.finish( Finish.EXIT ) );
+        BT_SAVE.setOnClickListener( (view) -> this.finish( Finish.SAVE_AND_EXIT ) );
 
         // Set device
         this.btDevice = PerformExperimentActivity.chosenBtDevice;
         LBL_DEVICE_NAME.setText( this.btDevice.getName() );
+
+        // Assign
+        this.ofm = Ofm.get();
+        this.logInfoFile = null;
     }
 
     public void showStatus(String msg)
     {
-        this.showStatus( LogTag, msg );
+        this.showStatus( LOG_TAG, msg );
     }
 
     @Override
@@ -54,6 +75,7 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         BluetoothUtils.openBluetoothConnections( this,
                                                     this.getString( R.string.lblConnected ),
                                                     this.getString( R.string.lblDisconnected ) );
+        this.status = Status.INACTIVE;
         this.showInactive();
 
         // Bluetooth permissions
@@ -62,9 +84,11 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
 
         if ( BT_PERMISSIONS_NEEDED.length > 0 ) {
             Toast.makeText( this, R.string.errNoBluetooth, Toast.LENGTH_LONG ).show();
+        } else {
+            this.startRecording();
         }
 
-        Log.d( LogTag, "UI started, service tried to bound." );
+        Log.d( LOG_TAG, "UI started, service tried to bound." );
     }
 
     @Override
@@ -75,7 +99,21 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         BluetoothUtils.closeBluetoothConnections( this );
         this.showInactive();
 
-        Log.d( LogTag, "UI finished, closed connections." );
+        if ( this.status == Status.RECORDING ) {
+            this.stopRecording( Finish.EXIT );
+        }
+
+        Log.d(LOG_TAG, "test UI finished, closed connections." );
+    }
+
+    public void finish(Finish finishAction)
+    {
+        if ( finishAction == Finish.SAVE_AND_EXIT ) {
+            this.showStatus( LOG_TAG, this.getString( R.string.msgExported ) );
+            this.stopRecording( Finish.SAVE_AND_EXIT );
+        }
+
+        super.finish();
     }
 
     @Override
@@ -93,6 +131,25 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
     {
         final int HR = intent.getIntExtra( BleService.HEART_RATE_TAG, -1 );
         final int MEAN_RR = intent.getIntExtra( BleService.MEAN_RR_TAG, -1 );
+        final BluetoothDeviceWrapper.BeatInfo BEAT_INFO = new BluetoothDeviceWrapper.BeatInfo();
+        int[] rrs = intent.getIntArrayExtra( BleService.RR_TAG );
+
+        if ( this.status == Status.INACTIVE ) {
+            this.startRecording();
+        }
+
+        BEAT_INFO.set( BluetoothDeviceWrapper.BeatInfo.Info.TIME, this.chrono.getMillis() );
+        BEAT_INFO.set( BluetoothDeviceWrapper.BeatInfo.Info.HR, HR );
+        BEAT_INFO.set( BluetoothDeviceWrapper.BeatInfo.Info.MEAN_RR, MEAN_RR );
+        BEAT_INFO.setRRs( rrs );
+
+        try {
+            this.logInfo.write( BEAT_INFO + System.lineSeparator() );
+        } catch(IOException exc)
+        {
+            Log.e( LOG_TAG, "error writing beat info file: " + exc.getMessage()  );
+        }
+
         String strHr = "";
         String strRr = "";
 
@@ -107,12 +164,75 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         this.showBpm( strHr, strRr );
     }
 
+    private void startRecording()
+    {
+        final Calendar TIME = Calendar.getInstance();
+        final String STR_ISO_TIME = String.format(
+                Locale.getDefault(),
+                "-%04d-%02d-%02dT%02d-%02d-%02d",
+                TIME.get( Calendar.YEAR ),
+                TIME.get( Calendar.MONTH + 1 ),
+                TIME.get( Calendar.DAY_OF_MONTH ),
+                TIME.get( Calendar.HOUR ),
+                TIME.get( Calendar.MINUTE ),
+                TIME.get( Calendar.SECOND ) );
+
+        try {
+            this.logInfoFile = this.ofm.createTempFile(
+                                "testhr-" + this.getBtDevice().getName() + "-",
+                                    STR_ISO_TIME );
+            this.logInfo = Ofm.openWriterFor( this.logInfoFile );
+            this.logInfo.write(
+                    BluetoothDeviceWrapper.BeatInfo.getInfoHeader()
+                    + System.lineSeparator() );
+            this.chrono = new Chronometer( this::onChronoUpdate );
+            this.chrono.reset();
+            this.chrono.start();
+            this.status = Status.RECORDING;
+        } catch(IOException exc)
+        {
+            this.logInfo = null;
+            this.logInfoFile = null;
+            this.status = Status.CANNOT_RECORD;
+            Toast.makeText( this, R.string.errIO, Toast.LENGTH_LONG ).show();
+        }
+
+        return;
+    }
+
+    private void stopRecording(Finish finishAction)
+    {
+        this.chrono.stop();
+        this.status = Status.INACTIVE;
+
+        // Close writer
+        if ( this.logInfo != null ) {
+            Ofm.close( this.logInfo );
+            this.logInfo = null;
+        }
+
+        // Save file
+        if ( this.logInfoFile != null ) {
+            if ( finishAction == Finish.SAVE_AND_EXIT ) {
+                try {
+                    this.ofm.saveToDownloads( this.logInfoFile, CSV_MIME_TYPE );
+                } catch(IOException exc) {
+                    Log.e( LOG_TAG, "saving log file to downloads: " + exc.getMessage() );
+                }
+            }
+
+            this.logInfoFile.delete();
+            this.logInfoFile = null;
+        }
+
+        return;
+    }
+
     /** Shows the info in the appropriate labels. */
     private void showBpm(String bpm, String rr)
     {
         final TextView LBL_BPM = this.findViewById( R.id.lblBpm );
         final TextView LBL_RR = this.findViewById( R.id.lblRR );
-
 
         if ( bpm != null
           && !bpm.isEmpty()  )
@@ -158,6 +278,17 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
     {
         this.showHRInactive();
         this.showRRInactive();
+    }
+
+    /** Updates the time.
+      * @param wc An instance of the Chronometer.
+      */
+    private void onChronoUpdate(Chronometer wc)
+    {
+        final TextView LBL_TIME = this.findViewById( R.id.lblTime );
+        final int SECONDS = (int) ( (double) wc.getMillis() / 1000 );
+
+        LBL_TIME.setText( new Duration( SECONDS ).toChronoString() );
     }
 
     /** @return the BleService object used by this activity. */
@@ -210,4 +341,10 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
     private BroadcastReceiver broadcastReceiver;
     private BleService bleService;
     private BluetoothDeviceWrapper btDevice;
+
+    private Ofm ofm;
+    private Status status;
+    private Writer logInfo;
+    private File logInfoFile;
+    private Chronometer chrono;
 }

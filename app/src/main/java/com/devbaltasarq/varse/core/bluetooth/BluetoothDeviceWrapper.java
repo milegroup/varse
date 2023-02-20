@@ -8,10 +8,96 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Locale;
+
 
 /** Bridge between real Bluetooth devices and a demo device. */
 public class BluetoothDeviceWrapper {
     public String LogTag = BluetoothDeviceWrapper.class.getSimpleName();
+
+
+    public static class BeatInfo {
+        private final static int MAX_NUM_RRS = 10;
+        public enum Info { TIME, HR, MEAN_RR }
+
+        public BeatInfo()
+        {
+            final Info[] INFO_VALUES = Info.values();
+            this.data = new HashMap<>( INFO_VALUES.length );
+            this.rrs = new int[ 0 ];
+
+            // Inits
+            for(Info info: INFO_VALUES) {
+                this.set( info, -1 );
+            }
+        }
+
+        public void set(@NonNull Info info, long data)
+        {
+            this.data.put( info, data );
+        }
+
+        public void setRRs(int[] data)
+        {
+            this.rrs = data.clone();
+        }
+
+        public long get(@NonNull Info info)
+        {
+            return this.data.get( info );
+        }
+
+        public int[] getRRs()
+        {
+            return this.rrs.clone();
+        }
+
+        @Override
+        public String toString()
+        {
+            final String STR_INFO_FMT = "%5d\t%3d\t%4d\t%2d%s";
+            final Locale LOCALE = Locale.getDefault();
+            final int[] RRS = Arrays.copyOf( this.rrs, MAX_NUM_RRS );
+
+            // Prepare the
+            final StringBuilder STR_RRS = new StringBuilder();
+            for(int i = 0; i < MAX_NUM_RRS; ++i) {
+                STR_RRS.append( String.format( LOCALE, "\t%4d", RRS[ i ] ) );
+            }
+
+            return String.format(
+                    LOCALE,
+                    STR_INFO_FMT,
+                    this.get( Info.TIME ),
+                    this.get( Info.HR ),
+                    this.get( Info.MEAN_RR ),
+                    this.rrs.length,
+                    STR_RRS );
+        }
+
+        public static String getInfoHeader()
+        {
+            if ( INFO_HEADER == null ) {
+                final StringBuilder TORET = new StringBuilder( "time\thr\tmean rr\t#rrs" );
+
+                for(int i = 0; i < MAX_NUM_RRS; ++i) {
+                    TORET.append( '\t' );
+                    TORET.append( "rr" );
+                    TORET.append( i + 1 );
+                }
+
+                INFO_HEADER = TORET.toString();
+            }
+
+            return INFO_HEADER;
+        }
+
+        private final HashMap<Info, Long> data;
+        private int[] rrs;
+        private static String INFO_HEADER;
+    }
 
     /** Creates a new wrapper, with a real bluetooth device. */
     public BluetoothDeviceWrapper(@NonNull BluetoothDevice bt)
@@ -54,7 +140,7 @@ public class BluetoothDeviceWrapper {
     /** @return the name of the device, as a String. */
     public String getName() throws Error
     {
-        String toret = "";
+        String toret;
 
         if ( this.btDevice != null ) {
             toret = this.btDevice.getName();

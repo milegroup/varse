@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -211,11 +212,9 @@ public class Experiment extends Persistent {
             if ( g instanceof MediaGroup ) {
                 final MediaGroup MG = (MediaGroup) g;
 
-                for( Group.Activity act: MG.getActivities() ) {
-                    final MediaGroup.MediaActivity MACT = (MediaGroup.MediaActivity) act;
-
-                    if ( MACT.getFile().getName().equals( fileName ) ) {
-                        toret = MACT;
+                for( MediaGroup.MediaActivity act: MG.get() ) {
+                    if ( act.getFile().getName().equals( fileName ) ) {
+                        toret = act;
                         break SEARCH;
                     }
                 }
@@ -415,9 +414,9 @@ public class Experiment extends Persistent {
                                                 DT );
         final ManualGroup MANUAL_GRP =
                 new ManualGroup( Id.create(),
-                            false,
+                                false,
                                 TORET,
-                                new ManualGroup.ManualActivity[]{ MANUAL_ACTIVITY } );
+                                Collections.singletonList( MANUAL_ACTIVITY ) );
 
         TORET.groups.add( MANUAL_GRP );
         return TORET;
