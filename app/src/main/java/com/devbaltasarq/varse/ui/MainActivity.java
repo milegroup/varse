@@ -1,11 +1,11 @@
+// VARSE 2019/23 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.ui;
 
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -13,12 +13,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.View;
 import com.google.android.material.navigation.NavigationView;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -43,7 +40,6 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.regex.Pattern;
 
 
 public class MainActivity extends AppActivity

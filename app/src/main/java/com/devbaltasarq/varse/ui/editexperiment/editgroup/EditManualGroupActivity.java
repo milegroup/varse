@@ -62,7 +62,9 @@ public class EditManualGroupActivity extends EditGroupActivity {
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
                         if ( result.getResultCode() == RSC_SAVE_DATA ) {
-                            group.add( EditManualEntryActivity.manualActivity );
+                            final ManualGroup MGROUP = (ManualGroup) group;
+
+                            MGROUP.add( EditManualEntryActivity.manualActivity );
                             this.showActivities();
                         }
                     });
@@ -72,7 +74,9 @@ public class EditManualGroupActivity extends EditGroupActivity {
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
                         if ( result.getResultCode() == RSC_SAVE_DATA ) {
-                            group.substituteActivity( EditManualEntryActivity.manualActivity );
+                            final ManualGroup MGROUP = (ManualGroup) group;
+
+                            MGROUP.substituteActivity( EditManualEntryActivity.manualActivity );
                             this.showActivities();
                         }
                     });

@@ -1,4 +1,8 @@
+// VARSE 2019/23 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.core.experiment;
+
 
 import android.util.JsonReader;
 import android.util.JsonWriter;
@@ -15,7 +19,8 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
+
 
 /** Groups of activities, many times related to media files. */
 public abstract class Group<T extends Group.Activity> extends Persistent {
@@ -40,7 +45,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         }
 
         /** @return The group this activity pertains to. */
-        public Group getGroup()
+        public Group<? extends Group.Activity> getGroup()
         {
             return this.group;
         }
@@ -136,7 +141,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
             return this.copy( this.getId().copy() );
         }
 
-        public abstract Activity copy(Id id);
+        protected abstract Activity copy(Id id);
 
         protected void copyBasicAttributesTo(Activity dest)
         {
@@ -145,30 +150,23 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         }
 
         private Tag tag;
-        Group group;
+        Group<? extends Activity> group;
     }
 
     /** Creates a new group. given a tag and a random display of terms. */
-    @SuppressWarnings("unchecked")
     protected Group(Id id, boolean rnd, Experiment expr)
     {
-        this( id, rnd, expr, (T[]) new Activity[] {} );
+        this( id, rnd, expr, new ArrayList<>() );
     }
 
     /** Creates a new group. given a tag and a random display of terms. */
-    protected Group(Id id, boolean rnd, Experiment expr, T[] acts)
+    protected Group(Id id, boolean rnd, Experiment expr, List<T> acts)
     {
         super( id );
 
         this.random = rnd;
-        this.activities = new ArrayList<>();
+        this.activities = new ArrayList<>( acts );
         this.experiment = expr;
-
-        for(T act: acts) {
-            this.add( act );
-        }
-
-        return;
     }
 
     @Override
@@ -206,10 +204,10 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         this.activities.remove( act );
     }
 
-    /** Removes the given activity.
+    /** Appends the given activity.
      * @param act The activity.
      */
-    public void add(Activity act)
+    public void add(T act)
     {
         act.group = this;
         this.activities.add( act );
@@ -218,7 +216,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     /** Substitutes a given activity.
       * @param act The activity to substitute.
       */
-    public void substituteActivity(Activity act)
+    public void substituteActivity(T act)
     {
         for(int i = 0; i < this.activities.size(); ++i) {
             if ( this.activities.get( i ).getId().equals( act.getId() ) ) {
@@ -229,11 +227,16 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         act.group = this;
     }
 
-    /** Returns all activities in this group. */
-    @SuppressWarnings("unchecked")
-    public T[] get()
+    /** @return all activities in this group. */
+    public List<T> get()
     {
-        return (T[]) this.activities.toArray( new Activity[ this.size() ] );
+        return new ArrayList<>( this.activities );
+    }
+
+    /** @return the number of activities in this group. */
+    public int getNumActivities()
+    {
+        return this.activities.size();
     }
 
     public void replaceActivities(T[] acts)
@@ -259,21 +262,16 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         this.activities.clear();
     }
 
-    /** @return the activities inside this group. */
-    public Activity[] getActivities()
-    {
-        return this.activities.toArray( new Activity[ 0 ] );
-    }
-
     /** Swaps a given media file with the previous one.
-     * @param act*/
+     * @param act the activity to swap.
+     */
     public void sortActivityUp(Activity act)
     {
         final int POS = this.activities.indexOf( act );
 
         // Nothing to do if not found or is the first one.
         if ( POS >= 1 ) {
-            Activity backUp = this.activities.get( POS - 1 );
+            T backUp = this.activities.get( POS - 1 );
             this.activities.set( POS - 1, this.activities.get( POS ) );
             this.activities.set( POS, backUp );
         }
@@ -291,7 +289,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
 
         // Nothing to do if not found or is the last one.
         if ( POS < ( LENGTH - 1 ) ) {
-            Activity backUp = this.activities.get( POS + 1 );
+            T backUp = this.activities.get( POS + 1 );
             this.activities.set( POS + 1, this.activities.get( POS ) );
             this.activities.set( POS, backUp );
         }
@@ -317,19 +315,23 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     {
         boolean toret = false;
 
-        if ( o instanceof Group ) {
-            final Group GROUP_OBJ = (Group) o;
-            final Activity[] ACTIVITIES_OBJ = GROUP_OBJ.get();
+        if ( o instanceof Group<?> ) {
+            final Group<? extends Activity> OTHER_GROUP = (Group<?>) o;
+            final List<? extends Activity> OTHER_ACTIVITIES = OTHER_GROUP.get();
+            final int THIS_ACTIVITIES_SIZE = this.getNumActivities();
+            final int OTHER_ACTIVITIES_SIZE = OTHER_GROUP.getNumActivities();
 
-            if ( this.activities.size() == ACTIVITIES_OBJ.length ) {
+            if ( THIS_ACTIVITIES_SIZE == OTHER_ACTIVITIES_SIZE ) {
                 int i = 0;
                 for(; i < this.activities.size(); ++i) {
-                    if ( !this.activities.get( i ).equals( ACTIVITIES_OBJ[ i ] ) ) {
+                    if ( !this.activities.get( i ).equals( OTHER_ACTIVITIES.get( i ) ) )
+                    {
                         break;
                     }
                 }
 
-                toret = ( i >= ACTIVITIES_OBJ.length ) && ( this.isRandom() == GROUP_OBJ.isRandom() );
+                toret = ( ( i >= OTHER_ACTIVITIES_SIZE )
+                       && ( this.isRandom() == OTHER_GROUP.isRandom() ) );
             }
         }
 
@@ -404,7 +406,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     public static Group<? extends Activity> fromJSON(JsonReader jsonReader) throws JSONException
     {
         final ArrayList<Activity> ACTS = new ArrayList<>();
-        Group<? extends Activity> toret;
+        final Group<? extends Activity> TORET;
         TypeId typeId = null;
         Tag tag = null;
         Duration duration = null;
@@ -449,7 +451,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
             jsonReader.endObject();
         } catch(IOException exc)
         {
-            Log.e(LOG_TAG, "Creating group from JSON: " + exc.getMessage() );
+            Log.e( LOG_TAG, "Creating group from JSON: " + exc.getMessage() );
         }
 
         // Chk
@@ -462,16 +464,10 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
             throw new JSONException( MSG_ERROR );
         }
 
-        final Group.Activity[] ACTIVITIES = ACTS.toArray( new Group.Activity[ ACTS.size() ] );
-
         try {
             if ( typeId == TypeId.PictureGroup
               || typeId == TypeId.VideoGroup )
             {
-                final MediaGroup.MediaActivity[] MEDIA_ACTS = Arrays.copyOf(
-                                                            ACTIVITIES, ACTIVITIES.length,
-                                                            MediaGroup.MediaActivity[].class );
-
                 if ( typeId == TypeId.PictureGroup ) {
                     if ( tag == null ) {
                         throw new JSONException( "Group.fromJSON: picture group missing tag" );
@@ -481,7 +477,8 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                         throw new JSONException( "Group.fromJSON: picture group missing time" );
                     }
 
-                    toret = new PictureGroup( id, tag, duration, rnd, null, MEDIA_ACTS );
+                    TORET = new PictureGroup( id, tag, duration, rnd, null,
+                                              MediaGroup.MediaActListFromActList( ACTS ) );
                 }
                 else
                 if ( typeId == TypeId.VideoGroup ) {
@@ -490,31 +487,29 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                     }
 
 
-                    toret = new VideoGroup( id, tag, rnd, null, MEDIA_ACTS );
+                    TORET = new VideoGroup( id, tag, rnd, null,
+                                            MediaGroup.MediaActListFromActList( ACTS ) );
                 } else {
                     throw new JSONException( "unknown media group typeId: " + typeId.toString() );
                 }
             }
             else
             if ( typeId == TypeId.ManualGroup ) {
-                final ManualGroup.ManualActivity[] MANUAL_ACTS = Arrays.copyOf(
-                                                        ACTIVITIES, ACTIVITIES.length,
-                                                        ManualGroup.ManualActivity[].class );
-
-                toret = new ManualGroup( id, rnd, null, MANUAL_ACTS );
+                TORET = new ManualGroup( id, rnd, null,
+                                         ManualGroup.ManualActListFromActList( ACTS ) );
             } else {
-                throw new JSONException( "unable to create appropriate group for: " + typeId.toString() );
+                throw new JSONException( "unable to create appropriate group for: " + typeId );
             }
         } catch(ClassCastException exc)
         {
             throw new JSONException( "Group.fromJSON(): group type and activities mismatch" );
         }
 
-        return toret;
+        return TORET;
     }
 
     /** @return a copy of this group, with the same id. */
-    public Group<? extends Activity> copy()
+    public Group<T> copy()
     {
         return this.copy( this.getId().copy() );
     }
@@ -523,25 +518,10 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
      * @param id A new id for the copy of the group.
      * @see Id
      */
-    public abstract Group<? extends Activity> copy(Id id);
-
-    /** Copies the activities in this group.
-      * @return a new vector with copied activities.
-      */
-    public Activity[] copyActivities()
-    {
-        Activity[] myActivities = this.getActivities();
-        Activity[] toret = new Group.Activity[ this.size() ];
-
-        for(int i = 0; i < toret.length; ++i) {
-            toret[ i ] = myActivities[ i ].copy();
-        }
-
-        return toret;
-    }
+    protected abstract Group<T> copy(Id id);
 
     private boolean random;
     private Duration timeForEachActivity;
-    private final ArrayList<Activity> activities;
+    private final ArrayList<T> activities;
     private Experiment experiment;
 }

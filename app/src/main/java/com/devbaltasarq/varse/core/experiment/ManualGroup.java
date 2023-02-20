@@ -1,4 +1,8 @@
+// VARSE 2019/23 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.core.experiment;
+
 
 import android.util.JsonReader;
 import android.util.JsonWriter;
@@ -12,7 +16,8 @@ import com.devbaltasarq.varse.core.Ofm;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /** Represents a group made of manual activities. */
@@ -144,7 +149,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
      */
     public ManualGroup(Id id, Experiment expr)
     {
-        this( id, false, expr, new ManualActivity[] {} );
+        this( id, false, expr, new ArrayList<>() );
     }
 
     /** Creates a new manual group.
@@ -153,7 +158,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
      */
     public ManualGroup(Id id, boolean rnd, Experiment expr)
     {
-        this( id, rnd, expr, new ManualActivity[] {} );
+        this( id, rnd, expr, new ArrayList<>() );
     }
 
     /** Creates a new manual group.
@@ -161,7 +166,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
      * @param rnd Whether this group is random or not.
      * @param acts The activities.
      */
-    public ManualGroup(Id id, boolean rnd, Experiment expr, ManualActivity[] acts)
+    public ManualGroup(Id id, boolean rnd, Experiment expr, List<ManualActivity> acts)
     {
         super( id, rnd, expr, acts );
     }
@@ -203,26 +208,24 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
     }
 
     @Override
-    public ManualGroup copy(Id id)
+    protected ManualGroup copy(Id id)
     {
-        return new ManualGroup( id, this.isRandom(), this.getExperimentOwner(), this.copyActivities() );
+        return new ManualGroup( id, this.isRandom(), this.getExperimentOwner(), this.get() );
     }
 
-    /** Copies the activities in this group.
-     * @return a new vector with copied activities.
-     */
-    public ManualActivity[] copyActivities()
+    /** This is needed to ensure that the activities for example loaded from JSON
+      * are actually ManualActivity's.
+      * @param acts The activities, as a list of Activity instance.
+      * @return A list of ManualActivity instances.
+      */
+    public static List<ManualActivity> ManualActListFromActList(List<Activity> acts)
     {
-        final Activity[] ACTS = super.copyActivities();
+        final ArrayList<ManualActivity> TORET = new ArrayList<>( acts.size() );
 
-        return Arrays.copyOf( ACTS, ACTS.length, ManualActivity[].class );
-    }
+        for(Activity act: acts) {
+            TORET.add( (ManualActivity) act );
+        }
 
-    @Override
-    public ManualActivity[] get()
-    {
-        final Activity[] TORET = super.get();
-
-        return Arrays.copyOf( TORET, TORET.length, ManualActivity[].class );
+        return TORET;
     }
 }

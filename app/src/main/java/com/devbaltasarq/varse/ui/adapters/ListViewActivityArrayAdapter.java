@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
-import android.provider.MediaStore;
+import android.os.Build;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
@@ -29,14 +29,16 @@ import com.devbaltasarq.varse.ui.editexperiment.editgroup.EditGroupActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+
 
 /** Represents an adapter of the special items for the ListView of media files. */
 public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
     public static final String LOG_TAG = ListViewActivityArrayAdapter.class.getSimpleName();
 
-    public ListViewActivityArrayAdapter(Context cntxt, Group.Activity[] entries)
+    public ListViewActivityArrayAdapter(Context cntxt, Collection<? extends Group.Activity> entries)
     {
-        super( cntxt, 0, entries );
+        super( cntxt, 0, entries.toArray( new Group.Activity[ 0 ] ) );
     }
 
     @Override
@@ -158,7 +160,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
 
     /** Gets the thumbnail associated to an image file.
      * @param f The path to the file.
-     * @return A Bitmap object.
+     * @return A Bitmap object, or null if any problem arose.
      * @see Bitmap
      */
     private static Bitmap getVideoThumbnail(Ofm db, Experiment expr, File f)
@@ -167,10 +169,12 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
         Bitmap toret = null;
 
         try {
-            toret = ThumbnailUtils.createVideoThumbnail(
-                                    MEDIA_FILE,
-                                    Size.parseSize( "256x256" ),
-                                    null );
+            if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
+                toret = ThumbnailUtils.createVideoThumbnail(
+                                        MEDIA_FILE,
+                                        Size.parseSize( "256x256" ),
+                                        null );
+            }
         } catch(IOException exc) {
             Log.e( LOG_TAG, "creating thumbail for: " + f.getName() );
         }

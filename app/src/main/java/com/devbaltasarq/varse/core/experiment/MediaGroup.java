@@ -1,3 +1,6 @@
+// VARSE 2019/23 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.core.experiment;
 
 
@@ -16,6 +19,7 @@ import org.json.JSONException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Arrays;
 
 
@@ -146,7 +150,7 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
             return toret;
         }
 
-        /** @return the time in seconds for the duration of this video.
+        /** Returns the time in seconds for the duration of this video.
           * @param ofm The ORM object (in order to qualify the file).
           * @param mact The media activity,
           * @return the time of the video, in seconds.
@@ -180,17 +184,17 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     /** Creates a new group with an empty list. */
     protected MediaGroup(Id id, Format fmt, Tag tag, Experiment expr)
     {
-        this( id, fmt, tag, false, expr, new MediaActivity[] {} );
+        this( id, fmt, tag, false, expr, new ArrayList<>() );
     }
 
     /** Creates a new group filled with various files. */
-    protected MediaGroup(Id id, Format fmt, Tag tag, Experiment expr, MediaActivity[] files)
+    protected MediaGroup(Id id, Format fmt, Tag tag, Experiment expr, List<MediaActivity> files)
     {
         this( id, fmt, tag, false, expr, files );
     }
 
     /** Creates a new group filled with various macts. */
-    protected MediaGroup(Id id, Format fmt, Tag tag, boolean rnd, Experiment expr, MediaActivity[] macts)
+    protected MediaGroup(Id id, Format fmt, Tag tag, boolean rnd, Experiment expr, List<MediaActivity> macts)
     {
         super( id, rnd, expr, macts );
 
@@ -242,32 +246,14 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         return toret;
     }
 
-    /** Copies the activities in this group.
-     * @return a new vector with copied activities.
-     */
-    public MediaActivity[] copyActivities()
-    {
-        final Activity[] ACTS = super.copyActivities();
-
-        return Arrays.copyOf( ACTS, ACTS.length, MediaActivity[].class );
-    }
-
-    @Override
-    public MediaActivity[] get()
-    {
-        final Activity[] TORET = super.get();
-
-        return Arrays.copyOf( TORET, TORET.length, MediaActivity[].class );
-    }
-
     @Override
     public String toString()
     {
-        final Object[] ACTS = this.get();
+        final List<MediaActivity> ACTS = this.get();
         String toret = this.getTag().toString() + " - ";
 
-        if ( ACTS.length == 1 ) {
-            toret += ACTS[ 0 ].toString();
+        if ( ACTS.size() == 1 ) {
+            toret += ACTS.get( 0 ).toString();
         } else {
             toret += super.toString();
         }
@@ -278,10 +264,9 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
     @Override
     public File[] enumerateMediaFiles()
     {
-        final MediaActivity[] ACTIVITIES = this.get();
-        final ArrayList<File> TORET = new ArrayList<>( ACTIVITIES.length );
+        final ArrayList<File> TORET = new ArrayList<>( this.getNumActivities() );
 
-        for (MediaActivity activity : ACTIVITIES) {
+        for (MediaActivity activity : this.get()) {
             TORET.addAll( Arrays.asList( activity.enumerateMediaFiles() ) );
         }
 
@@ -294,6 +279,22 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
         super.writeToJSON( jsonWriter );
 
         jsonWriter.name( Tag.FIELD ).value( this.getTag().toString() );
+    }
+
+    /** This is needed to ensure that the activities loaded for example from JSON
+      * are actually MediaActivity's.
+      * @param acts The activities, as a list of Activity instance.
+      * @return A list of MediaActivity instances.
+      */
+    public static List<MediaActivity> MediaActListFromActList(List<Activity> acts)
+    {
+        final ArrayList<MediaActivity> TORET = new ArrayList<>( acts.size() );
+
+        for(Activity act: acts) {
+            TORET.add( (MediaActivity) act );
+        }
+
+        return TORET;
     }
 
     private Tag tag;

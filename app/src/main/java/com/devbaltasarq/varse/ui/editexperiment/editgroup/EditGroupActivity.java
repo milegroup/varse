@@ -11,6 +11,9 @@ import com.devbaltasarq.varse.core.experiment.Group;
 import com.devbaltasarq.varse.ui.AppActivity;
 import com.devbaltasarq.varse.ui.adapters.ListViewActivityArrayAdapter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /** Parent class for group editor activities (i.e., EditMediaGroupActivity...) .*/
 public abstract class EditGroupActivity extends AppActivity {
@@ -27,15 +30,14 @@ public abstract class EditGroupActivity extends AppActivity {
         final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
         final int NUM_ENTRIES = group.size();
 
-        Log.i(LOG_TAG, "starting showActivities()..." );
-        Log.i(LOG_TAG, "entries: " + NUM_ENTRIES );
+        Log.i( LOG_TAG, "starting showActivities()..." );
+        Log.i( LOG_TAG, "entries: " + NUM_ENTRIES );
 
         if ( NUM_ENTRIES > 0 ) {
-            final Group.Activity[] ACTS = group.get();
             final ListViewActivityArrayAdapter ACTS_ADAPTER;
 
             // Create adapter
-            ACTS_ADAPTER = new ListViewActivityArrayAdapter( this, ACTS );
+            ACTS_ADAPTER = new ListViewActivityArrayAdapter( this, group.get() );
 
             LBL_NO_ENTRIES.setVisibility( View.GONE );
             LV_ACTS.setVisibility( View.VISIBLE );

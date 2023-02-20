@@ -48,7 +48,7 @@ public class TestJsonConversionTests {
         grp1 = new ManualGroup( Id.createFake(), true, expr2 );
         act1 = new ManualGroup.ManualActivity( Id.createFake(), new Tag( "tag1" ), new Duration( 3 ) );
         grp1.replaceActivities( new ManualGroup.ManualActivity[] { act1 } );
-        grp2 = new PictureGroup( Id.createFake(), new Tag( "tag2" ), new Duration( 8 ), false, expr2 );
+        grp2 = new PictureGroup( Id.createFake(), new Tag( "tag2" ), new Duration( 8 ), expr2, false );
         grp3 = new VideoGroup( Id.createFake(), new Tag( "tag3" ), true, expr2 );
         act2 = new MediaGroup.MediaActivity( Id.createFake(), new File( "image1.png" ) );
         act3 = new MediaGroup.MediaActivity( Id.createFake(), new File( "video1.ogg" ) );
