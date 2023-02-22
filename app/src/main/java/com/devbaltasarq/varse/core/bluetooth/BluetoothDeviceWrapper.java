@@ -8,7 +8,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -26,7 +28,7 @@ public class BluetoothDeviceWrapper {
         {
             final Info[] INFO_VALUES = Info.values();
             this.data = new HashMap<>( INFO_VALUES.length );
-            this.rrs = new int[ 0 ];
+            this.rrs = EMPTY_RRS;
 
             // Inits
             for(Info info: INFO_VALUES) {
@@ -41,7 +43,15 @@ public class BluetoothDeviceWrapper {
 
         public void setRRs(int[] data)
         {
-            this.rrs = data.clone();
+            if ( data != null
+              && data.length > 0 )
+            {
+                this.rrs = data.clone();
+            } else {
+                this.rrs = EMPTY_RRS;
+            }
+
+            return;
         }
 
         public long get(@NonNull Info info)
@@ -51,7 +61,13 @@ public class BluetoothDeviceWrapper {
 
         public int[] getRRs()
         {
-            return this.rrs.clone();
+            int[] toret = EMPTY_RRS;
+
+            if ( this.rrs != EMPTY_RRS ) {
+                toret = this.rrs.clone();
+            }
+
+            return toret;
         }
 
         @Override
@@ -59,12 +75,19 @@ public class BluetoothDeviceWrapper {
         {
             final String STR_INFO_FMT = "%5d\t%3d\t%4d\t%2d%s";
             final Locale LOCALE = Locale.getDefault();
-            final int[] RRS = Arrays.copyOf( this.rrs, MAX_NUM_RRS );
+            final int REAL_LEN = this.rrs.length;
 
-            // Prepare the
+            // Load the rr's info
             final StringBuilder STR_RRS = new StringBuilder();
+
             for(int i = 0; i < MAX_NUM_RRS; ++i) {
-                STR_RRS.append( String.format( LOCALE, "\t%4d", RRS[ i ] ) );
+                int valor = -1;
+
+                if ( i < REAL_LEN ) {
+                    valor = this.rrs[ i ];
+                }
+
+                STR_RRS.append( String.format( LOCALE, "\t%4d", valor ) );
             }
 
             return String.format(
@@ -97,6 +120,7 @@ public class BluetoothDeviceWrapper {
         private final HashMap<Info, Long> data;
         private int[] rrs;
         private static String INFO_HEADER;
+        private final static int[] EMPTY_RRS = new int[ 0 ];
     }
 
     /** Creates a new wrapper, with a real bluetooth device. */
