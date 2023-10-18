@@ -96,8 +96,8 @@ public class BleService extends Service {
             final byte[] DATA = GATT_CHAR.getValue();
             final StringBuilder bytes = new StringBuilder( LENGTH * 3 );
 
-            Log.d(LOG_TAG, "HR info received: " + LENGTH + " bytes" );
-            Log.d(LOG_TAG, "Flags: " + FLAGS );
+            Log.d( LOG_TAG, "HR info received: " + LENGTH + " bytes" );
+            Log.d( LOG_TAG, "Flags: " + FLAGS );
 
             bytes.append( '#' );
             bytes.append( LENGTH );

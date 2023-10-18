@@ -201,9 +201,9 @@ public class ResultsActivity extends AppActivity {
                     SELF.runOnUiThread( () -> {
                         PB_PROGRESS.setVisibility( View.GONE );
 
-                        ResultsActivity.this.handler.removeCallbacksAndMessages( null );
-                        ResultsActivity.this.handlerThread.quit();
-                        ResultsActivity.this.backupFinished = true;
+                        SELF.handler.removeCallbacksAndMessages( null );
+                        SELF.handlerThread.quit();
+                        SELF.backupFinished = true;
                     });
                 }
         });

@@ -7,6 +7,7 @@ package com.devbaltasarq.varse.ui.showresult;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -16,6 +17,8 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Result;
@@ -169,14 +172,27 @@ public class ResultViewerActivity extends AppActivity {
         return toret;
     }
 
+    private double getDensity()
+    {
+        double toret = 0.0;
+
+        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ) {
+            toret = this.getWindow().getWindowManager().getCurrentWindowMetrics().getDensity();
+        } else {
+            toret = this.getResources().getDisplayMetrics().scaledDensity;
+        }
+
+        return toret;
+    }
+
     /** Plots the chart in a drawable and shows it. */
     private void plotChart()
     {
-        final double DENSITY = this.getResources().getDisplayMetrics().scaledDensity;
         final ArrayList<LineChart.SeriesInfo> SERIES = new ArrayList<>();
         final ArrayList<LineChart.Point> POINTS = new ArrayList<>();
         final Float[] DATA_HR_INTERP_X = this.resultAnalyzer.getDataHRInterpolatedForX();
         final Float[] DATA_HR_INTERP = this.resultAnalyzer.getDataHRInterpolated();
+        final double DENSITY = this.getDensity();
 
         if ( DATA_HR_INTERP_X.length > 0 ) {
             String tag = this.findTag( DATA_HR_INTERP_X[ 0 ] );
@@ -283,13 +299,13 @@ public class ResultViewerActivity extends AppActivity {
         }
 
         @Override
-        public boolean onScaleBegin(ScaleGestureDetector detector)
+        public boolean onScaleBegin(@NonNull  ScaleGestureDetector detector)
         {
             return true;
         }
 
         @Override
-        public void onScaleEnd(ScaleGestureDetector detector)
+        public void onScaleEnd(@NonNull ScaleGestureDetector detector)
         {
         }
 

@@ -6,14 +6,17 @@ package com.devbaltasarq.varse.ui.performexperiment;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.companion.AssociationRequest;
+import android.companion.BluetoothLeDeviceFilter;
+import android.companion.CompanionDeviceManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
+import android.content.IntentSender;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
+import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,9 +34,9 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
@@ -41,10 +44,8 @@ import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
-import com.devbaltasarq.varse.core.bluetooth.BluetoothHRFiltering;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
 import com.devbaltasarq.varse.core.bluetooth.DemoBluetoothDevice;
-import com.devbaltasarq.varse.core.bluetooth.ScannerUI;
 import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.ui.AppActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -54,13 +55,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Executor;
 
 
-public class PerformExperimentActivity extends AppActivity implements ScannerUI {
-    private final String LOG_TAG = PerformExperimentActivity.class.getSimpleName();
-    private static final int RQC_ASK_CLEARANCE_FOR_BLUETOOTH = 389;
-    private static final int MAX_SCAN_PERIOD = 20000;
+public class PerformExperimentActivity extends AppActivity {
+    private static final String LOG_TAG = PerformExperimentActivity.class.getSimpleName();
+    private static final int RCQ_SELECT_DEVICE = 442;
 
     // Adapter for holding hrDevices found through deviceSearch.
     private static class BtDeviceListAdapter extends ArrayAdapter<BluetoothDeviceWrapper> {
@@ -86,19 +89,11 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
             // Set device's name, if possible.
             if ( DEVICE != null ) {
-                deviceName = DEVICE.getName();
+                deviceName = getBTDeviceName( this.getContext(), DEVICE );
                 deviceAddress = DEVICE.getAddress();
             }
 
-            // Check the final name, is it valid?
-            if ( deviceName == null
-              || deviceName.isEmpty() )
-            {
-                LBL_DEVICE_NAME.setText( R.string.errUnknownDevice );
-            } else {
-                LBL_DEVICE_NAME.setText( deviceName );
-            }
-
+            LBL_DEVICE_NAME.setText( deviceName );
             LBL_DEVICE_ADDR.setText( deviceAddress );
             return view;
         }
@@ -152,7 +147,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         );
 
         BT_STOP_SCAN.setOnClickListener( (view) ->
-            PerformExperimentActivity.this.cancelAllConnections( true )
+            PerformExperimentActivity.this.stopScanning( true )
         );
 
         BT_TEST_HR_DEVICE.setOnClickListener( (view) ->
@@ -185,17 +180,9 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     }
 
     @Override
-    public void onResume()
+    public void onStart()
     {
-        super.onResume();
-
-        // Read data from ORM
-        this.loadExperimentsSpinner();
-
-        // Initialize background tasks
-        this.bkgrnd = new HandlerThread( "PEA-bckgrnd" );
-        this.bkgrnd.start();
-        this.handler = new Handler( this.bkgrnd.getLooper() );
+        super.onStart();
 
         // Prepare bluetooth
         if ( !this.btDefinitelyNotAvailable ) {
@@ -213,7 +200,6 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 this.launchBtConfigPage();
             } else {
                 // Scans health devices
-                this.cancelAllConnections( false );
                 this.startScanning();
             }
         }
@@ -222,21 +208,19 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     }
 
     @Override
-    protected void onPause()
+    public void onResume()
+    {
+        super.onResume();
+
+        // Read data from ORM
+        this.loadExperimentsSpinner();
+    }
+
+    @Override
+    public void onPause()
     {
         super.onPause();
-
-        this.cancelAllConnections( true );
-
-        if ( this.actionDeviceDiscovery != null ) {
-            try {
-                this.unregisterReceiver( this.actionDeviceDiscovery );
-            } catch(IllegalArgumentException exc) {
-                Log.e( LOG_TAG, "the receiver for device discovery was not registered." );
-            }
-        }
-
-        this.bkgrnd.quit();
+        this.stopScanning( false );
     }
 
     @Override
@@ -272,50 +256,38 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        switch ( item.getItemId() ) {
-            case R.id.menu_start_scan:
-                this.startScanning();
-                break;
-            case R.id.menu_stop_scan:
-                this.cancelAllConnections();
-                break;
+        if ( item.getItemId() == R.id.menu_start_scan ) {
+            this.startScanning();
+        }
+        else
+        if ( item.getItemId() == R.id.menu_stop_scan ) {
+            this.stopScanning( true );
         }
 
         return true;
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    protected void onActivityResult(int req, int resultCode, @Nullable Intent data)
     {
-        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
-
-        switch( requestCode ) {
-            case RQC_ASK_CLEARANCE_FOR_BLUETOOTH:
-                int totalGrants = 0;
-
-                for(int result: grantResults) {
-                    if ( result == PackageManager.PERMISSION_GRANTED ) {
-                        ++totalGrants;
+        switch( req ) {
+            case RCQ_SELECT_DEVICE:
+                if ( resultCode == RESULT_OK
+                  && data != null )
+                {
+                    final ScanResult SCAN_RESULT =
+                            data.getParcelableExtra( CompanionDeviceManager.EXTRA_DEVICE );
+                    if ( SCAN_RESULT != null) {
+                        this.onDeviceFound( SCAN_RESULT.getDevice() );
+                    } else {
+                        Log.d( LOG_TAG, "device: found but was null" );
                     }
-                }
-
-                if ( totalGrants == grantResults.length ) {
-                    this.doStartScanning();
                 } else {
-                    final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
-
-                    DLG.setMessage( R.string.errNoBluetoothPermissions);
-                    DLG.setPositiveButton( R.string.lblBack, null );
-
-                    DLG.create().show();
-                    this.setBluetoothUnavailable();
+                    this.stopScanning( true );
                 }
                 break;
             default:
-                final String MSG = "unknown permission request code was not managed" + requestCode;
-
-                Log.e( LOG_TAG, MSG );
-                throw new InternalError( MSG );
+                super.onActivityResult( req, resultCode, data );
         }
 
         return;
@@ -337,10 +309,6 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
 
         if ( this.addrFound == null ) {
             this.addrFound = new HashSet<>( 16 );
-        }
-
-        if ( this.bluetoothFiltering == null ) {
-            this.bluetoothFiltering = new BluetoothHRFiltering( this );
         }
 
         // Set chosen device
@@ -370,14 +338,11 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         if ( this.discoveredDevices.size() > 0 ) {
             // Prepare all devices names
             for(int i = 0; i < this.discoveredDevices.size(); ++i) {
-                DEVICES_NAMES[ i ] = this.discoveredDevices.get( i ).getName();
+                DEVICES_NAMES[ i ] = getBTDeviceName( this, this.discoveredDevices.get( i ) );
             }
 
             // Prepare dialog with built names
-            DLG.setItems(
-                    DEVICES_NAMES,
-                    null
-            );
+            DLG.setItems( DEVICES_NAMES, null );
         } else {
             DLG.setMessage( "No devices found." );
         }
@@ -402,41 +367,33 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         return;
     }
 
-    /** Takes care of all open Gatt connections. */
-    private void closeAllGattConnections()
-    {
-        if ( this.bluetoothFiltering != null ) {
-            this.bluetoothFiltering.closeAllGattConnections();
-        }
-
-        return;
-    }
-
     /** Adds a given device to the list.
       * @param btDevice the bluetooth LE device.
       */
-    @Override
     public void onDeviceFound(BluetoothDevice btDevice)
     {
-        final String ADDR = btDevice.getAddress();
+        if ( btDevice != null ) {
+            final String ADDR = btDevice.getAddress();
 
-        if ( btDevice != null
-          && btDevice.getName() != null
-          && btDevice.getAddress() != null
-          && !this.addrFound.contains( ADDR ) )
-        {
-            this.addrFound.add( ADDR );
-            this.discoveredDevices.add( btDevice );
+            if ( ADDR != null
+              && !this.addrFound.contains( ADDR ) )
+            {
+                this.addrFound.add( ADDR );
+                this.discoveredDevices.add( btDevice );
+                this.addDeviceToListView( btDevice );
+            }
 
-            PerformExperimentActivity.this.runOnUiThread( () ->
-                this.showStatus( btDevice.getName()
-                                 + " " + this.getString( R.string.lblDeviceFound ).toLowerCase()
-                                 + "..." )
+            String name = getBTDeviceName( this, btDevice );
+            this.deviceSearch = false;
 
-            );
+            this.showStatus( name
+                             + " " + this.getString( R.string.lblDeviceFound ).toLowerCase()
+                             + "..." );
+        } else {
+            Log.e( LOG_TAG, "trying to add a null device (!!)" );
         }
 
-        return;
+        this.stopScanning( true );
     }
 
     /** Selects the device the user wants to employ.
@@ -450,7 +407,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         assert newChosenDevice != null: "FATAL: newChosenDevice is null!!!";
 
         chosenBtDevice = newChosenDevice;
-        LBL_CHOSEN_DEVICE.setText( newChosenDevice.getName() );
+        LBL_CHOSEN_DEVICE.setText( getBTDeviceName( this, newChosenDevice ) );
     }
 
     /** Initializes Bluetooth. */
@@ -459,15 +416,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         // Getting the Bluetooth adapter
         this.bluetoothAdapter = BluetoothUtils.getBluetoothAdapter( this );
 
-        if ( this.bluetoothAdapter != null ) {
-            // Register the BroadcastReceiver
-            IntentFilter discoverer = new IntentFilter( BluetoothDevice.ACTION_FOUND );
-            discoverer.addAction( BluetoothAdapter.ACTION_DISCOVERY_STARTED );
-            discoverer.addAction( BluetoothAdapter.ACTION_DISCOVERY_FINISHED );
-
-            this.actionDeviceDiscovery = BluetoothUtils.createActionDeviceDiscoveryReceiver( this );
-            this.registerReceiver( this.actionDeviceDiscovery, discoverer );
-        } else {
+        if ( this.bluetoothAdapter == null ) {
             this.disableFurtherScan();
         }
 
@@ -500,8 +449,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         final ImageButton BT_START_SCAN = this.findViewById( R.id.btStartScan );
         final ImageButton BT_STOP_SCAN = this.findViewById( R.id.btStopScan );
 
-
-        PerformExperimentActivity.this.runOnUiThread( () -> {
+        //PerformExperimentActivity.this.runOnUiThread( () -> {
             if ( this.bluetoothAdapter != null ) {
                 if ( !activate ) {
                     BT_START_SCAN.setVisibility( View.VISIBLE );
@@ -516,7 +464,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
             }
 
             this.onCreateOptionsMenu( this.scanMenu );
-        });
+        //});
 
         return;
     }
@@ -543,9 +491,9 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     /** Launches a tester activity to check the device. */
     private void launchDeviceTester()
     {
-        this.cancelAllConnections( false );
-
-        this.showStatus( "Test " + this.getString(  R.string.lblDevice ) + ": " + chosenBtDevice.getName() );
+        this.showStatus( "Test "
+                            + this.getString(  R.string.lblDevice )
+                            + ": " + BluetoothUtils.getBTDeviceName( chosenBtDevice ) );
 
         LAUNCH_DEVICE_TESTER.launch(
                 new Intent( this, TestHRDevice.class )
@@ -559,7 +507,6 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
     }
 
     /** Asks for permissions before start scanning. */
-    @Override
     public void startScanning()
     {
         if ( !this.btDefinitelyNotAvailable ) {
@@ -586,10 +533,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         DLG.setMessage( R.string.msgReportPermissionsNeeded );
 
         DLG.setPositiveButton( "Ok", (dialogInterface, i) -> {
-            ActivityCompat.requestPermissions(
-                    PerformExperimentActivity.this,
-                    BT_PERMISSIONS_NEEDED,
-                    RQC_ASK_CLEARANCE_FOR_BLUETOOTH );
+            this.LAUNCH_PERMISSIONS_REQ.launch( BT_PERMISSIONS_NEEDED );
         });
 
         DLG.setNegativeButton( R.string.lblCancel, (dialogInterface, i) ->
@@ -599,65 +543,107 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         DLG.create().show();
     }
 
+    private void associateDcmAndroid33(final CompanionDeviceManager DEV_MANAGER,
+                                              final AssociationRequest PAIRING_REQ)
+    {
+        if ( Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ) {
+            Log.e( LOG_TAG, "associating DCM for Android version < 33" );
+            return;
+        }
+
+        final Executor EXE = runnable -> runnable.run();
+
+        DEV_MANAGER.associate(PAIRING_REQ, EXE, new CompanionDeviceManager.Callback() {
+            // Called when a device is found. Launch the IntentSender so the user can
+            // select the device they want to pair with.
+            @Override
+            public void onAssociationPending(@NonNull IntentSender chooserLauncher)
+            {
+                final PerformExperimentActivity SELF = PerformExperimentActivity.this;
+
+                try {
+                    SELF.startIntentSenderForResult( chooserLauncher, RCQ_SELECT_DEVICE,
+                                            null, 0, 0, 0 );
+                } catch (IntentSender.SendIntentException e) {
+                    Log.e( LOG_TAG, "onAssociationPending: failed to send intent" );
+                }
+            }
+            @Override
+            public void onFailure(CharSequence errorMessage)
+            {
+                Log.e( LOG_TAG, "[FAIL] " + errorMessage );
+            }
+        });
+    }
+
+    private void associateDcmAndroid32(final CompanionDeviceManager DEV_MANAGER,
+                                       final AssociationRequest PAIRING_REQ)
+    {
+        if ( Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2 ) {
+            Log.e( LOG_TAG, "invoked associate DCM for Android version > 32" );
+            return;
+        }
+
+        DEV_MANAGER.associate( PAIRING_REQ, new CompanionDeviceManager.Callback() {
+            @Override
+            public void onDeviceFound(@NonNull IntentSender chooserLauncher)
+            {
+                final PerformExperimentActivity SELF = PerformExperimentActivity.this;
+
+                try {
+                    SELF.startIntentSenderForResult( chooserLauncher, RCQ_SELECT_DEVICE,
+                                            null, 0, 0, 0 );
+                } catch (IntentSender.SendIntentException e) {
+                    Log.e( LOG_TAG, "onAssociationPending: failed to send intent" );
+                }
+            }
+            @Override
+            public void onFailure(CharSequence errorMessage)
+            {
+                Log.e( LOG_TAG, "[FAIL] " + errorMessage );
+            }
+        }, null );
+
+        return;
+    }
+
     /** Launches deviceSearch for a given period of time */
     public void doStartScanning()
     {
         if ( !this.isLookingForDevices() ) {
-            this.cancelAllConnections( false );
+            final BluetoothLeDeviceFilter DEVICE_FILTER =
+                    new BluetoothLeDeviceFilter.Builder()
+                        .setScanFilter( new ScanFilter.Builder()
+                        /*    .setServiceUuid(
+                                    new ParcelUuid( BluetoothUtils.UUID_HR_MEASUREMENT_SRV ) )
+                        */
+                            .build() ).build();
 
-            this.handler.postDelayed( () -> {
-                if ( this.bluetoothAdapter.isDiscovering() ) {
-                    Log.d(LOG_TAG, "Discovery forced finish." );
-                    PerformExperimentActivity.this.stopScanning();
-                }
-            }, MAX_SCAN_PERIOD );
+            final AssociationRequest PAIRING_REQ = new AssociationRequest.Builder()
+                    .addDeviceFilter( DEVICE_FILTER )
+                    .setSingleDevice( false )
+                    .build();
 
             this.deviceSearch = true;
-            this.bluetoothAdapter.startDiscovery();
+
+            final CompanionDeviceManager DEV_MANAGER =
+                    (CompanionDeviceManager) getSystemService(
+                                        Context.COMPANION_DEVICE_SERVICE );
 
             PerformExperimentActivity.this.runOnUiThread( () -> {
                 this.enableScanUI();
+
+                if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ) {
+                    associateDcmAndroid33( DEV_MANAGER, PAIRING_REQ );
+                } else {
+                    associateDcmAndroid32( DEV_MANAGER, PAIRING_REQ );
+                }
+
                 this.showStatus( this.getString( R.string.lblStartScan ) );
             });
         }
 
         return;
-    }
-
-    /** Stops deviceSearch, starting the filtering for HR devices. */
-    @Override
-    public void stopScanning()
-    {
-        if ( this.isLookingForDevices() ) {
-            if ( this.bluetoothAdapter != null
-              && this.bluetoothAdapter.isDiscovering() )
-            {
-                this.cancelAllConnections( false );
-            }
-
-            PerformExperimentActivity.this.runOnUiThread( () ->
-                    this.showStatus( this.getString( R.string.lblFilteringByService ) + "..." ) );
-
-            if ( this.discoveredDevices.size() >  0 ) {
-                this.bluetoothFiltering.filter( this.discoveredDevices.toArray( new BluetoothDevice[ 0 ] ) );
-            } else {
-                this.filteringFinished();
-            }
-        }
-
-        return;
-    }
-
-    /** Stops deviceSearch, removing all pending callbacks (that would stop deviceSearch) */
-    private void cancelAllConnections()
-    {
-        cancelAllConnections( true );
-    }
-
-    private void cancelAllConnections(boolean warn)
-    {
-        this.filteringFinished( warn );
-        this.handler.removeCallbacksAndMessages( null );
     }
 
     public void addDeviceToListView(BluetoothDevice btDevice)
@@ -667,31 +653,19 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         PerformExperimentActivity.this.runOnUiThread( () -> {
             if ( !this.hrDevices.contains( BTW_DEVICE ) ) {
                 this.devicesListAdapter.add( BTW_DEVICE );
-                this.showStatus( this.getString( R.string.lblDeviceFound ) + ": " + btDevice.getName() );
+                this.showStatus( this.getString( R.string.lblDeviceFound )
+                                    + ": " + getBTDeviceName( this, BTW_DEVICE ) );
             }
         });
     }
 
-    public void denyAdditionToList(BluetoothDevice btDevice)
-    {
-        PerformExperimentActivity.this.runOnUiThread( () ->
-            this.showStatus( this.getString( R.string.errNoHR) + ": " + btDevice.getName() )
-        );
-    }
-
-    public void filteringFinished()
-    {
-        this.filteringFinished( true );
-    }
-
-    public void filteringFinished(final boolean WARN)
+    public void stopScanning(final boolean WARN)
     {
         this.deviceSearch = false;
-        this.closeAllGattConnections();
 
-        PerformExperimentActivity.this.runOnUiThread( () -> {
+        this.runOnUiThread( () -> {
             if ( WARN ) {
-                this.showStatus( this.getString(R.string.lblStopScan) );
+                this.showStatus( this.getString(R.string.lblStopScan ) );
             }
 
             this.disableScanUI();
@@ -716,7 +690,7 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
                 BT_START_SCAN.setEnabled( false );
                 BT_START_SCAN.setVisibility( View.INVISIBLE );
 
-                this.showStatus( this.getString( R.string.errNoBluetooth) );
+                this.showStatus( this.getString( R.string.errNoBluetooth ) );
             });
         }
 
@@ -929,21 +903,64 @@ public class PerformExperimentActivity extends AppActivity implements ScannerUI 
         return false;
     }
 
+    public static String getBTDeviceName(Context ctx, BluetoothDeviceWrapper btwDevice)
+    {
+        String toret = BluetoothUtils.getBTDeviceName( btwDevice );
+
+        if ( toret.equals( BluetoothUtils.STR_UNKNOWN_DEVICE ) ) {
+            toret = ctx.getString( R.string.errUnknownDevice );
+        }
+
+        return toret;
+    }
+
+    public static String getBTDeviceName(Context ctx, BluetoothDevice btDevice)
+    {
+        String toret = BluetoothUtils.getBTDeviceName( btDevice );
+
+        if ( toret.equals( BluetoothUtils.STR_UNKNOWN_DEVICE ) ) {
+            toret = ctx.getString( R.string.errUnknownDevice );
+        }
+
+        return toret;
+    }
+
     private Set<String> addrFound;
-    private BroadcastReceiver actionDeviceDiscovery;
     private BluetoothAdapter bluetoothAdapter;
     private ArrayList<BluetoothDeviceWrapper> hrDevices;
     private ArrayList<BluetoothDevice> discoveredDevices;
     private BtDeviceListAdapter devicesListAdapter;
-    private BluetoothHRFiltering bluetoothFiltering;
     private Menu scanMenu;
-    private HandlerThread bkgrnd;
-    private Handler handler;
     private boolean configBtLaunched;
     private boolean deviceSearch;
     private boolean btDefinitelyNotAvailable;
-
     private PartialObject[] experimentsList;
+
+    private final ActivityResultLauncher<String[]> LAUNCH_PERMISSIONS_REQ =
+            registerForActivityResult( new ActivityResultContracts.RequestMultiplePermissions(), mapGrants -> {
+                int totalGrants = 0;
+
+                for(Map.Entry<String, Boolean> entry: mapGrants.entrySet()) {
+                    if ( entry.getValue() ) {
+                        ++totalGrants;
+                    } else {
+                        Log.i( LOG_TAG, "permission not granted: " + entry.getKey() );
+                    }
+                }
+
+                if ( totalGrants == mapGrants.size() ) {
+                    this.doStartScanning();
+                } else {
+                    final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
+
+                    DLG.setMessage( R.string.errNoBluetoothPermissions );
+                    DLG.setPositiveButton( R.string.lblBack, null );
+
+                    DLG.create().show();
+                    this.setBluetoothUnavailable();
+                }
+            });
+
 
     private final ActivityResultLauncher<Intent> LAUNCH_ENABLE_BT =
             this.registerForActivityResult(

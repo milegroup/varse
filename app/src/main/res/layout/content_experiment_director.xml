@@ -139,6 +139,8 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical|center_horizontal">
 
+            <include layout="@layout/content_hr_rr_support" />
+
             <TextView    android:id="@+id/lblCrono"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

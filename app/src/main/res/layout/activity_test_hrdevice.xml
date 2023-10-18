@@ -112,10 +112,14 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal">
 
+        <include layout="@layout/content_hr_rr_support" />
+
         <TextView android:id="@+id/lblTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
             android:padding="10dp"
             android:textSize="40sp"
             android:text="__:__"/>

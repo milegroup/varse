@@ -167,14 +167,14 @@ public abstract class MediaGroup extends Group<MediaGroup.MediaActivity> {
             try {
                 RETRIEVER.setDataSource( MEDIA_FILE.getPath() );
                 String strTime = RETRIEVER.extractMetadata( MediaMetadataRetriever.METADATA_KEY_DURATION );
-                toret = Integer.parseInt(strTime) / 1000;
-            } catch(IllegalArgumentException exc) {
+                toret = Integer.parseInt( strTime ) / 1000;
+                RETRIEVER.release();
+            } catch(IOException | IllegalArgumentException exc) {
                 Log.e(LOG_TAG, "unable to calculate video length for' "
                                 + MEDIA_FILE.getPath()
                                 + "' invalid path: " + exc.getMessage() );
             }
 
-            RETRIEVER.release();
             return toret;
         }
 

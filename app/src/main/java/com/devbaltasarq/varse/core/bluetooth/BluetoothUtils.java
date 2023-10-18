@@ -2,7 +2,6 @@ package com.devbaltasarq.varse.core.bluetooth;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -32,14 +31,14 @@ public class BluetoothUtils {
     public static final UUID UUID_HR_MEASUREMENT_CHR = UUID.fromString( "00002a37-0000-1000-8000-00805f9b34fb" );
     public static final UUID UUID_HR_MEASUREMENT_SRV = UUID.fromString( "0000180D-0000-1000-8000-00805f9b34fb" );
     public static final UUID UUID_CLIENT_CHAR_CONFIG = UUID.fromString( "00002902-0000-1000-8000-00805f9b34fb" );
+    public static final String STR_UNKNOWN_DEVICE = "??";
 
     private static final String[] BT_PERMISSION_LIST = new String[] {
-                    Manifest.permission.BLUETOOTH,
-                    Manifest.permission.BLUETOOTH_ADMIN,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    android.Manifest.permission.BLUETOOTH,
+                    android.Manifest.permission.BLUETOOTH_ADMIN,
+                    //Manifest.permission.ACCESS_COARSE_LOCATION,
+                    //android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    //android.Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
     public static String[] fixBluetoothNeededPermissions(Context cntxt)
@@ -47,15 +46,15 @@ public class BluetoothUtils {
         final ArrayList<String> BUILT_PERMISSIONS = new ArrayList<>(
                 Arrays.asList( BT_PERMISSION_LIST ) );
 
-        if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
+        /*if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
         {
             BUILT_PERMISSIONS.add( Manifest.permission.ACCESS_BACKGROUND_LOCATION );
-        }
+        }*/
 
         if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S )
         {
-            BUILT_PERMISSIONS.add( Manifest.permission.BLUETOOTH_SCAN );
-            BUILT_PERMISSIONS.add( Manifest.permission.BLUETOOTH_CONNECT );
+            BUILT_PERMISSIONS.add( android.Manifest.permission.BLUETOOTH_SCAN );
+            BUILT_PERMISSIONS.add( android.Manifest.permission.BLUETOOTH_CONNECT );
         }
 
         final ArrayList<String> TORET = new ArrayList<>();
@@ -91,7 +90,7 @@ public class BluetoothUtils {
     /** @return the HR characteristic from a GATT connection to a device. */
     public static BluetoothGattCharacteristic getHeartRateChar(BluetoothGatt gatt)
     {
-        final String DEVICE_NAME = gatt.getDevice().getName();
+        final String DEVICE_NAME = getBTDeviceName( gatt.getDevice() );
         BluetoothGattCharacteristic toret = null;
         BluetoothGattService hrService = gatt.getService( UUID_HR_MEASUREMENT_SRV );
 
@@ -134,102 +133,6 @@ public class BluetoothUtils {
         return toret;
     }
 
-    // Invoke this when trying to discover the services of a given device.
-    // device.connectGatt(context,false,bluetoothGattCallback);
-    public static BluetoothGattCallback createGattServiceFilteringCallback(
-                                                    final GattServiceConsumer HR_SERV_DISCOVERED,
-                                                    final GattServiceConsumer HR_SERVICE_NOT_AVAIL)
-    {
-        return new BluetoothGattCallback() {
-            @Override
-            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
-            {
-                super.onConnectionStateChange(gatt, status, newState);
-
-                if ( newState == BluetoothGatt.STATE_CONNECTED
-                  && status == BluetoothGatt.GATT_SUCCESS )
-                {
-                    gatt.discoverServices();
-                }
-            }
-
-            @Override
-            public void onServicesDiscovered(BluetoothGatt gatt, int status)
-            {
-                super.onServicesDiscovered( gatt, status );
-
-                final BluetoothGattCharacteristic HR_CHR = BluetoothUtils.getHeartRateChar( gatt );
-
-                if ( HR_CHR != null ) {
-                    HR_SERV_DISCOVERED.consum( gatt.getDevice(), HR_CHR );
-                } else {
-                    HR_SERVICE_NOT_AVAIL.consum( gatt.getDevice(), null );
-                }
-
-                return;
-            }
-
-            @Override
-            public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
-            {
-                super.onCharacteristicRead( gatt, characteristic, status );
-            }
-
-            @Override
-            public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
-            {
-                super.onCharacteristicWrite( gatt, characteristic, status );
-            }
-
-            @Override
-            public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
-            {
-                super.onCharacteristicChanged( gatt, characteristic );
-            }
-
-            @Override
-            public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
-            {
-                super.onDescriptorRead( gatt, descriptor, status );
-            }
-
-            @Override
-            public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
-            {
-                super.onDescriptorWrite( gatt, descriptor, status );
-            }
-
-            @Override
-            public void onMtuChanged(BluetoothGatt gatt, int mtu, int status)
-            {
-                super.onMtuChanged( gatt, mtu, status );
-            }
-        };
-    }
-
-    public static BroadcastReceiver createActionDeviceDiscoveryReceiver(ScannerUI scanner)
-    {
-        return new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-
-                if ( BluetoothDevice.ACTION_FOUND.equals( action ) ) {
-                    BluetoothDevice device = intent.getParcelableExtra( BluetoothDevice.EXTRA_DEVICE );
-                    scanner.onDeviceFound( device );
-                }
-                else
-                if ( BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals( action ) ) {
-                    scanner.startScanning();
-                }
-                else
-                if ( BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals( action ) ) {
-                    scanner.stopScanning();
-                }
-            }
-        };
-    }
-
     /** @return a receiver for the events fired by the service. */
     public static BroadcastReceiver createBroadcastReceiverCallBack(final String MSG_CONNECTED,
                                                                     final String MSG_DISCONNECTED)
@@ -262,6 +165,8 @@ public class BluetoothUtils {
                         SERVICE.readCharacteristic( this.hrGattCharacteristic );
                         Log.d(LOG_TAG, "Reading hr..." );
                     } else {
+                        LISTENER_ACTIVITY.setHRNotSupported();
+                        LISTENER_ACTIVITY.setRRNotSupported();
                         Log.e(LOG_TAG, "Won't read hr since was not found..." );
                     }
                 }
@@ -290,7 +195,10 @@ public class BluetoothUtils {
         return INTENT_FILTER;
     }
 
-    /** @return A suitable BleService. */
+    /** Sets a suitable service in the caller.
+      * @param ACTIVITY the caller of this functionality.
+      * @param service the service mechanism.
+      */
     public static void createBleService(final HRListenerActivity ACTIVITY, IBinder service)
     {
         Log.d(LOG_TAG, "Binding service..." );
@@ -354,5 +262,41 @@ public class BluetoothUtils {
 
         Log.d(LOG_TAG, "Binding service for: " + activity.getBtDevice().getName() );
         // Follow up, once the service is bound, in createServiceConnectionCallback()
+    }
+
+    public static String getBTDeviceName(BluetoothDeviceWrapper btwDevice)
+    {
+        String toret = "";
+
+        if ( btwDevice != null ) {
+            if ( btwDevice.isDemo() ) {
+                toret = btwDevice.getName();
+            } else {
+                toret = getBTDeviceName( btwDevice.getDevice() );
+            }
+        }
+
+        return toret;
+    }
+
+    public static String getBTDeviceName(BluetoothDevice btDevice)
+    {
+        String toret = "";
+
+        if ( btDevice != null ) {
+            final String ADDR = btDevice.getAddress();
+
+            try {
+                toret = btDevice.getName();
+            } catch(SecurityException exc) {
+                toret = ADDR;
+            } finally {
+                if ( toret == null ) {
+                    toret = STR_UNKNOWN_DEVICE;
+                }
+            }
+        }
+
+        return toret;
     }
 }

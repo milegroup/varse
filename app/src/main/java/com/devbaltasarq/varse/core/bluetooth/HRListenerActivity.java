@@ -19,4 +19,8 @@ public interface HRListenerActivity {
     void showStatus(String msg);
 
     void onReceiveBpm(Intent intent);
+
+    void setHRNotSupported();
+
+    void setRRNotSupported();
 }

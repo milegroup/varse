@@ -450,6 +450,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 rrs = new int[] {
                         (int) ( 60.0 / ( (float) HR ) * 1000.0 )
                 };
+
+                this.setRRNotSupported();
             }
 
             // Start or store
@@ -850,6 +852,26 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     public void setBroadcastReceiver(BroadcastReceiver broadcastReceiver)
     {
         this.broadcastReceiver = broadcastReceiver;
+    }
+
+    @Override
+    public void setHRNotSupported()
+    {
+        final LinearLayout LY_HR_NOT_SUPPORTED = this.findViewById( R.id.lyHRNotSupported );
+
+        if ( LY_HR_NOT_SUPPORTED.getVisibility() != View.VISIBLE ) {
+            LY_HR_NOT_SUPPORTED.setVisibility( View.VISIBLE );
+        }
+    }
+
+    @Override
+    public void setRRNotSupported()
+    {
+        final LinearLayout LY_RR_NOT_SUPPORTED = this.findViewById( R.id.lyRRNotSupported );
+
+        if ( LY_RR_NOT_SUPPORTED.getVisibility() != View.VISIBLE ) {
+            LY_RR_NOT_SUPPORTED.setVisibility( View.VISIBLE );
+        }
     }
 
     private ImageView ivPictureBox;

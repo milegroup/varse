@@ -9,7 +9,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -159,6 +161,10 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
 
         if ( MEAN_RR >= 0 ) {
             strRr = Integer.toString( MEAN_RR );
+        }
+
+        if ( rrs == null ) {
+            this.setRRNotSupported();
         }
 
         this.showBpm( strHr, strRr );
@@ -335,6 +341,26 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
     public void setBroadcastReceiver(BroadcastReceiver broadcastReceiver)
     {
         this.broadcastReceiver = broadcastReceiver;
+    }
+
+    @Override
+    public void setHRNotSupported()
+    {
+        final LinearLayout LY_HR_NOT_SUPPORTED = this.findViewById( R.id.lyHRNotSupported );
+
+        if ( LY_HR_NOT_SUPPORTED.getVisibility() != View.VISIBLE ) {
+            LY_HR_NOT_SUPPORTED.setVisibility( View.VISIBLE );
+        }
+    }
+
+    @Override
+    public void setRRNotSupported()
+    {
+        final LinearLayout LY_RR_NOT_SUPPORTED = this.findViewById( R.id.lyRRNotSupported );
+
+        if ( LY_RR_NOT_SUPPORTED.getVisibility() != View.VISIBLE ) {
+            LY_RR_NOT_SUPPORTED.setVisibility( View.VISIBLE );
+        }
     }
 
     private ServiceConnectionWithStatus serviceConnection;

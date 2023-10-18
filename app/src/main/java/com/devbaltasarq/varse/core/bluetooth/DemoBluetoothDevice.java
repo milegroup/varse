@@ -108,6 +108,24 @@ public final class DemoBluetoothDevice {
         }
     }
 
+    @Override
+    public int hashCode()
+    {
+        return -42;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        boolean toret = false;
+
+        if ( obj instanceof DemoBluetoothDevice ) {
+            toret = true;
+        }
+
+        return toret;
+    }
+
     /** @return gets the only copy of the demo device. */
     public static DemoBluetoothDevice get()
     {

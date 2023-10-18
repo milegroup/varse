@@ -19,7 +19,6 @@ import java.util.Locale;
 public class BluetoothDeviceWrapper {
     public String LogTag = BluetoothDeviceWrapper.class.getSimpleName();
 
-
     public static class BeatInfo {
         private final static int MAX_NUM_RRS = 10;
         public enum Info { TIME, HR, MEAN_RR }
@@ -144,6 +143,8 @@ public class BluetoothDeviceWrapper {
 
         if ( !this.isDemo() ) {
             toret = this.getDevice().hashCode();
+        } else {
+            toret = this.getDemoDevice().hashCode();
         }
 
         return toret;
@@ -167,7 +168,7 @@ public class BluetoothDeviceWrapper {
         String toret;
 
         if ( this.btDevice != null ) {
-            toret = this.btDevice.getName();
+            toret = BluetoothUtils.getBTDeviceName( this );
         }
         else
         if ( this.demoDevice != null ) {
