@@ -2,6 +2,7 @@ package com.devbaltasarq.varse.core.bluetooth;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -34,27 +35,19 @@ public class BluetoothUtils {
     public static final String STR_UNKNOWN_DEVICE = "??";
 
     private static final String[] BT_PERMISSION_LIST = new String[] {
-                    android.Manifest.permission.BLUETOOTH,
-                    android.Manifest.permission.BLUETOOTH_ADMIN,
-                    //Manifest.permission.ACCESS_COARSE_LOCATION,
-                    //android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                    //android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN,
     };
 
     public static String[] fixBluetoothNeededPermissions(Context cntxt)
     {
-        final ArrayList<String> BUILT_PERMISSIONS = new ArrayList<>(
-                Arrays.asList( BT_PERMISSION_LIST ) );
-
-        /*if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
-        {
-            BUILT_PERMISSIONS.add( Manifest.permission.ACCESS_BACKGROUND_LOCATION );
-        }*/
+        final ArrayList<String> BUILT_PERMISSIONS =
+                new ArrayList<>( Arrays.asList( BT_PERMISSION_LIST ) );
 
         if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S )
         {
-            BUILT_PERMISSIONS.add( android.Manifest.permission.BLUETOOTH_SCAN );
-            BUILT_PERMISSIONS.add( android.Manifest.permission.BLUETOOTH_CONNECT );
+            BUILT_PERMISSIONS.add( Manifest.permission.BLUETOOTH_SCAN );
+            BUILT_PERMISSIONS.add( Manifest.permission.BLUETOOTH_CONNECT );
         }
 
         final ArrayList<String> TORET = new ArrayList<>();
@@ -90,40 +83,43 @@ public class BluetoothUtils {
     /** @return the HR characteristic from a GATT connection to a device. */
     public static BluetoothGattCharacteristic getHeartRateChar(BluetoothGatt gatt)
     {
-        final String DEVICE_NAME = getBTDeviceName( gatt.getDevice() );
         BluetoothGattCharacteristic toret = null;
-        BluetoothGattService hrService = gatt.getService( UUID_HR_MEASUREMENT_SRV );
 
-        if ( hrService != null ) {
-            toret = hrService.getCharacteristic( UUID_HR_MEASUREMENT_CHR );
+        if ( gatt != null ) {
+            final String DEVICE_NAME = getBTDeviceName( gatt.getDevice() );
+            final BluetoothGattService HR_SERVICE = gatt.getService( UUID_HR_MEASUREMENT_SRV );
 
-            if ( toret != null ) {
-                Log.d(LOG_TAG, "Building HR characteristic ("
-                                        + toret.getUuid().toString()
-                                        + ") in: " + DEVICE_NAME );
+            if ( HR_SERVICE != null ) {
+                toret = HR_SERVICE.getCharacteristic( UUID_HR_MEASUREMENT_CHR );
 
-                // Enabling notifications for HR
-                gatt.setCharacteristicNotification( toret, true );
+                if ( toret != null ) {
+                    Log.d(LOG_TAG, "Building HR characteristic ("
+                                            + toret.getUuid().toString()
+                                            + ") in: " + DEVICE_NAME );
 
-                Log.d(LOG_TAG, "HR enabled notifications ("
-                        + toret.getUuid().toString() + ") in: " + DEVICE_NAME );
+                    // Enabling notifications for HR
+                    gatt.setCharacteristicNotification( toret, true );
 
-                final BluetoothGattDescriptor DESCRIPTOR = toret.getDescriptor( UUID_CLIENT_CHAR_CONFIG );
+                    Log.d(LOG_TAG, "HR enabled notifications ("
+                            + toret.getUuid().toString() + ") in: " + DEVICE_NAME );
 
-                if ( !DESCRIPTOR.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE ) )
-                {
-                    Log.e(LOG_TAG, "    Cannot create descriptor for HR in: " + DEVICE_NAME );
-                }
+                    final BluetoothGattDescriptor DESCRIPTOR = toret.getDescriptor( UUID_CLIENT_CHAR_CONFIG );
 
-                if ( !gatt.writeDescriptor( DESCRIPTOR ) ) {
-                    Log.e(LOG_TAG, "    Cannot enable notifications for HR in: " + DEVICE_NAME );
-                    toret = null;
+                    if ( !DESCRIPTOR.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE ) )
+                    {
+                        Log.e(LOG_TAG, "    Cannot create descriptor for HR in: " + DEVICE_NAME );
+                    }
+
+                    if ( !gatt.writeDescriptor( DESCRIPTOR ) ) {
+                        Log.e(LOG_TAG, "    Cannot enable notifications for HR in: " + DEVICE_NAME );
+                        toret = null;
+                    }
+                } else {
+                    Log.d(LOG_TAG, "No HR characteristic found in: " + DEVICE_NAME );
                 }
             } else {
-                Log.d(LOG_TAG, "No HR characteristic found in: " + DEVICE_NAME );
+                Log.d(LOG_TAG, "No HR service in: " + DEVICE_NAME );
             }
-        } else {
-            Log.d(LOG_TAG, "No HR service in: " + DEVICE_NAME );
         }
 
         if ( toret != null ) {

@@ -403,6 +403,10 @@ public class Experiment extends Persistent {
         return toret;
     }
 
+    /** Creates a new experiment of DT duration with a manual activity.
+      * @param DT the duration for the new experiment.
+      * @return a new experiment.
+      */
     public static Experiment createSimpleExperiment(final Duration DT)
     {
         final String EXPR_NAME = "simple manual " + DT.getTimeInSeconds();

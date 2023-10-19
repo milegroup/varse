@@ -101,15 +101,17 @@
     <string name="msgFinishedExperiment">Experiment performed</string>
     <string name="msgFinishedBackup">Backup finished</string>
     <string name="msgFinishedRecovery">Recovery finished</string>
-    <string name="msgForceCloudBackup">Force backup to the cloud</string>
+    <string name="msgForceCloudBackup">Force backup to the cloud.</string>
     <string name="msgWaitForBackup">Please wait until backup is finished.</string>
     <string name="msgRecovery">Recovery from the cloud</string>
     <string name="msgReportPermissionsNeeded">
-        This app collects location data to enable Bluetooth
-        connectivity, even when the app is closed or not in use.
-        You are going to be asked next for permission.
-        Please completely allow its use (again, even when the app is not in use),
-        in order to be able to connect to health devices.
+        This app needs Bluetooth connectivity, in order to achieve
+        its objective of measuring heart rate variability.
+        You are going to be asked next for permissions to enable, scan,
+        and connect to health devices through Bluetooth LE.
+        Please grant these permissions to be able to use the
+        whole functionality of the app; otherwise, you will only be able
+        to test the app through a demo device.
     </string>
     <string name="msgTemplateRuffiusPhase1">Stay seated.</string>
     <string name="msgTemplateRuffiusPhase2">Thirty squats in forty five seconds.</string>
@@ -134,6 +136,7 @@
     <string name="errNoExperiment">No experiment chosen</string>
     <string name="errPermissionDenied">Permission denied</string>
     <string name="errUnsupportedFileType">Unsupported file type</string>
+    <string name="errIncorrectDuration">"Incorrect duration"</string>
     <string name="errUnableToShowActivity">Unable to show activity</string>
     <string name="errNotEnoughActivities">Not enough activities</string>
     <string name="errInitializingSettings">Initializing settings</string>

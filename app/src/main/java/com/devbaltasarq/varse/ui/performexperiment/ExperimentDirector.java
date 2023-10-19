@@ -645,7 +645,6 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final int NUM_GROUPS = GROUPS_IN_EXPERIMENT.size();
         final int[] SEQUENCE_OF_GROUPS = createSequence( NUM_GROUPS, this.experiment.isRandom() );
 
-        int pos = 0;
         this.groupsToPlay = new ArrayList<>( NUM_GROUPS );
 
         // Run over all groups honoring randomness of experiment, and gather their activities
@@ -667,8 +666,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 ACTIVITIES.add( ACTIVITY );
             }
 
-            this.groupsToPlay.set( pos, GROUP );
-            ++pos;
+            this.groupsToPlay.add( GROUP );
         }
 
         this.activitiesToPlay = ACTIVITIES;

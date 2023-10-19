@@ -16,7 +16,6 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -57,7 +56,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 
 
@@ -165,12 +163,6 @@ public class PerformExperimentActivity extends AppActivity {
             }
         });
 
-        LV_DEVICES.setOnItemLongClickListener(
-            (AdapterView<?> adapterView, View view, int i, long l) -> {
-                PerformExperimentActivity.this.showLastScanInfo();
-                return true;
-        });
-
         // Initalize UI
         this.configBtLaunched = false;
         this.btDefinitelyNotAvailable = false;
@@ -183,6 +175,9 @@ public class PerformExperimentActivity extends AppActivity {
     public void onStart()
     {
         super.onStart();
+
+        // Read data from ORM
+        this.loadExperimentsSpinner();
 
         // Prepare bluetooth
         if ( !this.btDefinitelyNotAvailable ) {
@@ -199,21 +194,16 @@ public class PerformExperimentActivity extends AppActivity {
             if ( !this.bluetoothAdapter.isEnabled() ) {
                 this.launchBtConfigPage();
             } else {
-                // Scans health devices
-                this.startScanning();
+                // Scans health devices automatically
+                // if there is none yet.
+                // Remember that the Demo Device is always there.
+                if ( this.hrDevices.size() < 2 ) {
+                    this.startScanning();
+                }
             }
         }
 
         return;
-    }
-
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-
-        // Read data from ORM
-        this.loadExperimentsSpinner();
     }
 
     @Override
@@ -270,24 +260,22 @@ public class PerformExperimentActivity extends AppActivity {
     @Override
     protected void onActivityResult(int req, int resultCode, @Nullable Intent data)
     {
-        switch( req ) {
-            case RCQ_SELECT_DEVICE:
-                if ( resultCode == RESULT_OK
-                  && data != null )
-                {
-                    final ScanResult SCAN_RESULT =
-                            data.getParcelableExtra( CompanionDeviceManager.EXTRA_DEVICE );
-                    if ( SCAN_RESULT != null) {
-                        this.onDeviceFound( SCAN_RESULT.getDevice() );
-                    } else {
-                        Log.d( LOG_TAG, "device: found but was null" );
-                    }
+        if ( req == RCQ_SELECT_DEVICE ) {
+            if ( resultCode == RESULT_OK
+              && data != null )
+            {
+                final ScanResult SCAN_RESULT =
+                        data.getParcelableExtra( CompanionDeviceManager.EXTRA_DEVICE );
+                if ( SCAN_RESULT != null) {
+                    this.onDeviceFound( SCAN_RESULT.getDevice() );
                 } else {
-                    this.stopScanning( true );
+                    Log.d( LOG_TAG, "device: found but was null" );
                 }
-                break;
-            default:
-                super.onActivityResult( req, resultCode, data );
+            } else {
+                this.stopScanning( true );
+            }
+        } else {
+            super.onActivityResult( req, resultCode, data );
         }
 
         return;
@@ -301,10 +289,6 @@ public class PerformExperimentActivity extends AppActivity {
         // Create lists, if needed
         if ( this.hrDevices == null ) {
             this.hrDevices = new ArrayList<>( 8 );
-        }
-
-        if ( this.discoveredDevices == null ) {
-            this.discoveredDevices = new ArrayList<>( 16 );
         }
 
         if ( this.addrFound == null ) {
@@ -328,33 +312,10 @@ public class PerformExperimentActivity extends AppActivity {
         this.clearDeviceListView();
     }
 
-    private void showLastScanInfo()
-    {
-        final AlertDialog.Builder DLG = new AlertDialog.Builder( this );
-        final String[] DEVICES_NAMES = new String[ this.discoveredDevices.size() ];
-
-        DLG.setTitle( "Found devices in last scan" );
-
-        if ( this.discoveredDevices.size() > 0 ) {
-            // Prepare all devices names
-            for(int i = 0; i < this.discoveredDevices.size(); ++i) {
-                DEVICES_NAMES[ i ] = getBTDeviceName( this, this.discoveredDevices.get( i ) );
-            }
-
-            // Prepare dialog with built names
-            DLG.setItems( DEVICES_NAMES, null );
-        } else {
-            DLG.setMessage( "No devices found." );
-        }
-
-        DLG.create().show();
-    }
-
     /** Removes all hrDevices in the list. */
     private void clearDeviceListView()
     {
         this.addrFound.clear();
-        this.discoveredDevices.clear();
         this.devicesListAdapter.clear();
         this.devicesListAdapter.add( demoDevice );
 
@@ -379,7 +340,6 @@ public class PerformExperimentActivity extends AppActivity {
               && !this.addrFound.contains( ADDR ) )
             {
                 this.addrFound.add( ADDR );
-                this.discoveredDevices.add( btDevice );
                 this.addDeviceToListView( btDevice );
             }
 
@@ -551,7 +511,7 @@ public class PerformExperimentActivity extends AppActivity {
             return;
         }
 
-        final Executor EXE = runnable -> runnable.run();
+        final Executor EXE = Runnable::run;
 
         DEV_MANAGER.associate(PAIRING_REQ, EXE, new CompanionDeviceManager.Callback() {
             // Called when a device is found. Launch the IntentSender so the user can
@@ -824,25 +784,36 @@ public class PerformExperimentActivity extends AppActivity {
         DLG.setView( R.layout.dialog_performexperiment );
         DLG.setNegativeButton( R.string.lblCancel, null );
         DLG.setPositiveButton( R.string.lblSave, (v, i) -> {
-            final AlertDialog D = (AlertDialog) v;
-            final EditText ED_MINS = D.findViewById( R.id.edNewExperimentMins );
-            final EditText ED_SECS = D.findViewById( R.id.edNewExperimentSecs );
-            int mins;
-            int secs;
+            final AlertDialog DLG_DURATION = (AlertDialog) v;
+            final EditText ED_MINS = DLG_DURATION.findViewById( R.id.edNewExperimentMins );
+            final EditText ED_SECS = DLG_DURATION.findViewById( R.id.edNewExperimentSecs );
+            int mins = 0;
+            int secs = 0;
 
-            try {
-                mins = Integer.parseInt( ED_MINS.getText().toString() );
-                secs = Integer.parseInt( ED_SECS.getText().toString() );
-            } catch(NumberFormatException exc) {
-                mins = secs = 0;
+            if ( ED_MINS != null
+              && ED_SECS != null )
+            {
+                try {
+                    mins = Integer.parseInt( ED_MINS.getText().toString() );
+                    secs = Integer.parseInt( ED_SECS.getText().toString() );
+                } catch(NumberFormatException exc) {
+                    Log.e( LOG_TAG, "incorrect duration: "
+                            + ED_MINS.getText() + "' "
+                            + ED_SECS.getText() + "' " );
+                }
+            } else {
+                Log.e( LOG_TAG, "no access to edMins and edSecs in the duration dialog" );
             }
 
             if ( mins > 0
               || secs > 0 )
             {
-                D.dismiss();
                 this.launchWithNewExperiment( new Duration( mins, secs ) );
+            } else {
+                this.showStatus( LOG_TAG, this.getString( R.string.errIncorrectDuration ) );
             }
+
+            DLG_DURATION.dismiss();
         });
 
         DLG.create().show();
@@ -928,7 +899,6 @@ public class PerformExperimentActivity extends AppActivity {
     private Set<String> addrFound;
     private BluetoothAdapter bluetoothAdapter;
     private ArrayList<BluetoothDeviceWrapper> hrDevices;
-    private ArrayList<BluetoothDevice> discoveredDevices;
     private BtDeviceListAdapter devicesListAdapter;
     private Menu scanMenu;
     private boolean configBtLaunched;
