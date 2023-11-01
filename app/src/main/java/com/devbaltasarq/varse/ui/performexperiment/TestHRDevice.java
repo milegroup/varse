@@ -220,11 +220,7 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         // Save file
         if ( this.logInfoFile != null ) {
             if ( finishAction == Finish.SAVE_AND_EXIT ) {
-                try {
-                    this.ofm.saveToDownloads( this.logInfoFile, CSV_MIME_TYPE );
-                } catch(IOException exc) {
-                    Log.e( LOG_TAG, "saving log file to downloads: " + exc.getMessage() );
-                }
+                this.ofm.saveToDownloads( this.logInfoFile, CSV_MIME_TYPE );
             }
 
             this.logInfoFile.delete();

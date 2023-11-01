@@ -5,8 +5,10 @@ package com.devbaltasarq.varse.ui;
 
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -21,29 +23,42 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.DropboxUsrClient;
+import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.Result;
 import com.devbaltasarq.varse.core.Settings;
+import com.devbaltasarq.varse.core.experiment.Tag;
 import com.devbaltasarq.varse.core.ofmcache.PartialObject;
 import com.devbaltasarq.varse.ui.adapters.ListViewResultArrayAdapter;
 import com.devbaltasarq.varse.ui.showresult.ResultViewerActivity;
 import com.dropbox.core.DbxException;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class ResultsActivity extends AppActivity {
@@ -59,6 +74,7 @@ public class ResultsActivity extends AppActivity {
         this.setSupportActionBar( TOOLBAR );
 
         final ImageButton BT_BACK = this.findViewById( R.id.btCloseResults );
+        final ImageButton BT_IMPORT = this.findViewById( R.id.btImport );
         final Spinner CB_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
 
         // Init
@@ -67,7 +83,10 @@ public class ResultsActivity extends AppActivity {
         this.dataStore.removeCache();
 
         // Event handlers
-        BT_BACK.setOnClickListener( (v) -> this.finish() );
+        BT_BACK.setOnClickListener( v -> this.finish() );
+        BT_IMPORT.setOnClickListener(
+                v -> this.LAUNCH_FILE_PICKER.launch(
+                                    new String[]{ "text/plain" } ) );
         CB_EXPERIMENTS.setOnItemSelectedListener(
                 new AdapterView.OnItemSelectedListener() {
                     @Override
@@ -134,18 +153,25 @@ public class ResultsActivity extends AppActivity {
 
     public void exportResult(Result res)
     {
-        final String PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-        final int RESULT_REQUEST = ContextCompat.checkSelfPermission( this, PERMISSION );
+        final int RESULT_REQUEST =
+                ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE );
 
         try {
+            final Result RESULT = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
+
+            this.chosenResultToExport = RESULT;
+
             if ( RESULT_REQUEST != PackageManager.PERMISSION_GRANTED ) {
-                this.showStatus(LOG_TAG, this.getString( R.string.errPermissionDenied ) );
+                this.LAUNCH_WRT_PERMISSION_REQ.launch( Manifest.permission.WRITE_EXTERNAL_STORAGE );
             } else {
-                final Result RESULT = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
                 this.doExportResult( RESULT );
             }
         } catch(IOException exc) {
-            this.showStatus(LOG_TAG, this.getString( R.string.errExport) );
+            this.showStatus( LOG_TAG,
+                    this.getString( R.string.errExport )
+                    + ": " + exc.getMessage() );
         }
 
         return;
@@ -233,6 +259,88 @@ public class ResultsActivity extends AppActivity {
         dlg.create().show();
     }
 
+    /** Reads a given file.
+      * @param uri the file to read from.
+      * @return a String with the contents of the file.
+      * @throws IOException if reading goes wrong.
+      */
+    private String readTextFromUri(Uri uri) throws IOException
+    {
+        final StringBuilder TORET = new StringBuilder();
+        final ContentResolver SOLVER = this.getContentResolver();
+        final String UTF8_BOM = "\uFEFF";
+
+        try (final BufferedReader INPUT =
+                     new BufferedReader(
+                            new InputStreamReader(
+                                     SOLVER.openInputStream( uri ) )))
+        {
+            String line;
+
+            while ( ( line = INPUT.readLine() ) != null ) {
+                if ( line.startsWith( UTF8_BOM )) {
+                    line = line.substring( UTF8_BOM.length() );
+                }
+
+                TORET.append( line );
+                TORET.append( '\n' );
+            }
+
+            Ofm.close( INPUT );
+        }
+
+        return TORET.toString();
+    }
+
+    private void onImport(final String RAW_DATA)
+    {
+        final List<Integer> DATA = Stream.of( RAW_DATA.split( "\n" ) )
+                                    .map( s -> Integer.valueOf( s.trim() ) )
+                                    .collect( Collectors.toList() );
+
+        final Calendar DATE_TIME = Calendar.getInstance();
+        final String STR_ISO_TIME = String.format(
+                Locale.getDefault(),
+                "-%04d-%02d-%02d",
+                DATE_TIME.get( Calendar.YEAR ),
+                DATE_TIME.get( Calendar.MONTH + 1 ),
+                DATE_TIME.get( Calendar.DAY_OF_MONTH ));
+        final Ofm OFM = Ofm.get();
+        int totalMilliSeconds = DATA.stream().mapToInt( Integer::intValue ).sum();
+        int totalSeconds = (int) Math.ceil( totalMilliSeconds / 1000.0 );
+
+        // Create a suitable experiment
+        final Experiment EXPR = Experiment.createSimpleExperiment(
+                            new Duration( totalSeconds ) );
+
+        // Create a suitable result
+        final Result.Builder RES_BUILDER =
+                new Result.Builder(
+                        "import" + STR_ISO_TIME,
+                        EXPR,
+                        DATE_TIME.getTimeInMillis() );
+
+        RES_BUILDER.add(
+                new Result.ActivityChangeEvent( 0,
+                        new Tag( "record" ) ));
+
+        int millisOffset = 0;
+        for(int rr: DATA) {
+            RES_BUILDER.add( new Result.BeatEvent( millisOffset, rr ) );
+            millisOffset += rr;
+        }
+
+        final Result RES = RES_BUILDER.build( totalMilliSeconds );
+
+        try {
+            OFM.store( EXPR );
+            OFM.store( RES );
+            this.onResume();
+        } catch(IOException exc) {
+            this.showStatus( LOG_TAG, this.getString( R.string.errIO ) );
+        }
+    }
+
     private void doExportResult(Result result)
     {
         final String LBL_RESULT = this.getString( R.string.lblResult );
@@ -242,7 +350,8 @@ public class ResultsActivity extends AppActivity {
             this.showStatus( LOG_TAG, this.getString( R.string.msgExported ) + ": " + LBL_RESULT );
         } catch(IOException exc)
         {
-            this.showStatus( LOG_TAG, this.getString( R.string.errExport) + ": " + LBL_RESULT );
+            this.showStatus( LOG_TAG, this.getString( R.string.errExport )
+                                    + ": " + exc.getMessage() );
         }
 
         return;
@@ -348,10 +457,42 @@ public class ResultsActivity extends AppActivity {
         this.loadResults();
     }
 
+    private final ActivityResultLauncher<String[]> LAUNCH_FILE_PICKER =
+            this.registerForActivityResult(
+                    new ActivityResultContracts.OpenDocument(), uri -> {
+                        final ResultsActivity SELF = ResultsActivity.this;
+
+                        if ( uri != null ) {
+                            SELF.showStatus(
+                                    LOG_TAG,
+                                    this.getString( R.string.lblImport )
+                                            + "..." );
+
+                            try {
+                                SELF.onImport( SELF.readTextFromUri( uri ) );
+                            } catch(IOException exc) {
+                                SELF.showStatus( LOG_TAG,
+                                        this.getString( R.string.lblImport )
+                                        + ": "
+                                        + this.getString( R.string.errIO ) );
+                            }
+                        }
+                    });
+
+    private final ActivityResultLauncher<String> LAUNCH_WRT_PERMISSION_REQ =
+            this.registerForActivityResult( new ActivityResultContracts.RequestPermission(), granted -> {
+                if ( !granted ) {
+                    this.showStatus( LOG_TAG, "write files permission not granted" );
+                } else {
+                    this.doExportResult( this.chosenResultToExport );
+                }
+            });
+
     private boolean backupFinished;
     private HandlerThread handlerThread;
     private Handler handler;
     private PartialObject[] experimentsList;
+    private Result chosenResultToExport;
     private Ofm dataStore;
 
     static Persistent experiment;

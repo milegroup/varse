@@ -27,7 +27,7 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/lblExperiment"
+                android:text="@string/lblResults"
                 android:layout_weight=".3" />
 
             <Spinner    android:id="@+id/cbExperiments"

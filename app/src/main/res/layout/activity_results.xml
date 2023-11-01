@@ -48,6 +48,17 @@
             android:layout_height="wrap_content"
             android:text="@string/lblResults"/>
 
+        <ImageButton
+            android:id="@+id/btImport"
+            android:padding="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:contentDescription="@string/lblImport"
+            android:background="#00000000"
+            app:srcCompat="@drawable/ic_import_button"
+            app:tint="#ffffffff" />
+
         <ProgressBar    android:id="@+id/pbIndeterminateResultUpload"
             android:visibility="gone"
             android:layout_width="wrap_content"

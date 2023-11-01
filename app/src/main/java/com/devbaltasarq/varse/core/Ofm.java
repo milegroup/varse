@@ -585,41 +585,25 @@ public final class Ofm {
         this.store( res );                  // Ensure it is in the db
 
         try {
-            if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
-            {
-                final File TAGS_TEMP_FILE = new File( this.dirTmp, TAGS_FILE_NAME );
-                final File RR_TEMP_FILE = new File( this.dirTmp, RR_FILE_NAME );
-                final Writer TAGS_STREAM = openWriterFor( TAGS_TEMP_FILE );
-                final Writer BEATS_STREAM = openWriterFor( RR_TEMP_FILE );
+            final File TAGS_TEMP_FILE = new File( this.dirTmp, TAGS_FILE_NAME );
+            final File RR_TEMP_FILE = new File( this.dirTmp, RR_FILE_NAME );
+            final Writer TAGS_STREAM = openWriterFor( TAGS_TEMP_FILE );
+            final Writer BEATS_STREAM = openWriterFor( RR_TEMP_FILE );
 
-                // Create tag and beat files in temporary dir
-                res.exportToStdTextFormat( TAGS_STREAM, BEATS_STREAM );
-                close( TAGS_STREAM );
-                close( BEATS_STREAM );
-                copy( ORG_FILE, ORG_FILE_COPY );
+            // Create tag and beat files in temporary dir
+            res.exportToStdTextFormat( TAGS_STREAM, BEATS_STREAM );
+            close( TAGS_STREAM );
+            close( BEATS_STREAM );
+            copy( ORG_FILE, ORG_FILE_COPY );
 
-                // Now save to downloads
-                this.saveToDownloads( ORG_FILE_COPY, TEXT_MIME_TYPE );
-                this.saveToDownloads( TAGS_TEMP_FILE, TEXT_MIME_TYPE );
-                this.saveToDownloads( RR_TEMP_FILE, TEXT_MIME_TYPE );
+            // Now save to downloads
+            this.saveToDownloads( ORG_FILE_COPY, TEXT_MIME_TYPE );
+            this.saveToDownloads( TAGS_TEMP_FILE, TEXT_MIME_TYPE );
+            this.saveToDownloads( RR_TEMP_FILE, TEXT_MIME_TYPE );
 
-                // Clean
-                TAGS_TEMP_FILE.delete();
-                RR_TEMP_FILE.delete();
-            } else {
-                // Dest
-                final File OUTPUT_FILE = new File( DIR_DOWNLOADS, RES_FILE_NAME );
-                final File TAGS_OUTPUT_FILE = new File( DIR_DOWNLOADS, TAGS_FILE_NAME );
-                final File RR_OUTPUT_FILE = new File( DIR_DOWNLOADS, RR_FILE_NAME );
-                final Writer TAGS_STREAM = openWriterFor( TAGS_OUTPUT_FILE );
-                final Writer BEATS_STREAM = openWriterFor( RR_OUTPUT_FILE );
-
-                copy( ORG_FILE, OUTPUT_FILE );
-                res.exportToStdTextFormat( TAGS_STREAM, BEATS_STREAM );
-
-                close( TAGS_STREAM );
-                close( BEATS_STREAM );
-            }
+            // Clean
+            TAGS_TEMP_FILE.delete();
+            RR_TEMP_FILE.delete();
         } catch(IOException exc) {
             throw new IOException( "exporting: '"
                             + RES_FILE_NAME
@@ -1050,49 +1034,40 @@ public final class Ofm {
         return;
     }
 
-    public void saveToDownloads(File file, String mimeTypeName) throws IOException
+    public void saveToDownloads(final File INPUT_FILE, String mimeTypeName)
     {
-        final String FILE_NAME = file.getPath();
+        final ContentValues VALUES = new ContentValues();
+        final ContentResolver FINDER = this.context.getContentResolver();
+        final InputStream IN;
+        final OutputStream OUT;
+        final Uri URI;
 
-        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
-            this.saveToDownloadsModern( FILE_NAME, mimeTypeName );
-        } else {
-            final File DWNLDS_OUTPUT_FILE = new File( DIR_DOWNLOADS, FILE_NAME + ".zip" );
-            copy( file, DWNLDS_OUTPUT_FILE );
-        }
+        VALUES.put( MediaStore.MediaColumns.DISPLAY_NAME, INPUT_FILE.getName() );
+        VALUES.put( MediaStore.MediaColumns.MIME_TYPE, mimeTypeName );
+        VALUES.put( MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS );
 
-        return;
-    }
-
-    private void saveToDownloadsModern(String fn, String mimeTypeName)
-    {
         if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q )
         {
-            //final String EXT = "." + mimeTypeName.substring( mimeTypeName.length() - 3 );
-            final File INPUT_FILE = new File( fn );
-            final ContentValues VALUES = new ContentValues();
-            final ContentResolver FINDER = this.context.getContentResolver();
+            URI = FINDER.insert(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    VALUES );
+        } else {
+            URI = FINDER.insert(
+                    MediaStore.Files.getContentUri( "external" ),
+                    VALUES );
+        }
 
-            VALUES.put( MediaStore.MediaColumns.DISPLAY_NAME, INPUT_FILE.getName() );
-            VALUES.put( MediaStore.MediaColumns.MIME_TYPE, mimeTypeName );
-            VALUES.put( MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS );
+        if ( URI != null ) {
+            try {
+                IN = INPUT_FILE.toURI().toURL().openStream();
+                OUT = FINDER.openOutputStream( URI );
 
-            final Uri URI = FINDER.insert( MediaStore.Downloads.EXTERNAL_CONTENT_URI, VALUES );
-            final InputStream IN;
-            final OutputStream OUT;
-
-            if ( URI != null ) {
-                try {
-                    IN = INPUT_FILE.toURI().toURL().openStream();
-                    OUT = FINDER.openOutputStream( URI );
-
-                    copy( IN, OUT );
-                } catch(IOException exc) {
-                    Log.e( LOG_TAG, "saving to Downloads: " + exc.getMessage() );
-                }
+                copy( IN, OUT );
+            } catch(IOException exc) {
+                Log.e( LOG_TAG, "saving to Downloads: " + exc.getMessage() );
             }
         } else {
-            throw new Error( "saveToDownloads() called from Android < Q" );
+            Log.e( LOG_TAG, "could not build MediaStore's URI" );
         }
 
         return;
