@@ -10,13 +10,12 @@ android {
     defaultConfig {
         applicationId "com.devbaltasarq.varse"
         compileSdk 34
-        minSdk 26
+        minSdk 29
         targetSdk 34
         vectorDrawables.useSupportLibrary = true
         versionCode 26
-        versionName '1.8.6'
+        versionName '1.8.7'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-        versionNameSuffix 'Beta 2'
     }
     buildTypes {
         release {
