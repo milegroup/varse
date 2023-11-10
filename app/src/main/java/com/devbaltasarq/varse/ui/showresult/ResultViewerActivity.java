@@ -33,7 +33,7 @@ import java.util.ArrayList;
   */
 public class ResultViewerActivity extends AppActivity {
     private static final String LogTag = ResultViewerActivity.class.getSimpleName();
-    private static int MAX_TAGS = 5;
+    private static final int MAX_TAGS = 5;
 
 
     @Override
