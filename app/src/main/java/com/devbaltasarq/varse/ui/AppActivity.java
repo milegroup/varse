@@ -2,6 +2,8 @@ package com.devbaltasarq.varse.ui;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AlertDialog;
@@ -15,7 +17,7 @@ import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.experiment.Tag;
 
 /** This activity has the capability of showing status messages through snackbars. */
-public class AppActivity extends AppCompatActivity {
+public abstract class AppActivity extends AppCompatActivity {
     public static final String LOG_TAG = AppActivity.class.getSimpleName();
     public static final int RSC_SAVE_DATA = 0x5a7eda7a;
     public static final int RSC_DISMISS_DATA = 0x10dda7a;
@@ -34,9 +36,9 @@ public class AppActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-            super.onCreate( savedInstanceState );
+        super.onCreate( savedInstanceState );
 
-            this.setTitle( "" );
+        this.setTitle( "" );
     }
 
     /** Shows an info status on screen. */

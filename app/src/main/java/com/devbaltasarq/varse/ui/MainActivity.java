@@ -9,13 +9,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import com.google.android.material.navigation.NavigationView;
-
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -91,7 +91,15 @@ public class MainActivity extends AppActivity
         LBL_APP_NAME.setOnClickListener( (v) -> this.toggleAppVersionShown() );
         LBL_APP_VERSION.setOnClickListener( (v) -> this.toggleAppVersionShown() );
 
-        this.block = false;
+        // Back
+        this.getOnBackPressedDispatcher().addCallback(this,
+                new OnBackPressedCallback( true ) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        MainActivity.this.onGoingBack();
+                    }
+                }
+        );
     }
 
     @Override
@@ -141,68 +149,60 @@ public class MainActivity extends AppActivity
     {
         boolean toret = false;
 
-        if ( !this.block ) {
-            if ( id == R.id.imgOptPerformExperiment
-              || id == R.id.lblOptPerformExperiment
-              || id == R.id.nav_perform_experiment )
-            {
-                this.startActivity( new Intent( this, PerformExperimentActivity.class ) );
-                toret = true;
-            }
-            else
-            if ( id == R.id.imgOptExperiments
-              || id ==  R.id.lblOptExperiments
-              || id ==  R.id.nav_experiments
-              || id ==  R.id.nav_export
-              || id ==  R.id.action_export )
-            {
-                this.startActivity( new Intent( this, ExperimentsActivity.class ) );
-                toret = true;
-            }
-            else
-            if ( id == R.id.imgOptResults
-              || id == R.id.lblOptResults
-              || id == R.id.nav_results )
-            {
-                this.startActivity( new Intent( this, ResultsActivity.class ) );
-                toret = true;
-            }
-            else
-            if ( id == R.id.nav_settings ) {
-                this.startActivity( new Intent( this, SettingsActivity.class ) );
-                toret = true;
-            }
-            else
-            if ( id == R.id.nav_import
-              || id == R.id.action_import )
-            {
-                this.pickFile();
-                toret = true;
-            }
-            else
-            if ( id == R.id.nav_privacy_policy ) {
-                Uri uri = Uri.parse( "https://milegroup.github.io/varse/privacy.html" );
-                Intent intent = new Intent( Intent.ACTION_VIEW, uri );
-                this.startActivity( intent );
-                toret = true;
-            }
-        } else {
-            Log.e( LOG_TAG, "Tried to operate in blocked app" );
-            this.showStatus(LOG_TAG, this.getString( R.string.errIO) );
+        if ( id == R.id.imgOptPerformExperiment
+          || id == R.id.lblOptPerformExperiment
+          || id == R.id.nav_perform_experiment )
+        {
+            this.startActivity( new Intent( this, PerformExperimentActivity.class ) );
+            toret = true;
+        }
+        else
+        if ( id == R.id.imgOptExperiments
+          || id ==  R.id.lblOptExperiments
+          || id ==  R.id.nav_experiments
+          || id ==  R.id.nav_export
+          || id ==  R.id.action_export )
+        {
+            this.startActivity( new Intent( this, ExperimentsActivity.class ) );
+            toret = true;
+        }
+        else
+        if ( id == R.id.imgOptResults
+          || id == R.id.lblOptResults
+          || id == R.id.nav_results )
+        {
+            this.startActivity( new Intent( this, ResultsActivity.class ) );
+            toret = true;
+        }
+        else
+        if ( id == R.id.nav_settings ) {
+            this.startActivity( new Intent( this, SettingsActivity.class ) );
+            toret = true;
+        }
+        else
+        if ( id == R.id.nav_import
+          || id == R.id.action_import )
+        {
+            this.pickFile();
+            toret = true;
+        }
+        else
+        if ( id == R.id.nav_privacy_policy ) {
+            Uri uri = Uri.parse( "https://milegroup.github.io/varse/privacy.html" );
+            Intent intent = new Intent( Intent.ACTION_VIEW, uri );
+            this.startActivity( intent );
+            toret = true;
         }
 
         return toret;
     }
 
-    @Override
-    public void onBackPressed()
+    public void onGoingBack()
     {
         final DrawerLayout DRAWER = this.findViewById( R.id.drawer_layout );
 
         if ( DRAWER.isDrawerOpen( GravityCompat.START ) ) {
-            DRAWER.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
+            DRAWER.closeDrawer( GravityCompat.START );
         }
     }
 
@@ -292,7 +292,6 @@ public class MainActivity extends AppActivity
         }
     }
 
-    private boolean block;
     private final ActivityResultLauncher<String> SELECT_MEDIA = this.registerForActivityResult(
             new ActivityResultContracts.GetContent(),
             uri -> {
