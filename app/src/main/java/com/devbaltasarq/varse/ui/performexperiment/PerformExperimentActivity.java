@@ -848,10 +848,10 @@ public class PerformExperimentActivity extends AppActivity {
     private void performExperiment()
     {
         final Spinner CB_EXPERIMENT = this.findViewById( R.id.cbExperiments );
-        final TextView ED_USERS = this.findViewById( R.id.edUsers);
-        final String USR_NAME = ED_USERS.getText().toString();
+        final TextView ED_RECORD = this.findViewById( R.id.edRecord );
+        final String RECORD_NAME = ED_RECORD.getText().toString();
 
-        this.onRecordSet( USR_NAME );
+        this.onRecordSet( RECORD_NAME );
 
         if ( rec == null) {
            this.showStatus( LOG_TAG, this.getString( R.string.errNoUsr ) );
