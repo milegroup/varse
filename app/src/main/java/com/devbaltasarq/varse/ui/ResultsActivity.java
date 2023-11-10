@@ -4,10 +4,8 @@
 package com.devbaltasarq.varse.ui;
 
 
-import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,7 +25,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.DropboxUsrClient;
@@ -47,16 +44,13 @@ import com.dropbox.core.DbxException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -153,25 +147,30 @@ public class ResultsActivity extends AppActivity {
 
     public void exportResult(Result res)
     {
-        final int RESULT_REQUEST =
-                ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE );
-
         try {
-            final Result RESULT = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
+            final File RR_TEMP_FILE = new File( this.dataStore.getDirTmp(), "rrs.txt" );
 
-            this.chosenResultToExport = RESULT;
+            // Ensure it is in the store
+            final Result RESULT = (Result) this.dataStore.retrieve(
+                                                     res.getId(), Persistent.TypeId.Result );
 
-            if ( RESULT_REQUEST != PackageManager.PERMISSION_GRANTED ) {
-                this.LAUNCH_WRT_PERMISSION_REQ.launch( Manifest.permission.WRITE_EXTERNAL_STORAGE );
-            } else {
-                this.doExportResult( RESULT );
-            }
+            // Write rr's to the tmo dir
+            final Writer BEATS_STREAM = Ofm.openWriterFor( RR_TEMP_FILE );
+            RESULT.exportToStdTextFormat( null, BEATS_STREAM );
+            Ofm.close( BEATS_STREAM );
+
+            // Share file
+            final Intent SHARING_INTENT = new Intent( Intent.ACTION_SEND );
+            Uri screenshotUri = Uri.parse( RR_TEMP_FILE.getAbsolutePath() );
+            SHARING_INTENT.setType( "text/plain" );
+            SHARING_INTENT.putExtra( Intent.EXTRA_STREAM, screenshotUri );
+            this.startActivity( Intent.createChooser(
+                                    SHARING_INTENT,
+                                    this.getString( R.string.lblExport ) ) );
         } catch(IOException exc) {
             this.showStatus( LOG_TAG,
                     this.getString( R.string.errExport )
-                    + ": " + exc.getMessage() );
+                            + ": " + exc.getMessage() );
         }
 
         return;
@@ -341,22 +340,6 @@ public class ResultsActivity extends AppActivity {
         }
     }
 
-    private void doExportResult(Result result)
-    {
-        final String LBL_RESULT = this.getString( R.string.lblResult );
-
-        try {
-            this.dataStore.exportResultToDownloads( result );
-            this.showStatus( LOG_TAG, this.getString( R.string.msgExported ) + ": " + LBL_RESULT );
-        } catch(IOException exc)
-        {
-            this.showStatus( LOG_TAG, this.getString( R.string.errExport )
-                                    + ": " + exc.getMessage() );
-        }
-
-        return;
-    }
-
     /** Reads the experiments' names from the Ofm. */
     private void loadExperimentsSpinner()
     {
@@ -401,7 +384,7 @@ public class ResultsActivity extends AppActivity {
                             this.dataStore.enumerateResultsForExperiment( experiment.getId() ) ) );
 
             // Sort by creation time, reversed (more recent before)
-            Collections.sort( PO_ENTRIES, (po1, po2) -> Long.compare(
+            PO_ENTRIES.sort( (po1, po2) -> Long.compare(
                     Result.parseTimeFromName( po2.getName() ),
                     Result.parseTimeFromName( po1.getName() ) )
             );
@@ -479,20 +462,10 @@ public class ResultsActivity extends AppActivity {
                         }
                     });
 
-    private final ActivityResultLauncher<String> LAUNCH_WRT_PERMISSION_REQ =
-            this.registerForActivityResult( new ActivityResultContracts.RequestPermission(), granted -> {
-                if ( !granted ) {
-                    this.showStatus( LOG_TAG, "write files permission not granted" );
-                } else {
-                    this.doExportResult( this.chosenResultToExport );
-                }
-            });
-
     private boolean backupFinished;
     private HandlerThread handlerThread;
     private Handler handler;
     private PartialObject[] experimentsList;
-    private Result chosenResultToExport;
     private Ofm dataStore;
 
     static Persistent experiment;

@@ -115,6 +115,12 @@ public final class Ofm {
         this.dirTmp = this.context.getCacheDir();
     }
 
+    /** @return the tmp directory, as a File object. */
+    public File getDirTmp()
+    {
+        return this.dirTmp;
+    }
+
     /** Removes all files in cache. */
     public void removeCache()
     {
