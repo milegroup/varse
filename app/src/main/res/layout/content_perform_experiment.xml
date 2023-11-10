@@ -28,10 +28,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/lblRecord"
-                android:labelFor="@id/edUsers"
+                android:labelFor="@id/edRecord"
                 android:layout_margin="10dp" />
 
-            <EditText       android:id="@+id/edUsers"
+            <EditText       android:id="@+id/edRecord"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="20dp"
