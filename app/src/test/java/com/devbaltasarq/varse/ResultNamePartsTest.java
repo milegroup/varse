@@ -32,21 +32,12 @@ public class ResultNamePartsTest {
                 new Id( RES_ID ),
                 time,
                 DURATION,
-                new User( new Id( USR_ID ), USR_NAME ),
+                "usr1",
                 new Experiment( new Id( EXP_ID ), EXP_NAME ),
                 null
         );
 
         resultName = res.buildResultName();
-    }
-
-    @Test
-    public void testResultPartUserId()
-    {
-        Assert.assertEquals(
-                USR_ID,
-                Result.parseUserIdFromName( resultName )
-        );
     }
 
     @Test

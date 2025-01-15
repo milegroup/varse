@@ -27,17 +27,11 @@ public class FileNameParsingTest {
                                 Persistent.TypeId.Experiment
         ));
 
-        usrFile = new File( EntitiesCache.buildFileNameFor(
-                                new Id( USR_ID ),
-                                Persistent.TypeId.User
-        ));
-
         resFile = new File( EntitiesCache.buildFileNameForResult(
                                 new Id( RES_ID ),
                                 new Id( EXP_ID ),
-                                new Id( USR_ID ),
-                                "r0",
-                                "experiment"
+                                "usr1",
+                                "r0"
         ));
 
         dirFile = new File( "media-" + EXP_ID );
@@ -51,10 +45,6 @@ public class FileNameParsingTest {
                         EntitiesCache.getFileExtFor( Persistent.TypeId.Experiment ) ) );
 
         Assert.assertTrue(
-                usrFile.getName().endsWith(
-                        EntitiesCache.getFileExtFor( Persistent.TypeId.User ) ) );
-
-        Assert.assertTrue(
                 resFile.getName().endsWith(
                         EntitiesCache.getFileExtFor( Persistent.TypeId.Result ) ) );
     }
@@ -64,9 +54,6 @@ public class FileNameParsingTest {
     {
         Assert.assertEquals( Persistent.TypeId.Experiment,
                              EntitiesCache.getTypeIdForExt( expFile ) );
-
-        Assert.assertEquals( Persistent.TypeId.User,
-                            EntitiesCache.getTypeIdForExt( usrFile ) );
 
         Assert.assertEquals( Persistent.TypeId.Result,
                             EntitiesCache.getTypeIdForExt( resFile ) );
@@ -89,10 +76,6 @@ public class FileNameParsingTest {
                 EntitiesCache.parseExperimentIdFromResultFileName( resFile )
         );
 
-        Assert.assertEquals(
-                USR_ID,
-                EntitiesCache.parseUserIdFromResultFileName( resFile )
-        );
     }
 
     private static File expFile;

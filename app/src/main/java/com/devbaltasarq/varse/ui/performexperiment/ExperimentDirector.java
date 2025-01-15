@@ -7,6 +7,7 @@ package com.devbaltasarq.varse.ui.performexperiment;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -31,7 +32,6 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-import com.devbaltasarq.varse.BuildConfig;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
@@ -160,7 +160,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         }
 
         // Check whether there is something to play
-        if ( this.groupsToPlay.size() == 0 ) {
+        if ( this.groupsToPlay.isEmpty() ) {
             isAble = false;
         }
 
@@ -433,7 +433,8 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         LBL_INSTANT_BPM.setText( HR + this.getString( R.string.lblBpm ) );
 
         // Log, if needed
-        if ( BuildConfig.DEBUG ) {
+        if ( 0 != ( this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE ) )
+        {
             final BluetoothDeviceWrapper.BeatInfo BEAT_INFO = new BluetoothDeviceWrapper.BeatInfo();
 
             BEAT_INFO.set( BluetoothDeviceWrapper.BeatInfo.Info.TIME, time );
@@ -581,7 +582,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
                 ++this.groupIndex;
 
                 while( this.groupIndex < GROUPS.size()
-                   &&  this.groupsToPlay.get( this.groupIndex ).get().size() == 0 )
+                   &&  this.groupsToPlay.get( this.groupIndex ).get().isEmpty() )
                 {
                     ++this.groupIndex;
                 }
@@ -598,7 +599,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     /** Launches the experiment. */
     private void launchExperiment()
     {
-        if ( this.groupsToPlay.size() > 0 ) {
+        if ( this.groupsToPlay.isEmpty() ) {
             final TextView LBL_MAX_TIME = this.findViewById( R.id.lblMaxTime );
             final Duration TIME_NEEDED = this.experiment.calculateTimeNeeded();
             final String REC = PerformExperimentActivity.rec;

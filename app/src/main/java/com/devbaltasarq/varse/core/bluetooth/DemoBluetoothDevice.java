@@ -1,16 +1,20 @@
+// Varse (c) 2019/20 Baltasar MIT License <jbgarcia@uvigo.es>
+
+
 package com.devbaltasarq.varse.core.bluetooth;
+
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.content.pm.ApplicationInfo;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import com.devbaltasarq.varse.BuildConfig;
-
 import java.util.Random;
 import java.util.UUID;
+
 
 public final class DemoBluetoothDevice {
     private static final String LOG_TAG = DemoBluetoothDevice.class.getSimpleName();
@@ -57,7 +61,8 @@ public final class DemoBluetoothDevice {
         GATT_HR_CHR.setValue( ADAPTED_RR, BluetoothGattCharacteristic.FORMAT_UINT16, 3 );
 
         // Some valuable debug info
-        if ( BuildConfig.DEBUG ) {
+        /*  // Android developers are still unable to provide a way to detect DEBUG profile
+        if (  0 != ( getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE ) ) {
             final byte[] RAW_VALUE = GATT_HR_CHR.getValue();
             final StringBuilder bytes = new StringBuilder( RAW_VALUE.length * 3 );
             Log.d(LOG_TAG, "Flags: " + GATT_HR_CHR.getProperties() );
@@ -71,6 +76,7 @@ public final class DemoBluetoothDevice {
             Log.d(LOG_TAG, "Adapted RR: " + ADAPTED_RR  );
             Log.d(LOG_TAG, "To send: { " + bytes.toString() + "}" );
         }
+        **/
 
         return GATT_HR_CHR;
     }
@@ -117,13 +123,7 @@ public final class DemoBluetoothDevice {
     @Override
     public boolean equals(Object obj)
     {
-        boolean toret = false;
-
-        if ( obj instanceof DemoBluetoothDevice ) {
-            toret = true;
-        }
-
-        return toret;
+        return ( obj instanceof DemoBluetoothDevice );
     }
 
     /** @return gets the only copy of the demo device. */
