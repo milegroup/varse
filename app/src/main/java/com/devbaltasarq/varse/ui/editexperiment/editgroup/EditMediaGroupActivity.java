@@ -7,6 +7,7 @@ import android.os.Bundle;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 import android.text.Editable;
@@ -178,14 +179,17 @@ public class EditMediaGroupActivity extends EditGroupActivity {
     /** Launch file browser. */
     private void openMedia()
     {
-        // Choose the intent type, video or image
-        String intentTypeStr = "image/*";
+        ActivityResultContracts.PickVisualMedia.VisualMediaType
+                mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE;
 
         if ( group instanceof VideoGroup ) {
-            intentTypeStr = "video/*";
+            mediaType = ActivityResultContracts.PickVisualMedia.VideoOnly.INSTANCE;
         }
 
-        this.LAUNCH_PICKER.launch( intentTypeStr );
+        var request = new PickVisualMediaRequest.Builder()
+                .setMediaType( mediaType )
+                .build();
+        this.LAUNCH_PICKER.launch( request );
     }
 
     /** Stores the media in the db, and creates the media activity
@@ -285,9 +289,9 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         // Nothing to do here, media files cannot be edited.
     }
 
-    private final ActivityResultLauncher<String> LAUNCH_PICKER =
+    private final ActivityResultLauncher<PickVisualMediaRequest> LAUNCH_PICKER =
             this.registerForActivityResult(
-                    new ActivityResultContracts.GetContent(),
+                    new ActivityResultContracts.PickVisualMedia(),
                     uri -> {
                         if ( uri != null ) {
                             this.storeMedia( uri );
