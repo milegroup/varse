@@ -599,7 +599,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
     /** Launches the experiment. */
     private void launchExperiment()
     {
-        if ( this.groupsToPlay.isEmpty() ) {
+        if ( !this.groupsToPlay.isEmpty() ) {
             final TextView LBL_MAX_TIME = this.findViewById( R.id.lblMaxTime );
             final Duration TIME_NEEDED = this.experiment.calculateTimeNeeded();
             final String REC = PerformExperimentActivity.rec;
