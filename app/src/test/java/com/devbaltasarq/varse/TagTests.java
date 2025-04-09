@@ -36,7 +36,8 @@ public class TagTests {
             Assert.fail( "No 'empty tag' exception launched" );
         } catch(Error err)
         {
-            Assert.assertTrue( "empty tag".contains( err.getMessage() ) );
+            final String MSG = "testEmptyTag(): " + err.getMessage();
+            Assert.assertTrue( MSG.contains( "empty tag" ) );
         }
     }
 

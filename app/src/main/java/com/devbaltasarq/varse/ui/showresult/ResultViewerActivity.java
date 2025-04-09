@@ -26,6 +26,7 @@ import com.devbaltasarq.varse.ui.AppActivity;
 import com.devbaltasarq.varse.core.ResultAnalyzer;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 /** Represents the result data set as a graph on the screen.
@@ -188,23 +189,24 @@ public class ResultViewerActivity extends AppActivity {
     /** Plots the chart in a drawable and shows it. */
     private void plotChart()
     {
-        final ArrayList<LineChart.SeriesInfo> SERIES = new ArrayList<>();
-        final ArrayList<LineChart.Point> POINTS = new ArrayList<>();
+        final List<LineChart.SeriesInfo> SERIES = new ArrayList<>();
+        final List<LineChart.Point> POINTS = new ArrayList<>();
         final Float[] DATA_HR_INTERP_X = this.resultAnalyzer.getDataHRInterpolatedForX();
         final Float[] DATA_HR_INTERP = this.resultAnalyzer.getDataHRInterpolated();
         final double DENSITY = this.getDensity();
+        final int LEN = Math.min( DATA_HR_INTERP.length, DATA_HR_INTERP_X.length );
 
-        if ( DATA_HR_INTERP_X.length > 0 ) {
+        if ( LEN > 0 ) {
             String tag = this.findTag( DATA_HR_INTERP_X[ 0 ] );
             int color = this.calculateColor( tag, 0 );
-            int index = 0;
             int colorIndex = 0;
 
             SERIES.add( new LineChart.SeriesInfo( tag, color ) );
 
-            for(float time: DATA_HR_INTERP_X ) {
-                final double BPM = DATA_HR_INTERP[ index ];
-                final String NEW_TAG = this.findTag( time );
+            for(int i = 0; i < LEN; ++i) {
+                final float TIME = DATA_HR_INTERP_X[ i ];
+                final double BPM = DATA_HR_INTERP[ i ];
+                final String NEW_TAG = this.findTag( TIME );
 
                 if ( !tag.equals( NEW_TAG ) ) {
                     ++colorIndex;
@@ -213,13 +215,13 @@ public class ResultViewerActivity extends AppActivity {
                     SERIES.add( new LineChart.SeriesInfo( NEW_TAG, color ) );
                 }
 
-                POINTS.add( new LineChart.Point( time, BPM, color ) );
-                ++index;
+                POINTS.add( new LineChart.Point( TIME, BPM, color ) );
+                ++i;
             }
         }
 
         // If there are no series, then there is solely the black/default series.
-        if ( SERIES.size() == 0 ) {
+        if ( SERIES.isEmpty() ) {
             SERIES.add( new LineChart.SeriesInfo(
                                 this.getString( R.string.lblDefaultTag ),
                                 Color.BLACK ) );

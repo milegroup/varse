@@ -4,6 +4,8 @@ import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
 
+import com.devbaltasarq.varse.core.ofm.FileManager;
+
 import org.json.JSONException;
 
 import java.io.File;
@@ -44,16 +46,16 @@ public class Settings {
     public void save()
     {
         final Ofm OFM = Ofm.get();
-        final File F = OFM.getSettingsPath();
+        final File F = OFM.getFileManager().getSettingsPath();
         Writer wrt = null;
 
         try {
-            wrt = Ofm.openWriterFor( F );
+            wrt = FileManager.openWriterFor( F );
             this.toJSON( wrt );
         } catch(IOException | JSONException exc) {
             Log.e( LogTag, "saving settings: " + exc );
         } finally {
-            Ofm.close( wrt );
+            FileManager.close( wrt );
         }
     }
 
@@ -124,9 +126,11 @@ public class Settings {
 
     public static Settings open() throws JSONException
     {
+        final FileManager F_MAN = Ofm.get().getFileManager();
+
         if ( settings == null ) {
             try {
-                settings = fromJSON( Ofm.openReaderFor( Ofm.get().getSettingsPath() ));
+                settings = fromJSON( FileManager.openReaderFor( F_MAN.getSettingsPath() ));
             } catch(IOException exc) {
                 throw new JSONException( exc.getMessage() );
             }

@@ -1,14 +1,23 @@
+// Varse (c) 2019/20 - 25 Baltasar MIT License <jbgarcia@uvigo.es>
+
+
 package com.devbaltasarq.varse.core;
+
 
 import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /** Represents classes that can be stored and retrieved using JSON. */
@@ -22,10 +31,21 @@ public abstract class Persistent implements Identifiable {
 
         public static final String FIELD = "type_id";
 
-        @Override
+        @Override @NonNull
         public String toString()
         {
             return this.name().toLowerCase();
+        }
+
+        public String toShortString()
+        {
+            String toret = this.toString().toLowerCase().substring( 0, 3 );
+
+            if ( this == ManualGroup ) {
+                toret = "mangrp";
+            }
+
+            return toret;
         }
 
         public static TypeId parse(String strTypeId) throws IllegalArgumentException
@@ -52,7 +72,7 @@ public abstract class Persistent implements Identifiable {
     }
 
     /** Creates a new object that can be stored in the db. */
-    public Persistent(Id id)
+    protected Persistent(Id id)
     {
         this.id = id.copy();
     }
@@ -73,38 +93,34 @@ public abstract class Persistent implements Identifiable {
         return this.id;
     }
 
+    public abstract String getName();
+
     /** Writes the common properties of a persistent object to JSON.
      * @param wrt The writer to write to.
      * @throws JSONException throws it when there are problems with the stream.
      */
     public void toJSON(Writer wrt) throws JSONException
     {
-        final String ErrorMessage = "Writing persistent object to JSON: ";
-        final JsonWriter jsonWriter = new JsonWriter( wrt );
-
-        try {
+        try (final JsonWriter jsonWriter = new JsonWriter( wrt ))
+        {
             jsonWriter.beginObject();
             this.writeToJSON( jsonWriter );
             jsonWriter.endObject();
         } catch(IOException exc)
         {
+            final String ErrorMessage = "Writing persistent object to JSON: ";
+
             Log.e( LOG_TAG, ErrorMessage + exc.getMessage() );
             throw new JSONException( exc.getMessage() );
-        } finally {
-            try {
-                jsonWriter.close();
-            } catch(IOException exc) {
-                Log.e(LOG_TAG, ErrorMessage + exc.getMessage() );
-            }
         }
 
         return;
     }
 
     /** Enumerates all associated media files to this persistent. */
-    public File[] enumerateMediaFiles()
+    public List<File> enumerateMediaFiles()
     {
-        return new File[ 0 ];
+        return new ArrayList<>( 0 );
     }
 
     /** Returns a an enum value for this object's type.
@@ -127,16 +143,12 @@ public abstract class Persistent implements Identifiable {
 
     public static TypeId readTypeIdFromJson(JsonReader jsonReader) throws IOException, JSONException
     {
-        TypeId toret = null;
+        TypeId toret;
 
         try {
             toret = TypeId.parse( jsonReader.nextString() );
         } catch(IllegalArgumentException exc) {
             throw new JSONException( "read type id: " + exc.getMessage() );
-        }
-
-        if ( toret == null ) {
-            throw new JSONException( "read type id: no valid data" );
         }
 
         return toret;

@@ -2,8 +2,7 @@ package com.devbaltasarq.varse.core;
 
 
 import com.devbaltasarq.varse.core.experiment.Tag;
-import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
-import com.devbaltasarq.varse.core.ofmcache.FileCache;
+import com.devbaltasarq.varse.core.ofm.FileManager;
 
 import androidx.annotation.NonNull;
 import android.util.JsonReader;
@@ -12,13 +11,13 @@ import android.util.Log;
 
 import org.json.JSONException;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -108,9 +107,7 @@ public class Result extends Persistent {
         {
             boolean toret = false;
 
-            if ( obj2 instanceof Event ) {
-                final Event EVT = (Event) obj2;
-
+            if ( obj2 instanceof final Event EVT) {
                 toret = ( this.getMillis() == EVT.getMillis() );
             }
 
@@ -138,24 +135,17 @@ public class Result extends Persistent {
 
             // Load data
             try {
+                jsonReader.setLenient( true );
                 jsonReader.beginObject();
                 while ( jsonReader.hasNext() ) {
                     final String NEXT_NAME = jsonReader.nextName();
 
-                    if ( NEXT_NAME.equals( Ofm.FIELD_EVENT_TYPE ) ) {
-                        eventType = jsonReader.nextString();
-                    }
-                    else
-                    if ( NEXT_NAME.equals( Ofm.FIELD_ELAPSED_TIME ) ) {
-                        millis = jsonReader.nextLong();
-                    }
-                    else
-                    if ( NEXT_NAME.equals( Ofm.FIELD_HEART_BEAT_AT ) ) {
-                        heartbeat = jsonReader.nextLong();
-                    }
-                    else
-                    if ( NEXT_NAME.equals( Ofm.FIELD_TAG ) ) {
-                        tag = jsonReader.nextString();
+                    switch (NEXT_NAME) {
+                        case Ofm.FIELD_EVENT_TYPE -> eventType = jsonReader.nextString();
+                        case Ofm.FIELD_ELAPSED_TIME -> millis = jsonReader.nextLong();
+                        case Ofm.FIELD_HEART_BEAT_AT -> heartbeat = jsonReader.nextLong();
+                        case Ofm.FIELD_TAG -> tag = jsonReader.nextString();
+                        default -> jsonReader.skipValue();
                     }
                 }
 
@@ -230,10 +220,8 @@ public class Result extends Persistent {
             boolean toret = false;
 
             if ( super.equals( obj2 )
-              && obj2 instanceof BeatEvent )
+              && obj2 instanceof final BeatEvent EVT)
             {
-                final BeatEvent EVT = (BeatEvent) obj2;
-
                 toret = this.getTimeOfNewHeartBeat() == EVT.getTimeOfNewHeartBeat();
             }
 
@@ -281,10 +269,8 @@ public class Result extends Persistent {
             boolean toret = false;
 
             if ( super.equals( obj2 )
-              && obj2 instanceof ActivityChangeEvent )
+              && obj2 instanceof final ActivityChangeEvent EVT)
             {
-                final ActivityChangeEvent EVT = (ActivityChangeEvent) obj2;
-
                 toret = this.getTag().equals( EVT.getTag() );
             }
 
@@ -328,7 +314,7 @@ public class Result extends Persistent {
         this.dateTime = dateTime;
         this.rec = rec;
         this.experiment = expr;
-        this.events = events;
+        this.events = Arrays.asList( events );
     }
 
     @Override
@@ -347,6 +333,12 @@ public class Result extends Persistent {
     public String getRec()
     {
         return this.rec;
+    }
+
+    @Override
+    public String getName()
+    {
+        return this.getRec();
     }
 
     /** @return the id of the experiment the results belong to. */
@@ -374,9 +366,7 @@ public class Result extends Persistent {
     {
         boolean toret = false;
 
-        if ( o instanceof Result ) {
-            Result ro = (Result) o;
-
+        if ( o instanceof final Result ro) {
             if ( this.getRec().equals( ro.getRec() )
               && this.getExperiment().equals( ro.getExperiment() ) )
             {
@@ -387,28 +377,20 @@ public class Result extends Persistent {
         return toret;
     }
 
-    @Override
-    public File[] enumerateMediaFiles()
-    {
-        return new File[ 0 ];
-    }
-
     /** @return all events in this result. Warning: the list can be huge. */
-    public Event[] buildEventsList()
+    public List<Event> buildEventsList()
     {
-        return Arrays.copyOf( this.events, this.events.length );
+        return new ArrayList<>( this.events );
     }
 
     /** @return a list with all activity changes. */
-    public ActivityChangeEvent[] buildActivityChangesList()
+    public List<ActivityChangeEvent> buildActivityChangesList()
     {
-        ActivityChangeEvent[] toret = new ActivityChangeEvent[ this.experiment.getNumActivities() ];
-        int i = 0;
+        final List<ActivityChangeEvent> toret = new ArrayList<>( this.experiment.getNumActivities() );
 
         for(Event evt: this.events) {
-            if ( evt instanceof ActivityChangeEvent ) {
-                toret[ i ] = (ActivityChangeEvent) evt;
-                ++i;
+            if ( evt instanceof final ActivityChangeEvent EVT) {
+                toret.add( EVT );
             }
         }
 
@@ -418,12 +400,12 @@ public class Result extends Persistent {
     /** @return the heart beats time distance, as a long[]. */
     public long[] buildHeartBeatsList()
     {
-        final ArrayList<Long> BEAT_DISTANCE_TIMES = new ArrayList<>( this.size() );
+        final List<Long> BEAT_DISTANCE_TIMES = new ArrayList<>( this.size() );
 
         // Create
         for(Event evt: this.events) {
-            if ( evt instanceof BeatEvent ) {
-                BEAT_DISTANCE_TIMES.add( ( (BeatEvent) evt ).getTimeOfNewHeartBeat() );
+            if ( evt instanceof final BeatEvent BEAT_EVT) {
+                BEAT_DISTANCE_TIMES.add( BEAT_EVT.getTimeOfNewHeartBeat() );
             }
         }
 
@@ -443,13 +425,13 @@ public class Result extends Persistent {
     private ActivityChangeEvent locateNextActivityChangeEvent(int i)
     {
         ActivityChangeEvent toret = null;
-        final int NUM_EVENTS = this.events.length;
+        final int NUM_EVENTS = this.events.size();
 
         for( ++i; i < NUM_EVENTS; ++i ) {
-            final Event EVT = this.events[ i ];
+            final Event EVT = this.events.get( i );
 
-            if ( EVT instanceof ActivityChangeEvent ) {
-                toret = (ActivityChangeEvent) EVT;
+            if ( EVT instanceof final ActivityChangeEvent ACTIVITY_EVT) {
+                toret = ACTIVITY_EVT;
                 break;
             }
         }
@@ -464,7 +446,7 @@ public class Result extends Persistent {
                                       final Writer BEATS_STREAM)
                                                         throws IOException
     {
-        final int NUM_EVENTS = this.events.length;
+        final int NUM_EVENTS = this.events.size();
 
         if ( TAGS_STREAM != null ) {
             TAGS_STREAM.write( "Init_time\tTag\tDurat\n" );
@@ -472,19 +454,18 @@ public class Result extends Persistent {
 
         // Run all over the events and scatter them on files
         for(int i = 0; i < NUM_EVENTS; ++i) {
-            final Event EVT = this.events[ i ];
+            final Event EVT = this.events.get( i );
 
-            if ( EVT instanceof BeatEvent
+            if ( EVT instanceof final BeatEvent BEAT_EVT
               && BEATS_STREAM != null )
             {
-                BEATS_STREAM.write( Long.toString( ( (BeatEvent) EVT ).getTimeOfNewHeartBeat() ) );
+                BEATS_STREAM.write( Long.toString( BEAT_EVT.getTimeOfNewHeartBeat() ) );
                 BEATS_STREAM.write( '\n' );
             }
             else
-            if ( EVT instanceof ActivityChangeEvent
+            if ( EVT instanceof final ActivityChangeEvent ACT_EVT
               && TAGS_STREAM != null )
             {
-                final ActivityChangeEvent ACT_EVT = ( (ActivityChangeEvent) EVT );
                 final long millis = EVT.getMillis();
                 long timeActWillLast;
 
@@ -530,21 +511,21 @@ public class Result extends Persistent {
     /** @return the number of events stored. */
     public int size()
     {
-        return this.events.length;
+        return this.events.size();
     }
 
     @Override
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
-        final String RESULT_NAME = this.buildResultName();
+        final String RESULT_NAME = this.buildName();
 
         this.writeIdToJSON( jsonWriter );
         jsonWriter.name( Ofm.FIELD_NAME ).value( RESULT_NAME );
         jsonWriter.name( Ofm.FIELD_DATE ).value( this.getTime() );
         jsonWriter.name( Ofm.FIELD_TIME ).value( this.getDurationInMillis() );
-        jsonWriter.name( EntitiesCache.FIELD_EXPERIMENT_ID )
+        jsonWriter.name( EXPERIMENT_ID_PART )
                     .value( this.getExperiment().getId().get() );
-        jsonWriter.name( Ofm.FIELD_REC )
+        jsonWriter.name( REC_PART )
                     .value( this.getRec() );
 
         jsonWriter.name( Ofm.FIELD_EVENTS ).beginArray();
@@ -561,6 +542,21 @@ public class Result extends Persistent {
         return this.durationInMillis;
     }
 
+    /** Returns the name for this result.
+      * (internal or file name).
+      * @return the name for this result.
+      * @see Result::buildNameWith
+      */
+    public String buildName()
+    {
+        return buildNameWith(
+                this.getId(),
+                this.getExperiment().getId(),
+                this.getExperiment().getName(),
+                this.getRec(),
+                this.getTime());
+    }
+
     @Override @NonNull
     public String toString()
     {
@@ -571,36 +567,59 @@ public class Result extends Persistent {
                         + ") (" + this.getRec() + ")";
     }
 
-    private static final String ID_PART = "i";
-    private static final String TIME_PART = "t";
-    private static final String REC_PART = "rk";
-    private static final String EXPERIMENT_ID_PART = "e";
+    private static final String TIME_PART = "tm";
+    private static final String REC_PART = "rec";
+    private static final String EXPERIMENT_NAME_PART = "expr";
+    private static final String EXPERIMENT_ID_PART = "exprid";
 
-    /** @return the result name (NOT the file name, the name inside JSON).
-     * This is used inside the JSON file.
-     * This name contains important info.
-     * The name structure must be made consistent with the static parse_XXX functions below.
+    /** The structure for file name and JSON's name inside. */
+    private static final String NAME_FORMAT =
+                    Id.FILE_NAME_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + Id.FILE_NAME_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + EXPERIMENT_NAME_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + EXPERIMENT_NAME_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + REC_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + REC_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + EXPERIMENT_ID_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + EXPERIMENT_ID_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + TIME_PART
+                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + TIME_PART
+                    + ".$" + FileManager.FIELD_EXT;
+
+    /** @return the name for a the corresponding result file.
+     * @param id The id of the result file.
+     * @param exprId The experiment id for the result data set file.
+     * @param experimentName the name of the experiment.
+     * @param rec the name of the record.
      */
-    public String buildResultName()
+    public static String buildNameWith(Id id, Id exprId, String experimentName, String rec, long time)
     {
-        return Persistent.TypeId.Result.toString().toLowerCase()
-                + FileCache.FILE_NAME_PART_SEPARATOR + ID_PART + this.getId()
-                + FileCache.FILE_NAME_PART_SEPARATOR + TIME_PART + this.getTime()
-                + FileCache.FILE_NAME_PART_SEPARATOR + REC_PART + PlainStringEncoder.get().encode( this.getRec() )
-                + FileCache.FILE_NAME_PART_SEPARATOR + EXPERIMENT_ID_PART + this.getExperiment().getId();
+        return Result.NAME_FORMAT
+                .replace( "$" + FileManager.FIELD_EXT,
+                                            FileManager.getFileExtFor( Persistent.TypeId.Result ) )
+                .replace( "$" + Id.FILE_NAME_PART, id.toString() )
+                .replace( "$" + EXPERIMENT_ID_PART, exprId.toString() )
+                .replace( "$" + REC_PART, PlainStringEncoder.get().encode( rec ) )
+                .replace( "$" + TIME_PART, Long.toString( time ) )
+                .replace( "$" + EXPERIMENT_NAME_PART,
+                                            PlainStringEncoder.get().encode( experimentName ) );
     }
 
-    /** @return the rec name (NOT the file name, the rec inside the name inside JSON).
-     * @param PART_NAME the part to look for.
-     */
+    /** @return an str part from the result's name.
+      * @param PART_NAME the part to look for.
+      */
     private static String parseStrFromName(final String NAME, final String PART_NAME)
     {
-        final String[] PARTS = NAME.split( FileCache.FILE_NAME_PART_SEPARATOR );
+        final String[] FILE_PARTS = NAME.split( "\\." );
+        final String[] PARTS = FILE_PARTS[ 0 ].split( FileManager.FILE_NAME_PART_SEPARATOR );
+        final int PARTS_LENGTH = PARTS.length;
         String toret = "";
 
-        for(final String PART: PARTS) {
-            if ( PART.startsWith( PART_NAME ) ) {
-                toret = PART.substring( PART_NAME.length() );
+        for(int i = 0; i < ( PARTS_LENGTH - 1 ); i += 2) {
+            final String PART = PARTS[ i ];
+
+            if ( PART.equals( PART_NAME ) ) {
+                toret = PARTS[ i + 1 ];
                 break;
             }
         }
@@ -610,6 +629,35 @@ public class Result extends Persistent {
         }
 
         return toret;
+    }
+
+    /** @return the result's time - date, reading it from its file name.
+      * @param RES_NAME the name of the result to extract the time from.
+      * @param PART_NAME the name of the part to extract.
+      */
+    private static long parseLongFromName(final String RES_NAME, final String PART_NAME)
+    {
+        String STR_TORET = parseStrFromName( RES_NAME, PART_NAME );
+        long toret = 0;
+
+        try {
+            toret = Long.parseLong( STR_TORET );
+        } catch(NumberFormatException exc)
+        {
+            throw new Error( "malformed result name looking for long, found: "
+                    + STR_TORET + "/" + RES_NAME );
+        }
+
+        return toret;
+    }
+
+    /** @return the result's experiment id, reading it from its name
+      *(NOT the file name, the name inside JSON).
+      * @param RES_NAME the name of the result to extract from.
+      */
+    public static long parseExprIdFromName(final String RES_NAME)
+    {
+        return parseLongFromName( RES_NAME, EXPERIMENT_ID_PART );
     }
 
     /** @return the result's time - date, reading it from its name
@@ -630,30 +678,10 @@ public class Result extends Persistent {
         return parseStrFromName( resName, REC_PART );
     }
 
-    /** @return the result's time - date, reading it from its name (NOT file name).
-      * @param RES_NAME the name of the result to extract the time from.
-      * @param PART_NAME the name of the part to extract.
-      */
-    private static long parseLongFromName(final String RES_NAME, final String PART_NAME)
-    {
-        String StrToret = parseStrFromName( RES_NAME, PART_NAME );
-        long toret = 0;
-
-        try {
-            toret = Long.parseLong( StrToret );
-        } catch(NumberFormatException exc)
-        {
-            throw new Error( "malformed result name looking for time, found: "
-                    + StrToret + "/" + RES_NAME );
-        }
-
-        return toret;
-    }
-
     public static Result fromJSON(Reader reader) throws JSONException
     {
         final JsonReader JSON_READER = new JsonReader( reader );
-        final ArrayList<Event> EVENTS = new ArrayList<>();
+        final List<Event> EVENTS = new ArrayList<>();
         Result toret;
         long durationInMillis = -1L;
         TypeId typeId = null;
@@ -664,47 +692,28 @@ public class Result extends Persistent {
 
         // Load data
         try {
+            JSON_READER.setLenient( true );
             JSON_READER.beginObject();
             while ( JSON_READER.hasNext() ) {
                 final String nextName = JSON_READER.nextName();
 
-                if ( nextName.equals( Ofm.FIELD_DATE ) ) {
-                    dateTime = JSON_READER.nextLong();
-                }
-                else
-                if ( nextName.equals( Ofm.FIELD_TIME ) ) {
-                    durationInMillis = JSON_READER.nextLong();
-                }
-                else
-                if ( nextName.equals( Ofm.FIELD_NAME ) ) {
-                    JSON_READER.nextString();
-                }
-                else
-                if ( nextName.equals( Ofm.FIELD_TYPE_ID ) ) {
-                    typeId = readTypeIdFromJson( JSON_READER );
-                }
-                else
-                if ( nextName.equals( Id.FIELD ) ) {
-                    id = readIdFromJSON( JSON_READER );
-                }
-                else
-                if ( nextName.equals( Ofm.FIELD_REC ) ) {
-                    rec = JSON_READER.nextString();
-                }
-                else
-                if ( nextName.equals( EntitiesCache.FIELD_EXPERIMENT_ID ) ) {
-                    experimentId = readIdFromJSON( JSON_READER );
-                }
-                else
-                if ( nextName.equals( Ofm.FIELD_EVENTS ) ) {
-                    JSON_READER.beginArray();
-                    while( JSON_READER.hasNext() ) {
-                        EVENTS.add( Event.fromJSON( JSON_READER ) );
-                    }
+                switch (nextName) {
+                    case Ofm.FIELD_DATE -> dateTime = JSON_READER.nextLong();
+                    case Ofm.FIELD_TIME -> durationInMillis = JSON_READER.nextLong();
+                    case Ofm.FIELD_NAME -> JSON_READER.nextString();
+                    case Ofm.FIELD_TYPE_ID -> typeId = readTypeIdFromJson(JSON_READER);
+                    case Id.FIELD -> id = readIdFromJSON(JSON_READER);
+                    case REC_PART -> rec = JSON_READER.nextString();
+                    case EXPERIMENT_ID_PART -> experimentId = readIdFromJSON(JSON_READER);
+                    case Ofm.FIELD_EVENTS -> {
+                        JSON_READER.beginArray();
+                        while (JSON_READER.hasNext()) {
+                            EVENTS.add(Event.fromJSON(JSON_READER));
+                        }
 
-                    JSON_READER.endArray();
-                } else {
-                    JSON_READER.skipValue();
+                        JSON_READER.endArray();
+                    }
+                    default -> JSON_READER.skipValue();
                 }
             }
         } catch(IOException exc)
@@ -757,5 +766,5 @@ public class Result extends Persistent {
     private final String rec;
     private final Experiment experiment;
     private final long dateTime;
-    private final Event[] events;
+    private final List<Event> events;
 }

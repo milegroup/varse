@@ -1,9 +1,10 @@
+// Varse (c) 2019/20 - 25 Baltasar MIT License <jbgarcia@uvigo.es>
+
+
 package com.devbaltasarq.varse.ui;
 
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,25 +15,25 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
-import com.devbaltasarq.varse.core.ofmcache.PartialObject;
+import com.devbaltasarq.varse.core.ofm.EntityId;
+import com.devbaltasarq.varse.core.ofm.FileManager;
 import com.devbaltasarq.varse.ui.adapters.ListViewExperimentArrayAdapter;
 import com.devbaltasarq.varse.ui.editexperiment.EditExperimentActivity;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class ExperimentsActivity extends AppActivity {
@@ -53,6 +54,7 @@ public class ExperimentsActivity extends AppActivity {
 
         FAB.setOnClickListener( (v) -> this.addExperiment() );
         BT_CLOSE_EXPERIMENTS.setOnClickListener( (v) -> this.finish() );
+        this.mapping = Ofm.get();
 
         this.setTitle( "" );
     }
@@ -66,25 +68,6 @@ public class ExperimentsActivity extends AppActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-    {
-        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
-
-        if ( requestCode == RQC_ASK_PERMISSION ) {
-            // If request is cancelled, the result arrays are empty.
-            if ( grantResults.length > 0
-              && grantResults[ 0 ] == PackageManager.PERMISSION_GRANTED )
-            {
-                doExportExperiment( selectedExperiment );
-            } else {
-                this.showStatus( LOG_TAG, this.getString( R.string.errPermissionDenied) );
-            }
-        }
-
-        return;
-    }
-
-    @Override
     public boolean askBeforeLeaving()
     {
         return false;
@@ -95,13 +78,13 @@ public class ExperimentsActivity extends AppActivity {
         try {
             final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
             final ListView LV_EXPERIMENTS = this.findViewById( R.id.lvExperiments );
-            final PartialObject[] PO_ENTRIES = Ofm.get().enumerateExperiments();
+            final List<EntityId> ENTITY_IDS = this.mapping.getFileManager().enumerateExperiments();
 
             // Prepare the list of experiments
-            this.experimentEntries = new ArrayList<>( PO_ENTRIES.length );
+            this.experimentEntries = new ArrayList<>( ENTITY_IDS.size() );
 
-            for(PartialObject po: PO_ENTRIES) {
-                experimentEntries.add( new Experiment( po.getId(), po.getName() ) );
+            for(EntityId ENT_ID: ENTITY_IDS) {
+                experimentEntries.add( new Experiment( ENT_ID.getId(), ENT_ID.getName() ) );
             }
 
             // Prepare the list view
@@ -110,7 +93,7 @@ public class ExperimentsActivity extends AppActivity {
             LV_EXPERIMENTS.setAdapter( this.experimentsListAdapter );
 
             // Show the experiments list (or maybe not).
-            if ( PO_ENTRIES.length > 0 ) {
+            if ( !ENTITY_IDS.isEmpty() ) {
                 LBL_NO_ENTRIES.setVisibility( View.GONE );
                 LV_EXPERIMENTS.setVisibility( View.VISIBLE );
             } else {
@@ -132,7 +115,7 @@ public class ExperimentsActivity extends AppActivity {
 
         this.experimentsListAdapter.notifyDataSetChanged();
 
-        if ( this.experimentEntries.size() == 0 ) {
+        if ( this.experimentEntries.isEmpty() ) {
             LBL_NO_ENTRIES.setVisibility( View.VISIBLE );
             LV_EXPERIMENTS.setVisibility( View.GONE );
         } else {
@@ -152,7 +135,7 @@ public class ExperimentsActivity extends AppActivity {
 
         try {
             selectedExperiment =
-                            (Experiment) Ofm.get().retrieve( id, Persistent.TypeId.Experiment );
+                            (Experiment) this.mapping.retrieve( id, Persistent.TypeId.Experiment );
         } catch(IOException exc)
         {
             Log.e(LOG_TAG, "error retrieving experiment: " + exc.getMessage() );
@@ -185,7 +168,7 @@ public class ExperimentsActivity extends AppActivity {
             loadExperiment( e.getId() );
 
             if ( selectedExperiment != null ) {
-                Ofm.get().remove( selectedExperiment );
+                this.mapping.remove( selectedExperiment );
                 this.experimentEntries.remove( position );
                 this.updateExperimentsList();
             } else {
@@ -203,7 +186,7 @@ public class ExperimentsActivity extends AppActivity {
 
         try {
              selectedExperiment = (Experiment)
-                                  Ofm.get().retrieve( e.getId(), Persistent.TypeId.Experiment );
+                                  this.mapping.retrieve( e.getId(), Persistent.TypeId.Experiment );
         } catch(IOException exc) {
             this.showStatus(LOG_TAG,
                              this.getString( R.string.msgFileNotFound )
@@ -240,7 +223,9 @@ public class ExperimentsActivity extends AppActivity {
 
             if ( i == 0 ) {
                 selectedExperiment =
-                        EditExperimentActivity.experiment = new Experiment( Id.createFake(), "expr" );
+                        EditExperimentActivity.experiment =
+                                new Experiment( Id.createFake(),
+                                                Persistent.TypeId.Experiment.toShortString() );
 
                 LAUNCH_ADD.launch(
                         new Intent(
@@ -272,36 +257,22 @@ public class ExperimentsActivity extends AppActivity {
 
     public void exportExperiment(Experiment e)
     {
-        final String PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-        final int RESULT_REQUEST = ContextCompat.checkSelfPermission( this, PERMISSION );
-
-        this.loadExperiment( e.getId() );
-
-        if ( RESULT_REQUEST != PackageManager.PERMISSION_GRANTED ) {
-            ActivityCompat.requestPermissions( this,
-                    new String[]{ PERMISSION },
-                    RQC_ASK_PERMISSION );
-        } else {
-            this.doExportExperiment( selectedExperiment );
-        }
-
-        return;
-    }
-
-    private void doExportExperiment(Experiment e)
-    {
         final String LBL_EXPERIMENT = this.getString( R.string.lblExperiment );
-        final Ofm DB = Ofm.get();
+        final Ofm DB = this.mapping;
+        final FileManager FMAN = this.mapping.getFileManager();
+        File TEMP_ZIP = null;
 
+        // Create the temp ZIP file
         try {
-            DB.exportExperimentToDownloads( e );
-            this.showStatus(LOG_TAG,
+            final Experiment EXPR = (Experiment) this.mapping.retrieve( e.getId(), e.getTypeId() );
+            TEMP_ZIP = DB.createZipForExperiment( EXPR );
+            FMAN.export( this, TEMP_ZIP, "application/zip" );
+            this.showStatus( LOG_TAG,
                     this.getString( R.string.msgExported )
                             + ": " + LBL_EXPERIMENT
                             + ": '" + e.getName() + '\'' );
-        } catch(IOException exc)
-        {
-            this.showStatus(LOG_TAG,
+        } catch(IOException exc) {
+            this.showStatus( LOG_TAG,
                     this.getString( R.string.errExport)
                             + ": " + LBL_EXPERIMENT
                             + ": '" + e.getName() + '\'' );
@@ -313,20 +284,22 @@ public class ExperimentsActivity extends AppActivity {
     public static Experiment selectedExperiment;
     private ArrayList<Experiment> experimentEntries;
     private ListViewExperimentArrayAdapter experimentsListAdapter;
+    private Ofm mapping;
+
     private final ActivityResultLauncher<Intent> LAUNCH_ADD =
         this.registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if ( result.getResultCode() == RSC_SAVE_DATA ) {
                         try {
-                            Ofm.get().store( selectedExperiment );
+                            this.mapping.store( selectedExperiment );
                             this.experimentEntries.add( selectedExperiment );
                             this.updateExperimentsList();
                         } catch(IOException exc) {
                             this.showStatus( LOG_TAG, this.getString( R.string.errIO ) );
                         }
                     } else {
-                        Ofm.get().purgeOrphanMediaFor( selectedExperiment );
+                        this.mapping.getFileManager().purgeOrphanMediaFor( selectedExperiment );
                     }
         });
 
@@ -337,14 +310,14 @@ public class ExperimentsActivity extends AppActivity {
                         if ( result.getResultCode() == RSC_SAVE_DATA ) {
                             try {
                                 // Edit a given experiment
-                                Ofm.get().store( selectedExperiment );
                                 this.substituteExperiment( selectedExperiment );
+                                this.mapping.store( selectedExperiment );
                                 this.updateExperimentsList();
                             } catch(IOException exc) {
                                 this.showStatus( LOG_TAG, this.getString( R.string.errIO ) );
                             }
                         } else {
-                            Ofm.get().purgeOrphanMediaFor( selectedExperiment );
+                            this.mapping.getFileManager().purgeOrphanMediaFor( selectedExperiment );
                         }
                     });
 
@@ -357,7 +330,7 @@ public class ExperimentsActivity extends AppActivity {
                             selectedExperiment.setName(
                                     selectedExperiment.getName()
                                             + "_" + this.experimentEntries.size() );
-                            Ofm.get().store( selectedExperiment );
+                            this.mapping.store( selectedExperiment );
                             this.experimentEntries.add( selectedExperiment );
                         } catch(IOException exc) {
                             this.showStatus( LOG_TAG, this.getString( R.string.errIO ) );

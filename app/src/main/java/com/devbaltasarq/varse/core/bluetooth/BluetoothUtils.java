@@ -3,10 +3,10 @@ package com.devbaltasarq.varse.core.bluetooth;
 import static android.content.Context.BIND_AUTO_CREATE;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -22,6 +22,7 @@ import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -41,7 +42,7 @@ public class BluetoothUtils {
 
     public static String[] fixBluetoothNeededPermissions(Context cntxt)
     {
-        final ArrayList<String> BUILT_PERMISSIONS =
+        final List<String> BUILT_PERMISSIONS =
                 new ArrayList<>( Arrays.asList( BT_PERMISSION_LIST ) );
 
         if ( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S )
@@ -50,7 +51,7 @@ public class BluetoothUtils {
             BUILT_PERMISSIONS.add( Manifest.permission.BLUETOOTH_CONNECT );
         }
 
-        final ArrayList<String> TORET = new ArrayList<>();
+        final List<String> TORET = new ArrayList<>();
 
         // Check all permissions
         for(String permissionId: BUILT_PERMISSIONS) {
@@ -81,6 +82,7 @@ public class BluetoothUtils {
     }
 
     /** @return the HR characteristic from a GATT connection to a device. */
+    @SuppressLint("MissingPermission")
     public static BluetoothGattCharacteristic getHeartRateChar(BluetoothGatt gatt)
     {
         BluetoothGattCharacteristic toret = null;

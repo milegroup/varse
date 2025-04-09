@@ -13,7 +13,7 @@ import java.util.Locale;
 
 
 public class ResultAnalyzer {
-    private static final String LogTag = ResultAnalyzer.class.getSimpleName();
+    private static final String LOG_TAG = ResultAnalyzer.class.getSimpleName();
 
     public ResultAnalyzer(final Result RESULT, final int MAX_TAGS)
     {
@@ -31,7 +31,7 @@ public class ResultAnalyzer {
         // Loads data into dataRRnf and episodes (unfiltered RR in milliseconds)
         this.loadData();
 
-        if ( this.dataRRnf.size() > 0 ) {
+        if ( !this.dataRRnf.isEmpty() ) {
             // Generates dataHRnf (unfiltered sequence of BPS values)
             ArrayList<Float> dataHRnf = new ArrayList<>( dataRRnf.size() );
             for (int i = 0; i < dataRRnf.size(); i++) {
@@ -51,17 +51,17 @@ public class ResultAnalyzer {
             dataRR = new ArrayList<>(dataRRnf);
             FilterData();
 
-            Log.i( LogTag,"Filtered sequence: " + dataBeatTimes.size() +" values");
-            Log.i( LogTag,"Last beat position: " + dataBeatTimes.get( dataBeatTimes.size() - 1 ) + " seconds");
+            Log.i(LOG_TAG,"Filtered sequence: " + dataBeatTimes.size() +" values");
+            Log.i(LOG_TAG,"Last beat position: " + dataBeatTimes.get( dataBeatTimes.size() - 1 ) + " seconds");
 
             // Creates a series of HR values linearly interpolated
             dataHRInterpX = new ArrayList<>( dataRRnf.size() );
             dataHRInterp = new ArrayList<>( dataRRnf.size() );
             Interpolate();
 
-            Log.i(LogTag,"length of xinterp: "+ dataHRInterpX.size());
-            Log.i(LogTag,"First value: "+ dataHRInterpX.get(0));
-            Log.i(LogTag,"Last value: "+ dataHRInterpX.get(dataHRInterpX.size()-1));
+            Log.i(LOG_TAG,"length of xinterp: "+ dataHRInterpX.size());
+            Log.i(LOG_TAG,"First value: "+ dataHRInterpX.get(0));
+            Log.i(LOG_TAG,"Last value: "+ dataHRInterpX.get(dataHRInterpX.size()-1));
 
             // Calculate stress level
             this.valueRMS = this.calculateRMSSD( this.dataRR );
@@ -75,7 +75,7 @@ public class ResultAnalyzer {
 
     private void loadData()
     {
-        final Result.Event[] EVENTS = this.result.buildEventsList();
+        final List<Result.Event> EVENTS = this.result.buildEventsList();
         Result.ActivityChangeEvent lastTagEvent = null;
 
         // Init data holders
@@ -83,9 +83,9 @@ public class ResultAnalyzer {
 
         // Store all data
         for(Result.Event evt: EVENTS) {
-            if ( evt instanceof Result.BeatEvent) {
+            if ( evt instanceof final Result.BeatEvent EVT) {
                 // Store a new beat
-                this.dataRRnf.add( (float) ( (Result.BeatEvent) evt ).getTimeOfNewHeartBeat() );
+                this.dataRRnf.add( (float) ( EVT.getTimeOfNewHeartBeat() ));
             } else {
                 // Store the tags info
                 final Result.ActivityChangeEvent TAG_EVENT = (Result.ActivityChangeEvent) evt;
@@ -104,7 +104,7 @@ public class ResultAnalyzer {
             }
         }
 
-        Log.i( LogTag,"Size of vector: " + this.dataRRnf.size() );
+        Log.i(LOG_TAG,"Size of vector: " + this.dataRRnf.size() );
     }
 
     private List<Float> getSegmentRR(int tagIndex)
@@ -114,7 +114,7 @@ public class ResultAnalyzer {
         final int APPROX_LENGTH = (int) ( EPISODE_END - EPISODE_INIT ) * 2;
         final List<Float> TORET = new ArrayList<>( APPROX_LENGTH );
 
-        Log.i( LogTag,"Getting segment corresponding to tag: " + episodesType.get( tagIndex ) );
+        Log.i(LOG_TAG,"Getting segment corresponding to tag: " + episodesType.get( tagIndex ) );
 
         for (int indexRR = 0; indexRR < dataRR.size(); indexRR++) {
             final boolean IS_OVER_LOWER_LIMIT = dataBeatTimes.get(indexRR) >= EPISODE_INIT;
@@ -131,7 +131,7 @@ public class ResultAnalyzer {
             TORET.add( dataRR.get( indexRR ) );
         }
 
-        Log.i( LogTag,"Num of values: "+ TORET.size() );
+        Log.i(LOG_TAG,"Num of values: "+ TORET.size() );
 
         return TORET;
     }
@@ -144,7 +144,7 @@ public class ResultAnalyzer {
         final float U_LAST = 13.0f;
         final float U_MEAN = 1.5f * U_LAST;
 
-        Log.i(LogTag,"I'm going to filter the signal");
+        Log.i(LOG_TAG,"I'm going to filter the signal");
 
         int index = 1;
 
@@ -178,7 +178,7 @@ public class ResultAnalyzer {
             {
                 index += 1;
             } else {
-                Log.i( LogTag,"Removing beat index: " + index );
+                Log.i(LOG_TAG,"Removing beat index: " + index );
 
                 index += 1;
                 ++this.filteredData;
@@ -214,15 +214,15 @@ public class ResultAnalyzer {
                 newValue += step;
             }
 
-            for (int xInterpIndex = 0; xInterpIndex< dataHRInterpX.size(); xInterpIndex++ )
+            for (int xInterpIndex = 0; xInterpIndex< dataHRInterpX.size() - 1; xInterpIndex++ )
             {
                 if (dataHRInterpX.get(xInterpIndex) >= rightBeatPos) {
                     leftHRIndex++;
                     rightHRIndex++;
-                    leftBeatPos = dataBeatTimes.get(leftHRIndex);
-                    rightBeatPos = dataBeatTimes.get(rightHRIndex);
-                    leftHRVal = dataHR.get(leftHRIndex);
-                    rightHRVal = dataHR.get(rightHRIndex);
+                    leftBeatPos = dataBeatTimes.get( leftHRIndex );
+                    rightBeatPos = dataBeatTimes.get( rightHRIndex );
+                    leftHRVal = dataHR.get( leftHRIndex );
+                    rightHRVal = dataHR.get( rightHRIndex );
                 }
 
                 // Estimate HR value in position
@@ -253,11 +253,14 @@ public class ResultAnalyzer {
         return segment;
     }
 
-    private double[] padSegmentHRInterp(List<Float> hrSegment, int newLength) {
-        double[] segmentPadded = new double[newLength];
+    private double[] padSegmentHRInterp(List<Float> hrSegment, int newLength)
+    {
+        double[] segmentPadded = new double[ newLength ];
+
         for (int index = 0 ; index < hrSegment.size() ; index++) {
-            segmentPadded[index] =  (double) (hrSegment.get(index));
+            segmentPadded[ index ] =  (double) ( hrSegment.get( index ) );
         }
+
         return segmentPadded;
     }
 
@@ -350,7 +353,7 @@ public class ResultAnalyzer {
 
         for (int tagIndex = 0; tagIndex < numOfTags; tagIndex++) {
             float length = episodesEnds.get(tagIndex) - episodesInits.get(tagIndex);
-            List<Float> tagSegment = getSegmentRR(tagIndex);
+            List<Float> tagSegment = getSegmentRR( tagIndex );
 
             TEXT.append( "<br/><h3> Tag: " );
             TEXT.append( episodesType.get(tagIndex) );
@@ -374,7 +377,7 @@ public class ResultAnalyzer {
             TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateRMSSD(tagSegment)) );
             TEXT.append( " ms</p>" );
             TEXT.append( "<p>&nbsp;&nbsp;<b>normHRV</b>: " );
-            TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateNormHRV(tagSegment)) );
+            TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateNormHRV( tagSegment )) );
             TEXT.append( "</p>" );
 
             TEXT.append( "<p>&nbsp;&nbsp;<b>MadRR</b>: " );
@@ -385,7 +388,8 @@ public class ResultAnalyzer {
             TEXT.append( String.format( Locale.getDefault(), "%.2f", calculateApEn( tagSegment, 2, 0.2f ) ) );
             TEXT.append( "ms.</p>" );
 
-            List<Float> tagPowerbands = calculateSpectrum(episodesInits.get(tagIndex), episodesEnds.get(tagIndex));
+            List<Float> tagPowerbands = calculateSpectrum( episodesInits.get( tagIndex ),
+                                                            episodesEnds.get(tagIndex));
             TEXT.append( "<p>&nbsp;&nbsp;<b>Total spectral power</b>: " );
             TEXT.append( String.format( Locale.getDefault(), "%.2f", tagPowerbands.get(0)) );
             TEXT.append( " ms&sup2;</p>" );
@@ -418,55 +422,82 @@ public class ResultAnalyzer {
         return TEXT.toString();
     }
 
-    private float calculateMean(List<Float> signal) {
-        float sum = 0.0f;
-        for (int i=0 ; i < signal.size() ; i++) {
-            sum += signal.get(i);
+    private float calculateMean(final List<Float> SIGNAL) {
+        float toret = 0f;
+
+        if ( !SIGNAL.isEmpty() ) {
+            for(float signalPart: SIGNAL) {
+                toret += signalPart;
+            }
         }
-        return sum/signal.size();
+
+        return toret / SIGNAL.size();
     }
 
-    private float calculateSTD(List<Float> signal) {
-        float std = 0.0f;
-        for (int i=1 ; i < signal.size() ; i++) {
-            std += Math.pow(signal.get(i)-calculateMean(signal),2);
+    private float calculateSTD(final List<Float> SIGNAL)
+    {
+        final int SIGNAL_LEN = SIGNAL.size();
+        float toret = 0f;
+
+        if ( SIGNAL_LEN > 0 ) {
+            final double SIGNAL_MEAN = this.calculateMean( SIGNAL );
+            double std = 0f;
+
+            for(float signalPart: SIGNAL) {
+                std += Math.pow( signalPart - SIGNAL_MEAN, 2 );
+            }
+
+            toret = (float) Math.sqrt( std / ( SIGNAL.size() - 1 ) );
         }
-        std /= (signal.size()-1);
-        std = (float) Math.sqrt(std);
-        return std;
+
+        return toret;
     }
 
     private float calculateRMSSD(List<Float> signal) {
-        float rrdifs2 = 0.0f;
-        for (int i=1 ; i < signal.size() ; i++) {
-            rrdifs2 += Math.pow((signal.get(i) - signal.get(i-1)),2);
+        double rrdifs2 = 0.0f;
+
+        for (int i = 1 ; i < signal.size() ; i++) {
+            rrdifs2 += Math.pow( ( signal.get(i) - signal.get( i - 1 ) ), 2 );
         }
-        return (float) Math.sqrt(rrdifs2/(signal.size()-1));
+
+        return (float) Math.sqrt( rrdifs2 / ( signal.size() - 1 ) );
     }
 
-    private float calculateNormHRV(List<Float> signal) {
-        float lnrMSSD = (float) Math.log(calculateRMSSD(signal));
-        return lnrMSSD*100.0f/6.5f;
+    private float calculateNormHRV(List<Float> signal)
+    {
+        float lnrMSSD = (float) Math.log( this.calculateRMSSD( signal ) );
+        return lnrMSSD * 100.0f / 6.5f;
     }
 
-    private float calculatePNN50(List<Float> signal) {
+    private float calculatePNN50(final List<Float> SIGNAL)
+    {
+        final int SIGNAL_LEN = SIGNAL.size();
         int numIntervals = 0;
         int numBigIntervals = 0;
-        for (int i=1 ; i < signal.size() ; i++) {
-            numIntervals++;
-            if (Math.abs(signal.get(i)-signal.get(i-1)) > 50.0) {
-                numBigIntervals++;
+        float toret = 0f;
+
+        if ( SIGNAL_LEN > 0 ) {
+            for (int i=1 ; i < SIGNAL_LEN; i++) {
+                numIntervals++;
+
+                if (Math.abs(SIGNAL.get(i)-SIGNAL.get(i-1)) > 50.0) {
+                    numBigIntervals++;
+                }
             }
+
+            toret = 100f * ( (float) numBigIntervals / numIntervals );
         }
-        return 100.0f * ((float)numBigIntervals/(float)numIntervals);
+
+        return toret;
     }
 
-    private List<Float> calculateSpectrum(Float begSegment, Float endSegment) {
-        Log.i(LogTag + ".Spec","Calculating spectrum");
-        Log.i(LogTag + ".Spec","Minimum time: " + begSegment + " seconds");
-        Log.i(LogTag + ".Spec","Maximum time: " + endSegment + " seconds");
+    private List<Float> calculateSpectrum(Float begSegment, Float endSegment)
+    {
+        Log.i(LOG_TAG + ".Spec","Calculating spectrum");
+        Log.i(LOG_TAG + ".Spec","Minimum time: " + begSegment + " seconds");
+        Log.i(LOG_TAG + ".Spec","Maximum time: " + endSegment + " seconds");
         float analysisWindowLength = ( endSegment-begSegment ) / 3.0f;
-        Log.i(LogTag + ".Spec","Analysis window length: "+ analysisWindowLength +" seconds");
+        Log.i(LOG_TAG + ".Spec","Analysis window length: "+ analysisWindowLength +" seconds");
 
         // Five windows, length 1/3 of signal, overlap 50%
         float[] beg = new float[5];
@@ -481,7 +512,7 @@ public class ResultAnalyzer {
         }
 
         for (int index=0; index < 5; index++) {
-            Log.i(LogTag + ".Spec","Window number "+ (index+1) +": ("+ beg[index] + "," + end[index] +") seconds");
+            Log.i(LOG_TAG + ".Spec","Window number "+ (index+1) +": ("+ beg[index] + "," + end[index] +") seconds");
         }
 
         int maxSegmentLength = 0;
@@ -496,19 +527,19 @@ public class ResultAnalyzer {
                                            (int) Math.ceil( Math.log( maxSegmentLength )
                                                    / Math.log( 2.0 ) ) );
 
-        Log.i(LogTag + ".Spec","Max segment length: "+maxSegmentLength);
-        Log.i(LogTag + ".Spec","Padded length: "+paddedLength);
+        Log.i(LOG_TAG + ".Spec","Max segment length: " + maxSegmentLength);
+        Log.i(LOG_TAG + ".Spec","Padded length: " + paddedLength);
 
         List<Float> SpectrumAvg = new ArrayList<>();
         int SpectrumLength = paddedLength/2;
 
 
         for (int windowIndex=0 ; windowIndex<5 ; windowIndex++) {
-            List<Float> RRSegment = getSegmentHRInterp(beg[windowIndex],end[windowIndex]);
-            for  (int index=0 ; index < RRSegment.size() ; index++) {
-                RRSegment.set(index,1000.0f/(RRSegment.get(index)/60.f));
-            }
-            Log.i(LogTag + ".Spec", "Segment "+(windowIndex+1)+" - number of samples: "+RRSegment.size());
+            List<Float> RRSegment = this.getSegmentHRInterp( beg[ windowIndex ], end[ windowIndex ] );
+
+            RRSegment.replaceAll(segPart -> 1000.0f / ( segPart / 60.f ) );
+
+            Log.i(LOG_TAG + ".Spec", "Segment "+(windowIndex+1)+" - number of samples: "+RRSegment.size());
             double avg = 0.0;
             for  (int index=0 ; index < RRSegment.size() ; index++) {
                 avg += RRSegment.get(index);
@@ -523,28 +554,16 @@ public class ResultAnalyzer {
                 RRSegment.set(index, (float) (RRSegment.get(index)*hamWindow[index]));
             }
 
-            // writeFile("timeSignal.txt", RRSegment);
-
             double[] RRSegmentPaddedX = padSegmentHRInterp(RRSegment, paddedLength);
-            //Log.i(LogTag + ".Spec", "Length of padded array: "+RRSegmentPaddedX.length);
-
-            /*
-            List<Double> RRSPtmp = new ArrayList<>();
-            for (double rrPaddedX: RRSegmentPaddedX) {
-                RRSPtmp.add( rrPaddedX );
-            }
-            writeFile("timeSignalPadded.txt", RRSPtmp);
-            */
             double[] RRSegmentPaddedY = new double[RRSegmentPaddedX.length];
 
             fft(RRSegmentPaddedX,RRSegmentPaddedY, RRSegmentPaddedX.length);
-            //Log.i(LogTag + ".Spec","Length of fft: "+RRSegmentPaddedX.length);
 
             List<Float> Spectrum = new ArrayList<>();
             for (int index=0 ; index<SpectrumLength ; index++) { // Only positive half of the spectrum
                 Spectrum.add((float) (Math.pow(RRSegmentPaddedX[index],2)+Math.pow(RRSegmentPaddedY[index],2)));
             }
-            Log.i(LogTag + ".Spec","Length of spectrum: "+Spectrum.size());
+            Log.i(LOG_TAG + ".Spec","Length of spectrum: "+Spectrum.size());
 
             if (windowIndex==0) {
                 for (int index=0 ; index<SpectrumLength ; index++) {
@@ -570,11 +589,11 @@ public class ResultAnalyzer {
 
         // writeFile("Spectrum.txt", SpectrumAvg);
 
-        Log.i(LogTag + ".Spec","Length of spectrum axis: "+SpectrumAxis.size());
+        Log.i(LOG_TAG + ".Spec","Length of spectrum axis: "+SpectrumAxis.size());
 
-        if ( SpectrumAxis.size() > 0 ) {
-            Log.i(LogTag + ".Spec","First sample of spectrum axis: "+SpectrumAxis.get(0));
-            Log.i(LogTag + ".Spec","Last sample of spectrum axis: "+SpectrumAxis.get(SpectrumLength-1));
+        if ( !SpectrumAxis.isEmpty() ) {
+            Log.i(LOG_TAG + ".Spec","First sample of spectrum axis: "+SpectrumAxis.get(0));
+            Log.i(LOG_TAG + ".Spec","Last sample of spectrum axis: "+SpectrumAxis.get(SpectrumLength-1));
         }
 
         List<Float> results = new ArrayList<>();
@@ -583,7 +602,7 @@ public class ResultAnalyzer {
 
         results.add(totalPower);
 
-        Log.i(LogTag + ".Spec", "Total power: "+totalPower);
+        Log.i(LOG_TAG + ".Spec", "Total power: "+totalPower);
 
 
 
@@ -595,7 +614,7 @@ public class ResultAnalyzer {
             LFPower = -1.0f;
         }
         results.add(LFPower);
-        Log.i(LogTag + ".Spec", "LF power: "+LFPower);
+        Log.i(LOG_TAG + ".Spec", "LF power: "+LFPower);
 
         float HFPower;
         if ((endSegment-begSegment) > 13.33) {
@@ -604,8 +623,8 @@ public class ResultAnalyzer {
             HFPower = -1.0f;
         }
         results.add(HFPower);
-        Log.i(LogTag + ".Spec", "HF power: "+HFPower);
-        Log.i(LogTag + ".Spec", "LF/HF ratio: "+LFPower/HFPower);
+        Log.i(LOG_TAG + ".Spec", "HF power: "+HFPower);
+        Log.i(LOG_TAG + ".Spec", "LF/HF ratio: "+LFPower/HFPower);
         results.add(LFPower/HFPower);
 
         return results;
@@ -621,6 +640,7 @@ public class ResultAnalyzer {
 
         double[] cos = new double[n/2];
         double[] sin = new double[n/2];
+
         for(int index=0; index<n/2; index++) {
             cos[index] = Math.cos(-2*Math.PI*index/n);
             sin[index] = Math.sin(-2*Math.PI*index/n);
@@ -672,115 +692,167 @@ public class ResultAnalyzer {
         }
     }
 
-    private double[] makeHammingWindow(int windowLength) {
-        // Make a Hamming window:
-        // w(n) = a0 - (1-a0)*cos( 2*PI*n/(N-1) )
-        // a0 = 25/46
-        double a0 = 25.0/46.0;
-        double[] window = new double[windowLength];
-        for(int i = 0; i < windowLength; i++)
-            window[i] = a0 - (1-a0) * Math.cos(2*Math.PI*i/(windowLength-1));
+    /** Make a Hamming window:
+      * w(n) = a0 - (1-a0)*cos( 2*PI*n/(N-1) )
+      * a0 = 25/46
+      * @param windowLength the size of the window
+      * @return the hamming window, as a vector of double.
+      */
+    private double[] makeHammingWindow(int windowLength)
+    {
+        double[] window = new double[ windowLength ];
+        double a0 = 25.0 / 46.0;
+
+        for(int i = 0; i < windowLength; i++) {
+            window[ i ] = a0 - ( 1 - a0 ) * Math.cos( 2 * Math.PI * i / ( windowLength - 1 ) );
+        }
+
         return window;
     }
 
-    private float powerInBand(List<Float> spectrum, List<Float> spectrumAxis, float begFreq, float endFreq) {
-        float pp = 0.0f;
-        for (int index=0 ; index < spectrum.size() ; index++) {
-            if ( (spectrumAxis.get(index)>=begFreq) && (spectrumAxis.get(index)<=endFreq) ) {
-                pp = pp + spectrum.get(index);
+    private float powerInBand(
+            final List<Float> SPECTRUM,
+            final List<Float> SPECTRUM_AXIS,
+            float begFreq, float endFreq)
+    {
+        final int SPECTRUM_LENGTH = SPECTRUM.size();
+        float toret = 0f;
+
+        if ( SPECTRUM_LENGTH > 0 ) {
+            for (int index = 0 ; index < SPECTRUM_LENGTH; index++) {
+                final float SPECCY_AXIS = SPECTRUM_AXIS.get( index );
+
+                if ( ( SPECCY_AXIS >= begFreq )
+                  && ( SPECCY_AXIS <= endFreq ) )
+                {
+                    toret += SPECTRUM.get( index );
+                }
             }
+
+            toret = toret * hammingFactor;
+            toret = (float) ( toret / ( 2f * Math.pow( SPECTRUM.size(), 2f ) ) );
         }
-        pp = pp * hammingFactor;
-        pp = pp / (float)(2.0f*Math.pow(spectrum.size(),2.0f));
-        return pp;
+
+        return toret;
     }
 
     /** @return the MADDRR (median) value. */
-    private float calculateMADRR(List<Float> signal)
+    private float calculateMADRR(final List<Float> SIGNAL)
     {
-        List<Float> difsRR = new ArrayList<>();
-        float result;
+        final int SIGNAL_LEN = SIGNAL.size();
+        float toret = 0;
 
-        for (int i=1 ; i < signal.size() ; i++) {
-            difsRR.add(Math.abs(signal.get(i) - signal.get(i-1)));
+        if ( SIGNAL_LEN > 0 ) {
+            final List<Float> DIFS_RR = new ArrayList<>( SIGNAL_LEN / 2 );
+
+            for (int i = 1; i < SIGNAL_LEN; i++) {
+                DIFS_RR.add( Math.abs( SIGNAL.get( i ) - SIGNAL.get( i - 1 ) ));
+            }
+
+            Collections.sort( DIFS_RR );
+
+            final int LEN_DIFFS_SIGNAL = DIFS_RR.size();
+            int n = LEN_DIFFS_SIGNAL / 2;
+
+            if ( LEN_DIFFS_SIGNAL % 2 == 0 ) {
+                toret = ( DIFS_RR.get( n ) + DIFS_RR.get( n - 1 ) ) / 2;
+            } else {
+                toret = DIFS_RR.get( n );
+            }
+        } else {
+            Log.d( LOG_TAG, "MADRR == 0 since #signal == 0" );
         }
-        Collections.sort(difsRR);
-        int n = difsRR.size() / 2;
 
-        if (difsRR.size() % 2 == 0)
-            result = ( difsRR.get(n) + difsRR.get(n-1) )/2;
-        else
-            result = difsRR.get(n);
-
-        return result;
+        return toret;
     }
 
     /** @return the entropy. */
     private float calculateApEn(final List<Float> signal, int m, float r)
     {
         r *= _calculateSD(signal);
-        return Math.abs( _phi(signal, m + 1, r)  - _phi( signal, m, r ) );
+        return Math.abs( _phi( signal, m + 1, r )  - _phi( signal, m, r ) );
     }
 
-    private float _calculateSD(final List<Float> signal)
+    private float _calculateSD(final List<Float> SIGNAL)
     {
-        float sum = 0.0f, standardDeviation = 0.0f;
-        int length = signal.size();
+        final int LEN = SIGNAL.size();
+        float toret = 0.0f;
 
-        for(int index=0 ; index < length ; index++) {
-            sum += signal.get(index);
+        if ( LEN > 0 ) {
+            // Calculate mean
+            double sum = 0.0f;
+
+            for(float SIGNAL_PART: SIGNAL) {
+                sum += SIGNAL_PART;
+            }
+
+            final double MEAN = sum / LEN;
+
+            // Calculate std deviation
+            double standardDeviation = 0.0f;
+
+            for(final float SIGNAL_PART: SIGNAL) {
+                standardDeviation += Math.pow( SIGNAL_PART - MEAN, 2 );
+            }
+
+            toret = (float) Math.sqrt( standardDeviation / LEN );
         }
 
-        float mean = sum/length;
-
-        for(int index=0 ; index < length ; index++) {
-            standardDeviation += Math.pow(signal.get(index) - mean, 2);
-        }
-
-        return (float) Math.sqrt(standardDeviation/length);
+        return toret;
     }
 
     private float _phi(final List<Float> U, int m, float r)
     {
-        int N = U.size();
-        ArrayList<ArrayList<Float>> x = new ArrayList<>();
-        for (int i=0; i < N-m+1 ; i++) {
-            ArrayList<Float> x_row = new ArrayList<>();
-            for (int j=i; j<i+m ; j++) {
-                x_row.add(U.get(j));
-            }
-            x.add(x_row);
-        }
+        final List<List<Float>> X = new ArrayList<>( U.size() / m );
+        final int U_SIZE = U.size();
+        float toret = 0f;
 
-        ArrayList<Float> C = new ArrayList<>();
-        for (int i=0 ; i<x.size() ; i++)
-        {
-            float C_tmp = .0f;
-            for (int j=0 ; j<x.size() ; j++)
-            {
-                if (_maxdist(x.get(i),x.get(j)) <= r)
-                {
-                    C_tmp += 1.0f;
+        if ( U_SIZE > 0 ) {
+            for (int i = 0; i < U_SIZE - m + 1 ; ++i) {
+                final List<Float> X_ROW = new ArrayList<>( m );
+
+                for (int j = i; j < i + m ; ++j) {
+                    X_ROW.add( U.get( j ) );
                 }
+
+                X.add( X_ROW );
             }
-            C.add(C_tmp / (N-m+1.0f));
+
+            final List<Float> C = new ArrayList<>( X.size() );
+
+            for (final List<Float> X_I: X) {
+                float C_tmp = .0f;
+
+                for (final List<Float> X_J: X) {
+                    if ( _maxdist( X_I, X_J ) <= r ) {
+                        C_tmp += 1.0f;
+                    }
+                }
+
+                C.add( C_tmp / ( U_SIZE - m + 1.0f ) );
+            }
+
+            double result = .0f;
+
+            for (float DIST: C) {
+                result += Math.log( DIST );
+            }
+
+            toret = (float) ( result / ( U_SIZE - m + 1.0f ) );
         }
 
-        float result = .0f;
-        for (int index=0 ; index<C.size() ; index++) {
-            result += Math.log(C.get(index));
-        }
-        result /= (N - m + 1.0f);
-        return result;
+        return toret;
     }
 
-    private float _maxdist(final List<Float> x_i , final List<Float> x_j)
+    private float _maxdist(final List<Float> X_I , final List<Float> X_J)
     {
-        ArrayList<Float> diffs = new ArrayList<>();
-        for (int index = 0; index < x_i.size(); index++) {
-            diffs.add(Math.abs(x_i.get(index)-x_j.get(index)));
+        final ArrayList<Float> DIFFS = new ArrayList<>( X_I.size() );
+
+        for (int index = 0; index < X_I.size(); index++) {
+            DIFFS.add( Math.abs( X_I.get( index ) - X_J.get( index ) ) );
         }
-        return Collections.max(diffs);
+
+        return Collections.max( DIFFS );
     }
 
     public int getRRnfCount()

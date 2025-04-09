@@ -45,13 +45,12 @@ import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
 import com.devbaltasarq.varse.core.bluetooth.DemoBluetoothDevice;
-import com.devbaltasarq.varse.core.ofmcache.PartialObject;
+import com.devbaltasarq.varse.core.ofm.EntityId;
 import com.devbaltasarq.varse.ui.AppActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -95,12 +94,6 @@ public class PerformExperimentActivity extends AppActivity {
             LBL_DEVICE_ADDR.setText( deviceAddress );
             return view;
         }
-    }
-
-    /** @return the context of this activity. */
-    public Context getContext()
-    {
-        return this;
     }
 
     @Override
@@ -167,7 +160,7 @@ public class PerformExperimentActivity extends AppActivity {
         this.configBtLaunched = false;
         this.btDefinitelyNotAvailable = false;
         this.deviceSearch = false;
-        this.experimentsList = new PartialObject[ 0 ];
+        this.experimentsList = new ArrayList<>( 0 );
         this.createList();
     }
 
@@ -513,7 +506,7 @@ public class PerformExperimentActivity extends AppActivity {
 
         final Executor EXE = Runnable::run;
 
-        DEV_MANAGER.associate(PAIRING_REQ, EXE, new CompanionDeviceManager.Callback() {
+        DEV_MANAGER.associate( PAIRING_REQ, EXE, new CompanionDeviceManager.Callback() {
             // Called when a device is found. Launch the IntentSender so the user can
             // select the device they want to pair with.
             @Override
@@ -522,12 +515,16 @@ public class PerformExperimentActivity extends AppActivity {
                 final PerformExperimentActivity SELF = PerformExperimentActivity.this;
 
                 try {
-                    SELF.startIntentSenderForResult( chooserLauncher, RCQ_SELECT_DEVICE,
-                                            null, 0, 0, 0 );
+                    SELF.startIntentSenderForResult(
+                            chooserLauncher,
+                            RCQ_SELECT_DEVICE,
+                            null, 0, 0, 0
+                    );
                 } catch (IntentSender.SendIntentException e) {
-                    Log.e( LOG_TAG, "onAssociationPending: failed to send intent" );
+                    Log.e( LOG_TAG, "ERROR trying to select device: " + e );
                 }
             }
+
             @Override
             public void onFailure(CharSequence errorMessage)
             {
@@ -551,10 +548,13 @@ public class PerformExperimentActivity extends AppActivity {
                 final PerformExperimentActivity SELF = PerformExperimentActivity.this;
 
                 try {
-                    SELF.startIntentSenderForResult( chooserLauncher, RCQ_SELECT_DEVICE,
-                                            null, 0, 0, 0 );
+                    SELF.startIntentSenderForResult(
+                            chooserLauncher,
+                            RCQ_SELECT_DEVICE,
+                            null, 0, 0, 0
+                    );
                 } catch (IntentSender.SendIntentException e) {
-                    Log.e( LOG_TAG, "onAssociationPending: failed to send intent" );
+                    Log.e( LOG_TAG, "ERROR trying to select device: " + e );
                 }
             }
             @Override
@@ -664,9 +664,9 @@ public class PerformExperimentActivity extends AppActivity {
             final Ofm DB = Ofm.get();
 
             // Read experiment's names
-            this.experimentsList = DB.enumerateExperiments();
-            final ArrayList<String> EXPR_NAMES = new ArrayList<>(
-                    Arrays.asList( DB.enumerateObjNames( this.experimentsList ) ) );
+            this.experimentsList = DB.getFileManager().enumerateExperiments();
+            final List<String> EXPR_NAMES = new ArrayList<>(
+                                    DB.getFileManager().enumerateObjNames( this.experimentsList ) );
 
             // Spinner experiments
             final Spinner CB_EXPERIMENTS = this.findViewById( R.id.cbExperiments );
@@ -697,7 +697,7 @@ public class PerformExperimentActivity extends AppActivity {
     private int lookForExperimentSpinnerByName(final String NAME)
     {
         final Ofm DB = Ofm.get();
-        final String[] EXPR_NAMES = DB.enumerateObjNames( this.experimentsList );
+        final List<String> EXPR_NAMES = DB.getFileManager().enumerateObjNames( this.experimentsList );
         int toret = -1;
 
         int i = 0;
@@ -709,7 +709,7 @@ public class PerformExperimentActivity extends AppActivity {
             ++i;
         }
 
-        if ( i < EXPR_NAMES.length ) {
+        if ( i < EXPR_NAMES.size() ) {
             toret = i;
         }
 
@@ -731,12 +731,12 @@ public class PerformExperimentActivity extends AppActivity {
         chosenExperiment = null;
 
         if ( pos >= 0
-          && pos < this.experimentsList.length )
+          && pos < this.experimentsList.size() )
         {
             final Ofm DB = Ofm.get();
             Experiment expr = null;
 
-            final PartialObject PARTIAL_EXPERIMENT = this.experimentsList[ pos ];
+            final EntityId PARTIAL_EXPERIMENT = this.experimentsList.get( pos );
 
             try {
                 expr = (Experiment) DB.retrieve(
@@ -745,7 +745,7 @@ public class PerformExperimentActivity extends AppActivity {
             } catch(IOException exc)
             {
                 Log.e( LOG_TAG, exc.getMessage()
-                                + "\n\tretrieving experiment: " + PARTIAL_EXPERIMENT.toString() );
+                                + "\n\tretrieving experiment: " + PARTIAL_EXPERIMENT );
             }
 
             // Assign the chosen experiment
@@ -755,7 +755,7 @@ public class PerformExperimentActivity extends AppActivity {
             }
         }
         else
-        if ( pos == experimentsList.length ) {
+        if ( pos == experimentsList.size() ) {
             Log.d( LOG_TAG, "will be a new experiment with pos: " + pos );
         } else {
             Log.e( LOG_TAG, "experiment set with invalid pos: " + pos );
@@ -771,7 +771,7 @@ public class PerformExperimentActivity extends AppActivity {
           && !record.trim().isEmpty() )
         {
             PerformExperimentActivity.rec = record.trim();
-            Log.d(LOG_TAG, "Chosen user: " + record );
+            Log.d( LOG_TAG, "Chosen record: " + record );
         }
 
         return;
@@ -904,7 +904,7 @@ public class PerformExperimentActivity extends AppActivity {
     private boolean configBtLaunched;
     private boolean deviceSearch;
     private boolean btDefinitelyNotAvailable;
-    private PartialObject[] experimentsList;
+    private List<EntityId> experimentsList;
 
     private final ActivityResultLauncher<String[]> LAUNCH_PERMISSIONS_REQ =
             registerForActivityResult( new ActivityResultContracts.RequestMultiplePermissions(), mapGrants -> {

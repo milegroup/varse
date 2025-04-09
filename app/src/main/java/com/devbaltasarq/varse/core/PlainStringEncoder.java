@@ -1,18 +1,21 @@
+// Varse (c) 2019/20 - 25 Baltasar MIT License <jbgarcia@uvigo.es>
+
+
 package com.devbaltasarq.varse.core;
 
-/** This class is needed since Android 5.0 does not support lambdas.
-  * Converts tags so fits our needs: no spaces, lowercase,
-  * only numbers, letters, and hyphens ('-' and '_').
+
+/** Converts tags so fits our needs: no spaces, lowercase,
+  * only numbers, letters, and underscores ('_').
   */
 public class PlainStringEncoder {
     private PlainStringEncoder()
     {
     }
 
-    /** Appropiately encodes a tag name.
+    /** Appropriately encodes a tag name.
       * - No spaces.
       * - Lowercase.
-      * - Hyphens allowed ('_' and '-').
+      * - No hyphens, since this is used in the datastore's file names.
       * @param initialTag the initial contents for the tag.
       * @return the final version of the tag.
       * @throws Error if the tag is empty or does only contain spaces.
@@ -20,22 +23,17 @@ public class PlainStringEncoder {
     public String encode(String initialTag)
     {
         final String BASIC_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789_";
-        final StringBuilder TORET = new StringBuilder();
+        final StringBuilder TORET = new StringBuilder( initialTag.length() );
 
         if ( initialTag.trim().isEmpty() ) {
-            throw new Error( "empty tag" );
+            throw new Error( "empty tag??" );
         }
 
-        initialTag = initialTag.trim().toLowerCase();
-
-        for(char ch: initialTag.toCharArray()) {
+        for(char ch: initialTag.trim().toLowerCase().toCharArray()) {
             if ( BASIC_ALPHABET.indexOf( ch ) >= 0 ) {
                 TORET.append( ch );
             }
-            else
-            if ( ch == ' '
-              || ch == '-' )
-            {
+            else {
                 TORET.append( '_' );
             }
         }

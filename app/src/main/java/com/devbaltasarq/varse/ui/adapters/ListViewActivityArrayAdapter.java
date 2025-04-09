@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
-import android.os.Build;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
@@ -57,7 +56,7 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
         if ( ENTRY_ACTIVITY == null ) {
             final String ERROR_MSG = "the activity target of this entry is null!!!";
 
-            Log.e(LOG_TAG, ERROR_MSG );
+            Log.e( LOG_TAG, ERROR_MSG );
             throw new InternalError( ERROR_MSG );
         }
 
@@ -94,8 +93,9 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
 
                 if ( MEDIA_GROUP.getFormat() == MediaGroup.Format.Picture ) {
                     BMP_WHOLE = BitmapFactory.decodeFile(
-                                    new File( DB.buildMediaDirectoryFor( EXPR ), FILE_NAME )
-                                                .getAbsolutePath() );
+                                    new File( DB.getFileManager().
+                                                buildMediaDirectoryFor( EXPR ), FILE_NAME ).
+                                                getAbsolutePath() );
                 } else {
                     BMP_WHOLE = thumbnail;
                 }
@@ -150,7 +150,8 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
       */
     private static Bitmap getImageThumbnail(Ofm db, Experiment expr, File f)
     {
-        final File MEDIA_FILE = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
+        final File MEDIA_FILE = new File( db.getFileManager().
+                                            buildMediaDirectoryFor( expr ), f.getName() );
 
         return ThumbnailUtils.extractThumbnail(
                                         BitmapFactory.decodeFile( MEDIA_FILE.getAbsolutePath() ),
@@ -165,16 +166,15 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
      */
     private static Bitmap getVideoThumbnail(Ofm db, Experiment expr, File f)
     {
-        final File MEDIA_FILE = new File( db.buildMediaDirectoryFor( expr ), f.getName() );
+        final File MEDIA_FILE = new File( db.getFileManager().
+                                                buildMediaDirectoryFor( expr ), f.getName() );
         Bitmap toret = null;
 
         try {
-            if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
-                toret = ThumbnailUtils.createVideoThumbnail(
-                                        MEDIA_FILE,
-                                        Size.parseSize( "256x256" ),
-                                        null );
-            }
+            toret = ThumbnailUtils.createVideoThumbnail(
+                                    MEDIA_FILE,
+                                    Size.parseSize( "256x256" ),
+                                    null );
         } catch(IOException exc) {
             Log.e( LOG_TAG, "creating thumbail for: " + f.getName() );
         }
@@ -190,10 +190,8 @@ public class ListViewActivityArrayAdapter extends ArrayAdapter<Group.Activity> {
     {
         String toret = activity.toString();
 
-        if ( activity instanceof MediaGroup.MediaActivity ) {
-            MediaGroup.MediaActivity mact = (MediaGroup.MediaActivity) activity;
-
-            toret = mact.getFile().getName();
+        if ( activity instanceof final MediaGroup.MediaActivity MACT) {
+            toret = MACT.getFile().getName();
         } else {
             Log.e(LOG_TAG, "not a media activity, no associated file" );
         }

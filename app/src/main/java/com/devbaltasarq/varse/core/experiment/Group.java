@@ -56,6 +56,12 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
             return tag;
         }
 
+        @Override
+        public String getName()
+        {
+            return this.getTag().toString();
+        }
+
         /** Change the tag for this activity.
           * @param tag The tag, as a Tag object.
           * @see Tag
@@ -93,6 +99,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
 
             try {
                 jsonReader.beginObject();
+                jsonReader.setLenient( true );
                 while ( ( id == null
                        || typeId == null )
                      && jsonReader.hasNext() )
@@ -105,6 +112,8 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                     else
                     if ( NEXT_NAME.equals( Ofm.FIELD_TYPE_ID ) ) {
                         typeId = readTypeIdFromJson( jsonReader );
+                    } else {
+                        jsonReader.skipValue();
                     }
                 }
 
@@ -116,16 +125,11 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
                 }
 
                 // Read the remaining data
-                switch ( typeId ) {
-                    case ManualActivity:
-                        toret = ManualGroup.ManualActivity.fromJSON( id, jsonReader );
-                        break;
-                    case MediaActivity:
-                        toret = MediaGroup.MediaActivity.fromJSON( id, jsonReader );
-                        break;
-                    default:
-                        throw new JSONException( "Activity.fromJSON: unrecognized type id" );
-                }
+                toret = switch (typeId) {
+                    case ManualActivity -> ManualGroup.ManualActivity.fromJSON( id, jsonReader );
+                    case MediaActivity -> MediaGroup.MediaActivity.fromJSON( id, jsonReader );
+                    default -> throw new JSONException( "Activity.fromJSON: unrecognized type id" );
+                };
 
                 jsonReader.endObject();
             } catch(IOException exc)
@@ -166,6 +170,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
 
         this.random = rnd;
         this.activities = new ArrayList<>( acts );
+        this.activities.forEach( act -> act.group = this );
         this.experiment = expr;
     }
 
@@ -179,6 +184,12 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         }
 
         return;
+    }
+
+    @Override
+    public String getName()
+    {
+        return LOG_TAG;
     }
 
     /** @return the time needed for each activity. */
@@ -300,14 +311,14 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     @Override
     public int hashCode()
     {
-        int toret = 19 * Boolean.valueOf( this.isRandom() ).hashCode();
+        int toret = 11 * Boolean.valueOf( this.isRandom() ).hashCode();
 
         int actsHashCode = 0;
         for(int i = 0; i < this.activities.size(); ++i) {
             actsHashCode += this.activities.get( i ).hashCode();
         }
 
-        return toret + ( 29 * actsHashCode );
+        return toret + ( 13 * actsHashCode );
     }
 
     @Override
@@ -315,8 +326,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
     {
         boolean toret = false;
 
-        if ( o instanceof Group<?> ) {
-            final Group<? extends Activity> OTHER_GROUP = (Group<?>) o;
+        if ( o instanceof final Group<?> OTHER_GROUP) {
             final List<? extends Activity> OTHER_ACTIVITIES = OTHER_GROUP.get();
             final int THIS_ACTIVITIES_SIZE = this.getNumActivities();
             final int OTHER_ACTIVITIES_SIZE = OTHER_GROUP.getNumActivities();
@@ -405,7 +415,7 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
 
     public static Group<? extends Activity> fromJSON(JsonReader jsonReader) throws JSONException
     {
-        final ArrayList<Activity> ACTS = new ArrayList<>();
+        final List<Activity> ACTS = new ArrayList<>();
         final Group<? extends Activity> TORET;
         TypeId typeId = null;
         Tag tag = null;
@@ -416,35 +426,24 @@ public abstract class Group<T extends Group.Activity> extends Persistent {
         // Load data
         try {
             jsonReader.beginObject();
+            jsonReader.setLenient( true );
             while ( jsonReader.hasNext() ) {
                 final String NEXT_NAME = jsonReader.nextName();
 
-                if ( NEXT_NAME.equals( Ofm.FIELD_RANDOM ) ) {
-                    rnd = jsonReader.nextBoolean();
-                }
-                else
-                if ( NEXT_NAME.equals( Ofm.FIELD_TYPE_ID ) ) {
-                    typeId = readTypeIdFromJson( jsonReader );
-                }
-                else
-                if ( NEXT_NAME.equals( Ofm.FIELD_TAG ) ) {
-                    tag = new Tag( jsonReader.nextString() );
-                }
-                else
-                if ( NEXT_NAME.equals( Ofm.FIELD_TIME ) ) {
-                    duration = new Duration( jsonReader.nextInt() );
-                }
-                else
-                if ( NEXT_NAME.equals( Id.FIELD) ) {
-                    id = readIdFromJSON( jsonReader );
-                }
-                else
-                if ( NEXT_NAME.equals( Ofm.FIELD_ACTIVITIES ) ) {
-                    jsonReader.beginArray();
-                    while ( jsonReader.hasNext() ) {
-                        ACTS.add( Activity.fromJSON( jsonReader ) );
+                switch ( NEXT_NAME ) {
+                    case Ofm.FIELD_RANDOM -> rnd = jsonReader.nextBoolean();
+                    case Ofm.FIELD_TYPE_ID -> typeId = readTypeIdFromJson( jsonReader );
+                    case Ofm.FIELD_TAG -> tag = new Tag( jsonReader.nextString() );
+                    case Ofm.FIELD_TIME -> duration = new Duration( jsonReader.nextInt() );
+                    case Id.FIELD -> id = readIdFromJSON( jsonReader );
+                    case Ofm.FIELD_ACTIVITIES -> {
+                        jsonReader.beginArray();
+                        while ( jsonReader.hasNext() ) {
+                            ACTS.add( Activity.fromJSON( jsonReader ) );
+                        }
+                        jsonReader.endArray();
                     }
-                    jsonReader.endArray();
+                    default -> jsonReader.skipValue();
                 }
             }
 

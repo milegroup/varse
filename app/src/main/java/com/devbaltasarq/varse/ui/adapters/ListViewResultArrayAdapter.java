@@ -40,7 +40,6 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
 
         final ImageButton BT_EXPORT_RESULT = rowView.findViewById( R.id.btExportResult );
         final ImageButton BT_DELETE_RESULT = rowView.findViewById( R.id.btDeleteResult );
-        final ImageButton BT_UPLOAD_RESULT = rowView.findViewById( R.id.btUploadResult );
         final ImageButton BT_SHOW_RESULTS = rowView.findViewById( R.id.btShowResult );
         final TextView LBL_EXPERIMENT_DESC = rowView.findViewById( R.id.lblResultDesc );
 
@@ -48,7 +47,6 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
 
         BT_DELETE_RESULT.setOnClickListener( (v) -> CONTEXT.deleteResult( RES ) );
         BT_EXPORT_RESULT.setOnClickListener( (v) -> CONTEXT.exportResult( RES ) );
-        BT_UPLOAD_RESULT.setOnClickListener( (v) -> CONTEXT.uploadResult( RES ) );
         BT_SHOW_RESULTS.setOnClickListener( (v) -> CONTEXT.showResults( RES ) );
 
         return rowView;
@@ -61,15 +59,14 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
 
         LOCAL_DATE.setTimeInMillis( result.getTime() );
         return String.format( Locale.getDefault(),
-                        "%04d-%02d-%02d %02d:%02d:%02d "
-                        + " " + context.getString( R.string.lblRecord )
-                        + ": " + result.getRec(),
+                        "%04d-%02d-%02d %02d:%02d:%02d %s",
                         LOCAL_DATE.get( Calendar.YEAR ),
                         LOCAL_DATE.get( Calendar.MONTH ) + 1,
                         LOCAL_DATE.get( Calendar.DAY_OF_MONTH ),
                         LOCAL_DATE.get( Calendar.HOUR_OF_DAY ),
                         LOCAL_DATE.get( Calendar.MINUTE ),
-                        LOCAL_DATE.get( Calendar.SECOND )
+                        LOCAL_DATE.get( Calendar.SECOND ),
+                        result.getRec()
         );
     }
 }

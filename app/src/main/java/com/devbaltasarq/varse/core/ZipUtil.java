@@ -1,4 +1,8 @@
+// Varse (c) 2019/20 - 25 Baltasar MIT License <jbgarcia@uvigo.es>
+
+
 package com.devbaltasarq.varse.core;
+
 
 import android.util.Log;
 
@@ -13,12 +17,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+
 /** Zip management utils. */
 public final class ZipUtil {
     private static final String LOG_TAG_ZIP = ZipUtil.class.getSimpleName() + ".zip";
-    private static final String LOG_TAG_UNZIP = ZipUtil.class.getSimpleName() + "ZipUtil.unzip";
+    private static final String LOG_TAG_UNZIP = ZipUtil.class.getSimpleName() + ".unzip";
     private static final int MAX_BUFFER = 40960;
     private static final byte[] BUFFER = new byte[ MAX_BUFFER ];
+    public static final String FILE_EXT = ".zip";
 
     /** Zips a set of files in a zip archive.
       *

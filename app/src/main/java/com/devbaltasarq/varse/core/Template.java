@@ -9,11 +9,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
+
 import androidx.core.content.ContextCompat;
 
 import com.devbaltasarq.varse.core.experiment.ManualGroup;
@@ -26,6 +29,7 @@ import com.devbaltasarq.varse.core.templates.RuffierTemplate;
 
 
 public abstract class Template {
+    private final static String LOG_TAG = Template.class.getSimpleName();
     public enum Templates {
         Quick,
         Default,
@@ -34,25 +38,18 @@ public abstract class Template {
 
         public Template create(Context cntxt, Ofm db, TemplateStrings tags)
         {
-            Template toret;
             final String TEMPLATE_NAME = this.toString().toLowerCase();
+            Template toret;
 
-            switch ( this ) {
-                case Quick:
-                    toret = new QuickTemplate( cntxt, db, TEMPLATE_NAME, tags );
-                    break;
-                case Default:
-                    toret = new DefaultTemplate( cntxt, db, TEMPLATE_NAME, tags );
-                    break;
-                case Affective:
-                    toret = new AffectiveTemplate( cntxt, db, TEMPLATE_NAME, tags );
-                    break;
-                case Ruffier:
-                    toret = new RuffierTemplate( cntxt, db, TEMPLATE_NAME, tags );
-                    break;
-                default:
-                    throw new Error( "Template.createTemplate(): No class found corresponding to enum" );
-            }
+            toret = switch ( this ) {
+                case Quick -> new QuickTemplate( cntxt, db, TEMPLATE_NAME, tags );
+                case Default -> new DefaultTemplate( cntxt, db, TEMPLATE_NAME, tags );
+                case Affective -> new AffectiveTemplate( cntxt, db, TEMPLATE_NAME, tags );
+                case Ruffier -> new RuffierTemplate( cntxt, db, TEMPLATE_NAME, tags );
+                default ->
+                        throw new Error(
+                                "Template.createTemplate(): No class found corresponding to enum" );
+            };
 
             return toret;
         }
@@ -133,7 +130,7 @@ public abstract class Template {
 
     public abstract Experiment create() throws IOException;
 
-    /** Gets a file available in the assets and stores as part of the experiment.
+    /** Gets a file available in the assets and stores it as part of the experiment.
       * @param imageId the id identifying the file resource in the assets.
       * @param fileName the desired basic name for the file in the store.
       * @return a file in the app's store.
@@ -142,14 +139,26 @@ public abstract class Template {
     protected File storeFileFromAssets(int imageId, String fileName) throws IOException
     {
         final Drawable IMG = ContextCompat.getDrawable( this.getContext(), imageId );
-        final Bitmap BITMAP = ( (BitmapDrawable) IMG ).getBitmap();
-        final ByteArrayOutputStream BIT_OUT_STREAM = new ByteArrayOutputStream();
-        final String FILE_NAME = Ofm.buildMediaFileNameForDbFromMediaFileName( fileName );
 
-        BITMAP.compress( Bitmap.CompressFormat.JPEG, 100, BIT_OUT_STREAM );
-        final ByteArrayInputStream BIT_IN_STREAM = new ByteArrayInputStream( BIT_OUT_STREAM.toByteArray() );
+        if ( IMG != null ) {
+            final Bitmap BITMAP = ( (BitmapDrawable) IMG ).getBitmap();
 
-        return this.getDb().storeMedia( this.getExperiment(), FILE_NAME, BIT_IN_STREAM );
+            try (final ByteArrayOutputStream BIT_OUT_STREAM = new ByteArrayOutputStream()) {
+                final String FILE_NAME = this.getDb().getFileManager().
+                                                buildMediaFileNameForDbFromMediaFileName( fileName );
+
+                BITMAP.compress( Bitmap.CompressFormat.JPEG, 100, BIT_OUT_STREAM );
+                final ByteArrayInputStream BIT_IN_STREAM = new ByteArrayInputStream( BIT_OUT_STREAM.toByteArray() );
+
+                return this.getDb().storeMedia( this.getExperiment(), FILE_NAME, BIT_IN_STREAM );
+            }
+        } else {
+            final String MSG = String.format( Locale.getDefault(),
+                                        "cannot find image: %d/%s", imageId, fileName );
+
+            Log.e( LOG_TAG, MSG );
+            throw new IOException( MSG );
+        }
     }
 
     /** Just a convenience method.

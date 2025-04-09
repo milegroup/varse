@@ -1,4 +1,8 @@
+// Varse (c) 2019/20 - 25 Baltasar MIT License <jbgarcia@uvigo.es>
+
+
 package com.devbaltasarq.varse.core;
+
 
 import androidx.annotation.NonNull;
 import android.util.JsonReader;
@@ -16,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,9 +41,9 @@ public class Experiment extends Persistent {
     {
         super( id );
 
-        this.name = name;
         this.groups = new ArrayList<>();
         this.random = rnd;
+        this.name = name;
     }
 
     @Override
@@ -69,8 +72,7 @@ public class Experiment extends Persistent {
     {
         boolean toret = false;
 
-        if ( o instanceof Experiment ) {
-            final Experiment EXPR = (Experiment) o;
+        if ( o instanceof final Experiment EXPR) {
             final List<Group<? extends Group.Activity>> EXPR_GROUPS = EXPR.getGroups();
 
             toret = this.getName().equals( EXPR.getName() )
@@ -103,6 +105,12 @@ public class Experiment extends Persistent {
         return;
     }
 
+    @Override
+    public String getName()
+    {
+        return this.name;
+    }
+
     /** @return the total number of activities in this experiment. */
     public int getNumActivities()
     {
@@ -128,18 +136,11 @@ public class Experiment extends Persistent {
     }
 
     /** Replaces the media groups of the experiments with new ones. */
-    public void replaceGroups(List<Group<? extends Group.Activity>> files)
+    public void replaceGroups(final List<Group<? extends Group.Activity>> GRPS)
     {
-        for(Group<? extends Group.Activity> grp: this.groups) {
-            this.removeGroup( grp );
-        }
-
         this.groups.clear();
-        this.groups.addAll( files );
-
-        for(Group<? extends Group.Activity> grp: this.groups) {
-            grp.setExperiment( this );
-        }
+        this.groups.addAll( GRPS );
+        this.groups.forEach( grp -> grp.setExperiment( this ) );
     }
 
     /** Removes a given group from the media group list. */
@@ -179,25 +180,6 @@ public class Experiment extends Persistent {
         return;
     }
 
-    /** @return A MediaGroup instance, given its tag, null if not found. */
-    public MediaGroup locateMediaGroup(Tag tag)
-    {
-        MediaGroup toret = null;
-
-        for(Group<? extends Group.Activity> g: this.groups) {
-            if ( g instanceof MediaGroup ) {
-                MediaGroup mg = (MediaGroup) g;
-
-                if ( mg.getTag().equals( tag ) ) {
-                    toret = mg;
-                    break;
-                }
-            }
-        }
-
-        return toret;
-    }
-
     /** Locates a media activity, given the file name of its media.
       * @param fileName the file name of the media to look for.
       * @return the media activity object corresponding to that media file.
@@ -209,9 +191,7 @@ public class Experiment extends Persistent {
 
         SEARCH:
         for(Group<? extends Group.Activity> g: this.groups) {
-            if ( g instanceof MediaGroup ) {
-                final MediaGroup MG = (MediaGroup) g;
-
+            if ( g instanceof final MediaGroup MG) {
                 for( MediaGroup.MediaActivity act: MG.get() ) {
                     if ( act.getFile().getName().equals( fileName ) ) {
                         toret = act;
@@ -227,8 +207,8 @@ public class Experiment extends Persistent {
     /** Adds a new group to the groups list. */
     public void addGroup(Group<? extends Group.Activity> group)
     {
-        this.groups.add( group );
         group.setExperiment( this );
+        this.groups.add( group );
     }
 
     /** Substitute a given group.
@@ -236,19 +216,9 @@ public class Experiment extends Persistent {
      */
     public void substituteGroup(Group<? extends Group.Activity> group)
     {
-        for(int i = 0; i < this.groups.size(); ++i) {
-            if ( this.groups.get( i ).getId().equals( group.getId() ) ) {
-                this.groups.set( i, group );
-            }
-        }
-
         group.setExperiment( this );
-    }
-
-    /** @return The name of the experiment. */
-    public String getName()
-    {
-        return name;
+        this.removeGroup( group );
+        this.addGroup( group );
     }
 
     /** @return Whether the groups in the experiment are played at random. */
@@ -294,15 +264,15 @@ public class Experiment extends Persistent {
     }
 
     @Override
-    public File[] enumerateMediaFiles()
+    public List<File> enumerateMediaFiles()
     {
-        ArrayList<File> toret = new ArrayList<>();
+        final List<File> TORET = new ArrayList<>();
 
         for(Group<? extends Group.Activity> grp: this.getGroups()) {
-            toret.addAll( Arrays.asList( grp.enumerateMediaFiles() ) );
+            TORET.addAll( grp.enumerateMediaFiles() );
         }
 
-        return toret.toArray( new File[ 0 ] );
+        return TORET;
     }
 
     @Override
@@ -331,46 +301,38 @@ public class Experiment extends Persistent {
         String name = null;
         Id id = null;
         boolean rnd = false;
-        JsonReader jsonReader = new JsonReader( rd );
-        ArrayList<Group<? extends Group.Activity>> groups = new ArrayList<>();
+        final JsonReader JSON_READER = new JsonReader( rd );
+        final List<Group<? extends Group.Activity>> GROUPS = new ArrayList<>();
 
         // Load data
         try {
-            jsonReader.beginObject();
-            while ( jsonReader.hasNext() ) {
-                final String TOKEN = jsonReader.nextName();
+            JSON_READER.setLenient( true );
+            JSON_READER.beginObject();
+            while ( JSON_READER.hasNext() ) {
+                final String TOKEN = JSON_READER.nextName();
 
-                if ( TOKEN.equals( Ofm.FIELD_NAME ) ) {
-                    name = jsonReader.nextString();
-                }
-                else
-                if ( TOKEN.equals( Ofm.FIELD_TYPE_ID ) ) {
-                    try {
-                        typeId = TypeId.parse( jsonReader.nextString() );
-                    } catch (IllegalArgumentException exc)
-                    {
-                        throw new JSONException( "Experiment.fromJSON():" + exc.getMessage() );
+                switch ( TOKEN ) {
+                    case Ofm.FIELD_NAME -> name = JSON_READER.nextString();
+                    case Ofm.FIELD_TYPE_ID -> {
+                        try {
+                            typeId = TypeId.parse( JSON_READER.nextString() );
+                        } catch (IllegalArgumentException exc) {
+                            throw new JSONException("Experiment.fromJSON():" + exc.getMessage());
+                        }
                     }
-                }
-                else
-                if ( TOKEN.equals( Id.FIELD) ) {
-                    id = readIdFromJSON( jsonReader );
-                }
-                else
-                if ( TOKEN.equals( Ofm.FIELD_RANDOM ) ) {
-                    rnd = jsonReader.nextBoolean();
-                }
-                else
-                if ( TOKEN.equals( Ofm.FIELD_GROUPS ) ) {
-                    jsonReader.beginArray();
-                    while( jsonReader.hasNext() ) {
-                        groups.add( Group.fromJSON( jsonReader ) );
+                    case Id.FIELD -> id = readIdFromJSON(JSON_READER);
+                    case Ofm.FIELD_RANDOM -> rnd = JSON_READER.nextBoolean();
+                    case Ofm.FIELD_GROUPS -> {
+                        JSON_READER.beginArray();
+                        while ( JSON_READER.hasNext() ) {
+                            GROUPS.add( Group.fromJSON( JSON_READER ) );
+                        }
+                        JSON_READER.endArray();
                     }
-                    jsonReader.endArray();
+                    default -> JSON_READER.skipValue();
                 }
             }
-        } catch(IOException exc)
-        {
+        } catch(IOException exc) {
             Log.e( LogTag, "Creating experiment from JSON: " + exc.getMessage() );
         }
 
@@ -386,7 +348,7 @@ public class Experiment extends Persistent {
         }
 
         final Experiment TORET = new Experiment( id, name, rnd );
-        TORET.replaceGroups( groups );
+        TORET.replaceGroups( GROUPS );
         return TORET;
     }
 
@@ -426,7 +388,7 @@ public class Experiment extends Persistent {
         return TORET;
     }
 
-    private final ArrayList<Group<? extends Group.Activity>> groups;
+    private final List<Group<? extends Group.Activity>> groups;
     private boolean random;
     private String name;
 }

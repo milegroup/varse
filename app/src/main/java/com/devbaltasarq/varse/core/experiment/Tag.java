@@ -1,9 +1,14 @@
+// Varse (c) 2019/20 - 25 Baltasar MIT License <jbgarcia@uvigo.es>
+
+
 package com.devbaltasarq.varse.core.experiment;
 
-import com.devbaltasarq.varse.core.PlainStringEncoder;
-import com.devbaltasarq.varse.core.ofmcache.FileCache;
 
-/** Represents a Tag.
+import com.devbaltasarq.varse.core.PlainStringEncoder;
+import com.devbaltasarq.varse.core.ofm.FileManager;
+
+
+/** Represents a tag, used as the name of the recording.
   * Depends on FileNameAdapter, in order to adapt tags.
   * @see PlainStringEncoder
   */
@@ -29,15 +34,8 @@ public class Tag {
 
     public boolean equals(Object o)
     {
-        boolean toret = false;
-
-        if ( o instanceof Tag ) {
-            Tag other = (Tag) o;
-
-            toret = this.tag.equals( other.tag );
-        }
-
-        return toret;
+        return  ( o instanceof final Tag OTHER )
+                && this.tag.equals( OTHER.tag );
     }
 
     /** Changes the contents for this Tag.
@@ -49,13 +47,13 @@ public class Tag {
     }
 
     /** @return a string formatted as a tag needs to accomplish with standards.
-      * Note that the '_' must not be allowed, it is used as a separator
+      * Note that the '-' must not be allowed, it is used as a separator
       * for file parts identifying different id's.
-      * @see PlainStringEncoder , which converts the tag appropriately. */
+      * @see PlainStringEncoder, which converts the tag appropriately. */
     public String encode(String tag)
     {
         return plainStringEncoder.encode( tag ).replace(
-                                        FileCache.FILE_NAME_PART_SEPARATOR,
+                                        FileManager.FILE_NAME_PART_SEPARATOR,
                                         "_" );
     }
 

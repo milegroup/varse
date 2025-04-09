@@ -57,9 +57,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
         {
             boolean toret = false;
 
-            if ( o instanceof ManualActivity ) {
-                final ManualActivity MACT_OBJ = (ManualActivity) o;
-
+            if ( o instanceof ManualActivity MACT_OBJ) {
                 toret = this.getTime().equals( MACT_OBJ.getTime() )
                      && this.getTag().equals( MACT_OBJ.getTag() );
             }
@@ -220,7 +218,7 @@ public class ManualGroup extends Group<ManualGroup.ManualActivity> {
       */
     public static List<ManualActivity> ManualActListFromActList(List<Activity> acts)
     {
-        final ArrayList<ManualActivity> TORET = new ArrayList<>( acts.size() );
+        final List<ManualActivity> TORET = new ArrayList<>( acts.size() );
 
         for(Activity act: acts) {
             TORET.add( (ManualActivity) act );

@@ -12,7 +12,6 @@ import com.devbaltasarq.varse.core.experiment.MediaGroup;
 import com.devbaltasarq.varse.core.experiment.PictureGroup;
 import com.devbaltasarq.varse.core.experiment.Tag;
 import com.devbaltasarq.varse.core.experiment.VideoGroup;
-import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
 
 import android.util.JsonReader;
 import android.util.JsonWriter;
@@ -29,7 +28,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 
 /** Tests the JSON conversion mechanisms. */
@@ -37,7 +36,7 @@ public class TestJsonConversionTests {
     @BeforeClass
     public static void init()
     {
-        final ArrayList<Group<? extends Group.Activity>> GRPS = new ArrayList<>( 3 );
+        final List<Group<? extends Group.Activity>> GRPS = new ArrayList<>( 3 );
         Ofm.init( ApplicationProvider.getApplicationContext(),
                     PlainStringEncoder.get() );
 
@@ -249,7 +248,7 @@ public class TestJsonConversionTests {
                 + "\"" + Ofm.FIELD_NAME + "\":\"$29876\","
                 + "\"" + Ofm.FIELD_DATE + "\":$29872,"
                 + "\"" + Ofm.FIELD_TIME + "\":$29877,"
-                + "\"" + EntitiesCache.FIELD_EXPERIMENT_ID + "\":$29874,"
+                + "\"" + Ofm.FIELD_EXPERIMENT_ID + "\":$29874,"
                 + "\"" + Ofm.FIELD_REC + "\":\"$29875\","
                 + "\"" + Ofm.FIELD_EVENTS + "\":[$29873]}";
 
@@ -305,7 +304,7 @@ public class TestJsonConversionTests {
                 + "\"" + Ofm.FIELD_NAME + "\":\"$29876\","
                 + "\"" + Ofm.FIELD_DATE + "\":$29872,"
                 + "\"" + Ofm.FIELD_TIME + "\":$29877,"
-                + "\"" + EntitiesCache.FIELD_EXPERIMENT_ID + "\":$29874,"
+                + "\"" + Ofm.FIELD_EXPERIMENT_ID + "\":$29874,"
                 + "\"" + Ofm.FIELD_REC + "\":\"$29875\","
                 + "\"" + Ofm.FIELD_EVENTS + "\":[$29873]}";
 

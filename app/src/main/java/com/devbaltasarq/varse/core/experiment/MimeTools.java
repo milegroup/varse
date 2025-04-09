@@ -2,6 +2,7 @@ package com.devbaltasarq.varse.core.experiment;
 
 
 import com.devbaltasarq.varse.core.Ofm;
+import com.devbaltasarq.varse.core.ofm.FileManager;
 
 import java.io.File;
 import java.util.HashMap;
@@ -94,7 +95,7 @@ public final class MimeTools {
     {
         init();
 
-        final String FILE_EXT = Ofm.extractFileExt( f ).trim().toLowerCase();
+        final String FILE_EXT = FileManager.extractFileExt( f ).trim().toLowerCase();
         final String TORET = mimeForExtension.get( FILE_EXT );
 
         if ( TORET == null ) {

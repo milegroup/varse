@@ -430,7 +430,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         long time = this.getElapsedExperimentMillis();
         int[] rrs = intent.getIntArrayExtra( BleService.RR_TAG );
 
-        LBL_INSTANT_BPM.setText( HR + this.getString( R.string.lblBpm ) );
+        LBL_INSTANT_BPM.setText( String.format( "%s %s", HR, this.getString( R.string.lblBpm ) ) );
 
         // Log, if needed
         if ( 0 != ( this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE ) )
@@ -569,7 +569,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
       */
     private boolean calculateNextIndexes()
     {
-        final ArrayList<Group<? extends Group.Activity>> GROUPS = this.groupsToPlay;
+        final List<Group<? extends Group.Activity>> GROUPS = this.groupsToPlay;
         boolean toret = false;
 
         if ( this.groupIndex < GROUPS.size() ) {
@@ -641,7 +641,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
       */
     private void buildActivitiesToPlay()
     {
-        final ArrayList<Group.Activity> ACTIVITIES = new ArrayList<>( this.experiment.getNumActivities() );
+        final List<Group.Activity> ACTIVITIES = new ArrayList<>( this.experiment.getNumActivities() );
         final List<Group<? extends Group.Activity>> GROUPS_IN_EXPERIMENT = this.experiment.getGroups();
         final int NUM_GROUPS = GROUPS_IN_EXPERIMENT.size();
         final int[] SEQUENCE_OF_GROUPS = createSequence( NUM_GROUPS, this.experiment.isRandom() );
@@ -688,7 +688,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void loadImage(File imgFile)
     {
-        final File DIR_EXPERIMENT = this.ofm.buildMediaDirectoryFor( this.experiment );
+        final File DIR_EXPERIMENT = this.ofm.getFileManager().buildMediaDirectoryFor( this.experiment );
         final File MEDIA_FILE = new File( DIR_EXPERIMENT, imgFile.getPath() );
 
         if ( MEDIA_FILE.exists() ) {
@@ -704,7 +704,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
 
     private void loadVideo(File videoFile)
     {
-        final File EXPERIMENT_DIR = this.ofm.buildMediaDirectoryFor( this.experiment );
+        final File EXPERIMENT_DIR = this.ofm.getFileManager().buildMediaDirectoryFor( this.experiment );
         final File MEDIA_FILE = new File( EXPERIMENT_DIR, videoFile.getPath() );
 
         if ( MEDIA_FILE.exists() ) {
@@ -749,9 +749,7 @@ public class ExperimentDirector extends AppActivity implements HRListenerActivit
         final Group.Activity ACT = this.groupsToPlay.get( i ).get().get( j );
         final Group<? extends Group.Activity> GRP = ACT.getGroup();
 
-        if ( ACT instanceof MediaGroup.MediaActivity ) {
-            final MediaGroup.MediaActivity MEDIA_ACT = (MediaGroup.MediaActivity) ACT;
-
+        if ( ACT instanceof MediaGroup.MediaActivity MEDIA_ACT) {
             final MediaGroup MEDIA_GRP = (MediaGroup) GRP;
 
             if ( MEDIA_GRP.getFormat() == MediaGroup.Format.Picture  ) {

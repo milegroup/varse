@@ -64,8 +64,8 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         FB_ADD_MEDIA.setOnClickListener( (v) -> this.openMedia() );
 
         // Show the appropriate image
-        int resId = R.drawable.ic_picture;
         final ImageView IV_GRP_FMT = this.findViewById( R.id.ivMediaGroupFormat );
+        int resId = -11;
 
         if ( group instanceof VideoGroup) {
             resId = R.drawable.ic_video;
@@ -152,9 +152,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         ED_TAG.setText( MEDIA_GRP.getTag().toString() );
         CB_RANDOM.setChecked( MEDIA_GRP.isRandom() );
 
-        if ( group instanceof PictureGroup ) {
-            final PictureGroup PICTURE_GRP = (PictureGroup) group;
-
+        if ( group instanceof final PictureGroup PICTURE_GRP) {
             fillInDurationInUI( PICTURE_GRP.getTimeForEachActivity(), CB_TIME_UNIT, ED_TIME );
         }
 
@@ -167,9 +165,7 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         final EditText ED_DURATION = this.findViewById( R.id.edDuration );
         final Spinner CB_TIME_UNIT = this.findViewById( R.id.cbTimeUnit );
 
-        if ( group instanceof PictureGroup ) {
-            final PictureGroup PICTURE_GRP = (PictureGroup) group;
-
+        if ( group instanceof final PictureGroup PICTURE_GRP) {
             fillInDurationInObj( PICTURE_GRP.getTimeForEachActivity(), CB_TIME_UNIT, ED_DURATION );
         }
 
@@ -214,9 +210,10 @@ public class EditMediaGroupActivity extends EditGroupActivity {
                 if ( IN != null ) {
                     final Experiment EXPERIMENT = mediaGroup.getExperimentOwner();
 
-                    mediaFileName = Ofm.buildMediaFileNameForDbFromMediaFileName( mediaFileName );
+                    mediaFileName = db.getFileManager().buildMediaFileNameForDbFromMediaFileName(
+                                                                                        mediaFileName );
 
-                    if ( !db.existsMedia( EXPERIMENT, mediaFileName ) ) {
+                    if ( !db.getFileManager().existsMedia( EXPERIMENT, mediaFileName ) ) {
                         final File F = db.storeMedia( EXPERIMENT, mediaFileName, IN );
                         mediaGroup.add( new MediaGroup.MediaActivity( Id.create(), F ) );
                     } else {
@@ -272,9 +269,9 @@ public class EditMediaGroupActivity extends EditGroupActivity {
         final String FILE_NAME = MEDIA_ACTIVITY.getFile().getName();
         final Experiment OWNER = group.getExperimentOwner();
 
-        if ( DB.existsMedia( OWNER, FILE_NAME ) ) {
+        if ( DB.getFileManager().existsMedia( OWNER, FILE_NAME ) ) {
             try {
-                DB.deleteMedia( OWNER, FILE_NAME );
+                DB.getFileManager().deleteMedia( OWNER, FILE_NAME );
             } catch(IOException exc) {
                 this.showStatus( LOG_TAG, exc.getMessage() );
             }

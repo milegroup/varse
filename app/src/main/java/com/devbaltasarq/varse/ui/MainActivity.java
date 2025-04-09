@@ -15,6 +15,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
+
+import com.devbaltasarq.varse.core.ofm.FileManager;
 import com.google.android.material.navigation.NavigationView;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -32,11 +34,7 @@ import com.devbaltasarq.varse.core.AppInfo;
 import com.devbaltasarq.varse.core.PlainStringEncoder;
 import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
-import com.devbaltasarq.varse.core.Settings;
-import com.devbaltasarq.varse.core.ofmcache.EntitiesCache;
 import com.devbaltasarq.varse.ui.performexperiment.PerformExperimentActivity;
-
-import org.json.JSONException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -103,33 +101,21 @@ public class MainActivity extends AppActivity
     }
 
     @Override
-    public void onStart()
-    {
-        super.onStart();
-
-        // Initialize the database
-        Ofm.init( this.getApplicationContext(), PlainStringEncoder.get() );
-
-        // Initialize settings
-        try {
-            Settings.open();
-        } catch(JSONException exc)
-        {
-            Log.i( LOG_TAG,
-                    this.getString( R.string.errInitializingSettings)
-                        + exc.getMessage() );
-            Settings.create();
-            Log.i( LOG_TAG, this.getString( R.string.msgResettingSettings ) );
-        }
-    }
-
-    @Override
     public void onResume()
     {
         super.onResume();
 
         // Initialize the database
-        Ofm.get().removeCache();
+        Ofm.init( this.getApplicationContext(), PlainStringEncoder.get() );
+        this.dataStore = Ofm.get();
+        this.dataStore.getFileManager().removeTempData();
+    }
+
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        this.dataStore.close();
     }
 
     private void toggleAppVersionShown()
@@ -175,11 +161,11 @@ public class MainActivity extends AppActivity
             toret = true;
         }
         else
-        if ( id == R.id.nav_settings ) {
+        /*if ( id == R.id.nav_settings ) {
             this.startActivity( new Intent( this, SettingsActivity.class ) );
             toret = true;
         }
-        else
+        else */
         if ( id == R.id.nav_import
           || id == R.id.action_import )
         {
@@ -265,9 +251,9 @@ public class MainActivity extends AppActivity
             {
                 final String URI_PATH_SEGMENT = uri.getLastPathSegment();
                 final InputStream fileIn = this.getContentResolver().openInputStream( uri );
-                final String FILE_EXT = Ofm.extractFileExt( URI_PATH_SEGMENT );
+                final String FILE_EXT = FileManager.extractFileExt( URI_PATH_SEGMENT );
 
-                if ( FILE_EXT.equalsIgnoreCase( EntitiesCache.getFileExtFor( Persistent.TypeId.Result ) ) )
+                if ( FILE_EXT.equalsIgnoreCase( FileManager.getFileExtFor( Persistent.TypeId.Result ) ) )
                 {
                     final String LBL_RESULT = this.getString( R.string.lblResult );
 
@@ -298,7 +284,7 @@ public class MainActivity extends AppActivity
                 if ( uri != null ) {
                     final String FILE_EXTENSION = MimeTypeMap.getFileExtensionFromUrl(
                             uri.toString().toLowerCase() );
-                    final String RES_FILE_EXT = EntitiesCache.getFileExtFor( Persistent.TypeId.Result ).toLowerCase();
+                    final String RES_FILE_EXT = FileManager.getFileExtFor( Persistent.TypeId.Result ).toLowerCase();
 
                     if ( FILE_EXTENSION.equals( "zip" )
                       || FILE_EXTENSION.equals( RES_FILE_EXT ) )
@@ -309,4 +295,6 @@ public class MainActivity extends AppActivity
                     }
                 }
             });
+
+    private Ofm dataStore;
 }

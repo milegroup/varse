@@ -30,13 +30,8 @@ public class Id {
     @Override
     public boolean equals(Object o)
     {
-        boolean toret = false;
-
-        if ( o instanceof Id ) {
-            return this.get() == ( (Id) o ).get();
-        }
-
-        return toret;
+        return o instanceof Id ID
+            && this.get() == ID.get();
     }
 
     /** @return true if the identifier is valid, false otherwise. */
@@ -83,7 +78,7 @@ public class Id {
         return ( nextFakeId -= 1 );
     }
 
-    private long id;
+    private final long id;
     private static long nextFakeId = START_CREATED_IDS + 1;
     private static long nextId = System.currentTimeMillis();
 }

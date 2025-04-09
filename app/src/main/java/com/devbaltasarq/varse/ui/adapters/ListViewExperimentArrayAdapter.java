@@ -14,6 +14,7 @@ import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.ui.ExperimentsActivity;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 /** Represents an adapter of the special items for the ListView of media files. */
 public class ListViewExperimentArrayAdapter extends ArrayAdapter<Experiment> {
@@ -44,7 +45,7 @@ public class ListViewExperimentArrayAdapter extends ArrayAdapter<Experiment> {
         final TextView LBL_EXPERIMENT_DESC = convertView.findViewById( R.id.lblExperimentDesc );
         final ExperimentsActivity CONTEXT = (ExperimentsActivity) ListViewExperimentArrayAdapter.this.getContext();
 
-        LBL_EXPERIMENT_DESC.setText( EXPR.toString() );
+        LBL_EXPERIMENT_DESC.setText( EXPR.getName() );
 
         BT_LAUNCH.setOnClickListener( (v) -> CONTEXT.launchExperiment( EXPR ) );
         BT_MODIFY.setOnClickListener( (v) -> CONTEXT.editExperiment( EXPR ) );

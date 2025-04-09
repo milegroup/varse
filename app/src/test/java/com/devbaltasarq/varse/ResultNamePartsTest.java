@@ -13,12 +13,10 @@ import java.util.Calendar;
 
 
 public class ResultNamePartsTest {
-    private static final long USR_ID = 909090;
     private static final long RES_ID = 787878;
     private static final long EXP_ID = 424242;
     private static final long DURATION = 180;
-    private static final String USR_NAME = "hal";
-    private static final String EXP_NAME = "manhattan";
+    private static final String EXPR_NAME = "manhattan";
     private static final Calendar TIME = Calendar.getInstance();
 
 
@@ -27,17 +25,18 @@ public class ResultNamePartsTest {
     {
         TIME.set( 1974, 7, 11 );
         time = TIME.getTimeInMillis();
+        REC = "rr01";
 
-        Result res = new Result(
+        final Result RES = new Result(
                 new Id( RES_ID ),
                 time,
                 DURATION,
-                "usr1",
-                new Experiment( new Id( EXP_ID ), EXP_NAME ),
-                null
+                REC,
+                new Experiment( new Id( EXP_ID ), EXPR_NAME ),
+                new Result.Event[ 0 ]
         );
 
-        resultName = res.buildResultName();
+        resultName = RES.buildName();
     }
 
     @Test
@@ -49,6 +48,25 @@ public class ResultNamePartsTest {
         );
     }
 
+    @Test
+    public void testResultPartExprId()
+    {
+        Assert.assertEquals(
+                EXP_ID,
+                Result.parseExprIdFromName( resultName )
+        );
+    }
+
+    @Test
+    public void testResultPartName()
+    {
+        Assert.assertEquals(
+                REC,
+                Result.parseRecFromName( resultName )
+        );
+    }
+
     private static long time;
     private static String resultName;
+    private static String REC;
 }

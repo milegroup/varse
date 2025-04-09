@@ -6,6 +6,7 @@ import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
 import com.devbaltasarq.varse.core.Ofm;
+import com.devbaltasarq.varse.core.ofm.FileManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -56,10 +57,10 @@ public class VideoGroup extends MediaGroup {
     {
         final File F = mact.getFile();
 
-        if ( !Ofm.extractFileExt( F ).isEmpty() ) {
-            if ( !MimeTools.isVideo( mact.getFile() ) ) {
-                throw new Error( mact.getFile() + " not a video." );
-            }
+        if ( !FileManager.extractFileExt( F ).isEmpty()
+          && !MimeTools.isVideo( mact.getFile() ) )
+        {
+            throw new Error( mact.getFile() + " not a video." );
         }
 
         super.add( mact );

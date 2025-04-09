@@ -23,6 +23,7 @@ import com.devbaltasarq.varse.core.bluetooth.BluetoothDeviceWrapper;
 import com.devbaltasarq.varse.core.bluetooth.BluetoothUtils;
 import com.devbaltasarq.varse.core.bluetooth.HRListenerActivity;
 import com.devbaltasarq.varse.core.bluetooth.ServiceConnectionWithStatus;
+import com.devbaltasarq.varse.core.ofm.FileManager;
 import com.devbaltasarq.varse.ui.AppActivity;
 
 import java.io.File;
@@ -108,7 +109,7 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         Log.d(LOG_TAG, "test UI finished, closed connections." );
     }
 
-    public void finish(Finish finishAction)
+    private void finish(Finish finishAction)
     {
         if ( finishAction == Finish.SAVE_AND_EXIT ) {
             this.showStatus( LOG_TAG, this.getString( R.string.msgExported ) );
@@ -182,12 +183,13 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
                 TIME.get( Calendar.HOUR ),
                 TIME.get( Calendar.MINUTE ),
                 TIME.get( Calendar.SECOND ) );
+        final FileManager F_MAN = this.ofm.getFileManager();
 
         try {
-            this.logInfoFile = this.ofm.createTempFile(
-                                "testhr-" + this.getBtDevice().getName() + "-",
-                                    STR_ISO_TIME );
-            this.logInfo = Ofm.openWriterFor( this.logInfoFile );
+            this.logInfoFile = F_MAN.createTempFile(
+                    "testhr-" + this.getBtDevice().getName() + "-",
+                    STR_ISO_TIME );
+            this.logInfo = FileManager.openWriterFor( this.logInfoFile );
             this.logInfo.write(
                     BluetoothDeviceWrapper.BeatInfo.getInfoHeader()
                     + System.lineSeparator() );
@@ -213,17 +215,20 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
 
         // Close writer
         if ( this.logInfo != null ) {
-            Ofm.close( this.logInfo );
+            FileManager.close( this.logInfo );
             this.logInfo = null;
         }
 
         // Save file
         if ( this.logInfoFile != null ) {
             if ( finishAction == Finish.SAVE_AND_EXIT ) {
-                this.ofm.saveToDownloads( this.logInfoFile, CSV_MIME_TYPE );
+                this.ofm.getFileManager()
+                        .export( this, this.logInfoFile, CSV_MIME_TYPE );
             }
 
-            this.logInfoFile.delete();
+            if ( !this.logInfoFile.delete() ) {
+                Log.e( LOG_TAG, "stopRecording(): failed to delete: " + this.logInfoFile );
+            }
             this.logInfoFile = null;
         }
 
