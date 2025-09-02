@@ -42,6 +42,8 @@ public final class Ofm {
     public static final String FIELD_TYPE_ID = Persistent.TypeId.FIELD;
     public static final String FIELD_ACTIVITIES = "activities";
     public static final String FIELD_NAME = "name";
+    public static final String FIELD_REC = "rec";
+    public static final String FIELD_EXPR_ID = "exprid";
 
     private static final String ZIP_MIME_TYPE = "application/zip";
 

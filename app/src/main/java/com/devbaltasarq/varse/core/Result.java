@@ -2,7 +2,6 @@ package com.devbaltasarq.varse.core;
 
 
 import com.devbaltasarq.varse.core.experiment.Tag;
-import com.devbaltasarq.varse.core.ofm.FileManager;
 
 import androidx.annotation.NonNull;
 import android.util.JsonReader;
@@ -517,15 +516,12 @@ public class Result extends Persistent {
     @Override
     public void writeToJSON(JsonWriter jsonWriter) throws IOException
     {
-        final String RESULT_NAME = this.buildName();
-
         this.writeIdToJSON( jsonWriter );
-        jsonWriter.name( Ofm.FIELD_NAME ).value( RESULT_NAME );
         jsonWriter.name( Ofm.FIELD_DATE ).value( this.getTime() );
         jsonWriter.name( Ofm.FIELD_TIME ).value( this.getDurationInMillis() );
-        jsonWriter.name( EXPERIMENT_ID_PART )
+        jsonWriter.name( Ofm.FIELD_EXPR_ID )
                     .value( this.getExperiment().getId().get() );
-        jsonWriter.name( REC_PART )
+        jsonWriter.name( Ofm.FIELD_REC )
                     .value( this.getRec() );
 
         jsonWriter.name( Ofm.FIELD_EVENTS ).beginArray();
@@ -542,21 +538,6 @@ public class Result extends Persistent {
         return this.durationInMillis;
     }
 
-    /** Returns the name for this result.
-      * (internal or file name).
-      * @return the name for this result.
-      * @see Result::buildNameWith
-      */
-    public String buildName()
-    {
-        return buildNameWith(
-                this.getId(),
-                this.getExperiment().getId(),
-                this.getExperiment().getName(),
-                this.getRec(),
-                this.getTime());
-    }
-
     @Override @NonNull
     public String toString()
     {
@@ -567,117 +548,11 @@ public class Result extends Persistent {
                         + ") (" + this.getRec() + ")";
     }
 
-    private static final String TIME_PART = "tm";
-    private static final String REC_PART = "rec";
-    private static final String EXPERIMENT_NAME_PART = "expr";
-    private static final String EXPERIMENT_ID_PART = "exprid";
-
-    /** The structure for file name and JSON's name inside. */
-    private static final String NAME_FORMAT =
-                    Id.FILE_NAME_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + Id.FILE_NAME_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + EXPERIMENT_NAME_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + EXPERIMENT_NAME_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + REC_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + REC_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + EXPERIMENT_ID_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + EXPERIMENT_ID_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + TIME_PART
-                    + FileManager.FILE_NAME_PART_SEPARATOR + "$" + TIME_PART
-                    + ".$" + FileManager.FIELD_EXT;
-
-    /** @return the name for a the corresponding result file.
-     * @param id The id of the result file.
-     * @param exprId The experiment id for the result data set file.
-     * @param experimentName the name of the experiment.
-     * @param rec the name of the record.
+    /** Retrieves a Result object from JSON.
+      * @param reader the reader to read the info from.
+      * @return a Result object.
+      * @throws JSONException if something goes wrong.
      */
-    public static String buildNameWith(Id id, Id exprId, String experimentName, String rec, long time)
-    {
-        return Result.NAME_FORMAT
-                .replace( "$" + FileManager.FIELD_EXT,
-                                            FileManager.getFileExtFor( Persistent.TypeId.Result ) )
-                .replace( "$" + Id.FILE_NAME_PART, id.toString() )
-                .replace( "$" + EXPERIMENT_ID_PART, exprId.toString() )
-                .replace( "$" + REC_PART, PlainStringEncoder.get().encode( rec ) )
-                .replace( "$" + TIME_PART, Long.toString( time ) )
-                .replace( "$" + EXPERIMENT_NAME_PART,
-                                            PlainStringEncoder.get().encode( experimentName ) );
-    }
-
-    /** @return an str part from the result's name.
-      * @param PART_NAME the part to look for.
-      */
-    private static String parseStrFromName(final String NAME, final String PART_NAME)
-    {
-        final String[] FILE_PARTS = NAME.split( "\\." );
-        final String[] PARTS = FILE_PARTS[ 0 ].split( FileManager.FILE_NAME_PART_SEPARATOR );
-        final int PARTS_LENGTH = PARTS.length;
-        String toret = "";
-
-        for(int i = 0; i < ( PARTS_LENGTH - 1 ); i += 2) {
-            final String PART = PARTS[ i ];
-
-            if ( PART.equals( PART_NAME ) ) {
-                toret = PARTS[ i + 1 ];
-                break;
-            }
-        }
-
-        if ( toret.isEmpty() ) {
-            throw new Error( "missing " + PART_NAME + " in result name: " + NAME );
-        }
-
-        return toret;
-    }
-
-    /** @return the result's time - date, reading it from its file name.
-      * @param RES_NAME the name of the result to extract the time from.
-      * @param PART_NAME the name of the part to extract.
-      */
-    private static long parseLongFromName(final String RES_NAME, final String PART_NAME)
-    {
-        String STR_TORET = parseStrFromName( RES_NAME, PART_NAME );
-        long toret = 0;
-
-        try {
-            toret = Long.parseLong( STR_TORET );
-        } catch(NumberFormatException exc)
-        {
-            throw new Error( "malformed result name looking for long, found: "
-                    + STR_TORET + "/" + RES_NAME );
-        }
-
-        return toret;
-    }
-
-    /** @return the result's experiment id, reading it from its name
-      *(NOT the file name, the name inside JSON).
-      * @param RES_NAME the name of the result to extract from.
-      */
-    public static long parseExprIdFromName(final String RES_NAME)
-    {
-        return parseLongFromName( RES_NAME, EXPERIMENT_ID_PART );
-    }
-
-    /** @return the result's time - date, reading it from its name
-      * (NOT the file name, the name inside JSON).
-      * @param resName the name of the result to extract the time from.
-      */
-    public static long parseTimeFromName(String resName)
-    {
-        return parseLongFromName( resName, TIME_PART );
-    }
-
-    /** @return the result's record, reading it from its name
-     * (NOT the file name, the name inside JSON).
-     * @param resName the name of the result to extract the time from.
-     */
-    public static String parseRecFromName(String resName)
-    {
-        return parseStrFromName( resName, REC_PART );
-    }
-
     public static Result fromJSON(Reader reader) throws JSONException
     {
         final JsonReader JSON_READER = new JsonReader( reader );
@@ -703,8 +578,8 @@ public class Result extends Persistent {
                     case Ofm.FIELD_NAME -> JSON_READER.nextString();
                     case Ofm.FIELD_TYPE_ID -> typeId = readTypeIdFromJson(JSON_READER);
                     case Id.FIELD -> id = readIdFromJSON(JSON_READER);
-                    case REC_PART -> rec = JSON_READER.nextString();
-                    case EXPERIMENT_ID_PART -> experimentId = readIdFromJSON(JSON_READER);
+                    case Ofm.FIELD_REC -> rec = JSON_READER.nextString();
+                    case Ofm.FIELD_EXPR_ID -> experimentId = readIdFromJSON(JSON_READER);
                     case Ofm.FIELD_EVENTS -> {
                         JSON_READER.beginArray();
                         while (JSON_READER.hasNext()) {

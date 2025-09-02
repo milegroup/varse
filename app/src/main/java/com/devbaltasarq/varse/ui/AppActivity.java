@@ -1,4 +1,8 @@
+// VARSE 2019/25 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.ui;
+
 
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -14,6 +18,7 @@ import android.widget.Spinner;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
 import com.devbaltasarq.varse.core.experiment.Tag;
+
 
 /** This activity has the capability of showing status messages through snackbars. */
 public abstract class AppActivity extends AppCompatActivity {

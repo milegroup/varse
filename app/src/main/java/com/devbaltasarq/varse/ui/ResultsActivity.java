@@ -1,4 +1,4 @@
-// VARSE 2019/23 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+// VARSE 2019/25 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
 
 
 package com.devbaltasarq.varse.ui;
@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 
@@ -44,7 +45,9 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -98,7 +101,7 @@ public class ResultsActivity extends AppActivity {
 
         try {
             this.loadExperimentsSpinner();
-            this.loadResults();
+            this.loadResultsListView();
         } catch(Error err)
         {
             final String IO_ERROR = this.getString( R.string.errIO );
@@ -136,17 +139,11 @@ public class ResultsActivity extends AppActivity {
         return;
     }
 
-    public void showResults(Result result)
+    public void launchResultViewer(Result result)
     {
-        try {
-            result = (Result) this.dataStore.retrieve( result.getId(), Persistent.TypeId.Result );
-
-            ResultViewerActivity.result = result;
-            final Intent GRPH_VIEWER_INTENT = new Intent( this, ResultViewerActivity.class );
-            this.startActivity( GRPH_VIEWER_INTENT );
-        } catch(IOException exc) {
-            this.showStatus(LOG_TAG, "unable to generate result data set" );
-        }
+        ResultViewerActivity.result = result;
+        final Intent GRPH_VIEWER_INTENT = new Intent( this, ResultViewerActivity.class );
+        this.startActivity( GRPH_VIEWER_INTENT );
     }
 
     public void exportResult(Result res)
@@ -176,7 +173,7 @@ public class ResultsActivity extends AppActivity {
             final Path PATH_DEST = PATH_ORG.resolveSibling( FILE_NAME );
 
             Files.move( PATH_ORG, PATH_DEST, REPLACE_EXISTING );
-            FMAN.export( this, PATH_DEST.toFile(), "text/csv" );
+            FMAN.export( this, PATH_DEST.toFile() );
         } catch(IOException exc) {
             this.showStatus( LOG_TAG,
                     this.getString( R.string.errExport )
@@ -199,7 +196,7 @@ public class ResultsActivity extends AppActivity {
                 final Result RESULT = (Result) this.dataStore.retrieve( res.getId(), Persistent.TypeId.Result );
 
                 this.dataStore.getFileManager().remove( RESULT );
-                this.loadResults();
+                this.loadResultsListView();
             } catch(IOException exc) {
                 final String ERR_MSG = this.getString( R.string.errDeleting );
                 Log.e( LOG_TAG, ERR_MSG + ": " + exc.getMessage() );
@@ -215,6 +212,7 @@ public class ResultsActivity extends AppActivity {
       * @return a String with the contents of the file.
       * @throws IOException if reading goes wrong.
       */
+    @NonNull
     private String readTextFromUri(Uri uri) throws IOException
     {
         final StringBuilder TORET = new StringBuilder();
@@ -243,7 +241,7 @@ public class ResultsActivity extends AppActivity {
         return TORET.toString();
     }
 
-    private void onImport(final String RAW_DATA)
+    private void onImport(@NonNull final String RAW_DATA)
     {
         final List<Integer> DATA = Stream.of( RAW_DATA.split( "\n" ) )
                                     .map( s -> Integer.valueOf( s.trim() ) )
@@ -332,7 +330,7 @@ public class ResultsActivity extends AppActivity {
     }
 
     /** Loads the results for the given experiment. */
-    private void loadResults()
+    private void loadResultsListView()
     {
         if ( experiment == null ) {
             return;
@@ -340,43 +338,32 @@ public class ResultsActivity extends AppActivity {
 
         final TextView LBL_NO_ENTRIES = this.findViewById( R.id.lblNoEntries );
         final ListView LV_RESULTS = this.findViewById( R.id.lvResultItems );
-        final List<EntityId> ALL_EXPR_RES = this.dataStore.getFileManager().
-                                                enumerateResultsForExperiment( experiment );
+        final List<EntityId> ALL_EXPR_RES_IDS =
+                                    this.dataStore.getFileManager().
+                                        enumerateResultsForExperiment( experiment );
 
-        // Sort by creation time, reversed (more recent before)
-        ALL_EXPR_RES.sort( (ent1, ent2) -> Long.compare(
-                Result.parseTimeFromName( ent2.getName() ),
-                Result.parseTimeFromName( ent1.getName() ) )
-        );
+        if ( !ALL_EXPR_RES_IDS.isEmpty() ) {
+            final List<Result> ALL_EXPR_RES = new ArrayList<>( ALL_EXPR_RES_IDS.size() );
 
-        // Prepare the list of experiments
-        final int NUM_RESULT_ENTRIES = ALL_EXPR_RES.size();
-        final Result[] RESULT_ENTRIES = new Result[ NUM_RESULT_ENTRIES ];
-
-        for(int i = 0; i < NUM_RESULT_ENTRIES; ++i) {
-            final EntityId ENT = ALL_EXPR_RES.get( i );
-            String rec = "";
-
+            // Sort by creation time, reversed (more recent before)
             try {
-                rec = Result.parseRecFromName( ENT.getName() );
-            } catch(Error e) {
-                // The record could not be parsed.
-                rec = "{rec}";
+                for(EntityId eid: ALL_EXPR_RES_IDS) {
+                    ALL_EXPR_RES.add(
+                            (Result) this.dataStore.
+                                            retrieve( eid.getId(), eid.getTypeId() ) );
+                }
+                ALL_EXPR_RES.sort( Comparator.comparingLong( Result::getTime ) );
+            } catch(IOException exc) {
+                this.showStatus( LOG_TAG, "error loading results: " + exc.getMessage() );
             }
 
-            RESULT_ENTRIES[ i ] =
-                        new Result( ENT.getId(),
-                                    Result.parseTimeFromName( ENT.getName() ),
-                                    0,
-                                    rec,
-                                    null, new Result.Event[ 0 ] );
-        }
+            // Prepare the list view
+            LV_RESULTS.setAdapter(
+                            new ListViewResultArrayAdapter(
+                                    this, ALL_EXPR_RES.toArray( new Result[ 0 ] ) ) );
 
-        // Prepare the list view
-        LV_RESULTS.setAdapter( new ListViewResultArrayAdapter(this, RESULT_ENTRIES ) );
+            // Show the experiments list (or maybe not).
 
-        // Show the experiments list (or maybe not).
-        if ( RESULT_ENTRIES.length > 0 ) {
             LBL_NO_ENTRIES.setVisibility( View.GONE );
             LV_RESULTS.setVisibility( View.VISIBLE );
         } else {
@@ -401,7 +388,7 @@ public class ResultsActivity extends AppActivity {
             throw new Error( "unable to retrieve experiment: " + exc.getMessage() );
         }
 
-        this.loadResults();
+        this.loadResultsListView();
     }
 
     private final ActivityResultLauncher<String[]> LAUNCH_FILE_PICKER =

@@ -1,4 +1,8 @@
+// VARSE 2019/25 (c) Baltasar for MILEGroup MIT License <baltasarq@uvigo.es>
+
+
 package com.devbaltasarq.varse.ui.adapters;
+
 
 import android.content.Context;
 import androidx.annotation.NonNull;
@@ -15,6 +19,7 @@ import com.devbaltasarq.varse.ui.ResultsActivity;
 
 import java.util.Calendar;
 import java.util.Locale;
+
 
 /** Represents an adapter of the special items for the ListView of Result objects. */
 public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
@@ -43,17 +48,17 @@ public class ListViewResultArrayAdapter extends ArrayAdapter<Result> {
         final ImageButton BT_SHOW_RESULTS = rowView.findViewById( R.id.btShowResult );
         final TextView LBL_EXPERIMENT_DESC = rowView.findViewById( R.id.lblResultDesc );
 
-        LBL_EXPERIMENT_DESC.setText( this.getResultDesc( CONTEXT, RES ) );
+        LBL_EXPERIMENT_DESC.setText( this.getResultDesc( RES ) );
 
         BT_DELETE_RESULT.setOnClickListener( (v) -> CONTEXT.deleteResult( RES ) );
         BT_EXPORT_RESULT.setOnClickListener( (v) -> CONTEXT.exportResult( RES ) );
-        BT_SHOW_RESULTS.setOnClickListener( (v) -> CONTEXT.showResults( RES ) );
+        BT_SHOW_RESULTS.setOnClickListener( (v) -> CONTEXT.launchResultViewer( RES ) );
 
         return rowView;
     }
 
     /** @return a shortcut to the result description. */
-    private String getResultDesc(Context context, Result result)
+    private String getResultDesc(Result result)
     {
         final Calendar LOCAL_DATE = Calendar.getInstance();
 

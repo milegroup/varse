@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Experiment;
 import com.devbaltasarq.varse.core.Id;
-import com.devbaltasarq.varse.core.Ofm;
 import com.devbaltasarq.varse.core.Persistent;
 import com.devbaltasarq.varse.core.PlainStringEncoder;
 import com.devbaltasarq.varse.core.Result;
@@ -95,7 +94,6 @@ public class FileManager implements AutoCloseable {
         return;
     }
 
-
     /** Builds the directory for the experiment's media.
      * @param p The experiment itself.
      * @return a File object for the experiment's media directory.
@@ -107,30 +105,9 @@ public class FileManager implements AutoCloseable {
                 buildMediaDirectoryNameFor( p ) );
     }
 
-    /** @return the file name this object will be saved with.
-     * @param p The data object to build the file name for.
-     */
-    public static String buildFileNameFor(Persistent p)
-    {
-        final Persistent.TypeId TYPE_ID = p.getTypeId();
-        String toret;
-
-        if ( TYPE_ID == Persistent.TypeId.Result ) {
-            final Result RES = (Result) p;
-
-            toret = Result.buildNameWith(
-                                RES.getId(),
-                                RES.getExperiment().getId(),
-                                RES.getExperiment().getName(),
-                                RES.getRec(),
-                                RES.getTime() );
-        } else {
-            toret = buildFileNameFor( p.getTypeId(), p.getId() );
-        }
-
-        return toret;
-    }
-
+    /** @return the absolute path to the given persistent: Result, Experiment...
+      * @param p the object to obtain the absolute path to.
+      */
     public File getAbsolutePathFor(Persistent p)
     {
         return new File( this.getDirDb(), FileManager.buildFileNameFor( p ) );
@@ -161,10 +138,16 @@ public class FileManager implements AutoCloseable {
 
             if ( FILE != null ) {
                 final String NAME = FILE.getName();
-                final Id RES_EXPR_ID = new Id( Result.parseExprIdFromName( NAME ) );
+                try {
+                    final Result RESULT = Result.fromJSON( openReaderFor( FILE ) );
+                    final Id RES_EXPR_ID = RESULT.getExperiment().getId();
 
-                if ( RES_EXPR_ID.equals( EXPR.getId() ) ) {
-                    TORET.put( RES_EID, FILE );
+                    if ( RES_EXPR_ID.equals( EXPR.getId() ) ) {
+                        TORET.put( RES_EID, FILE );
+                    }
+                } catch(JSONException | IOException exc) {
+                    Log.e( "fsm", "ERROR loading: " + NAME
+                                        + ": " + exc.getMessage() );
                 }
             }
         }
@@ -698,9 +681,17 @@ public class FileManager implements AutoCloseable {
     }
 
     private static final String REGULAR_FILE_FORMAT =
-            Id.FILE_NAME_PART
+                    Id.FILE_NAME_PART
                     + FILE_NAME_PART_SEPARATOR + "$" + Id.FILE_NAME_PART
                     + ".$" + FIELD_EXT;
+
+    /** @return the file name this object will be saved with.
+     * @param p The data object to build the file name for.
+     */
+    public static String buildFileNameFor(Persistent p)
+    {
+        return buildFileNameFor( p.getTypeId(), p.getId() );
+    }
 
     /** @return the file name for the an entity, given its id and type.
      * @param id The id object representing the if of the file.
@@ -851,7 +842,7 @@ public class FileManager implements AutoCloseable {
         return toret;
     }
 
-    public void export(final Activity ACT, final File FILE, final String MIME_TYPE)
+    public void export(final Activity ACT, final File FILE)
     {
         // Prepare
         final Intent SHARING_INTENT = new Intent( Intent.ACTION_SEND );

@@ -266,7 +266,7 @@ public class ExperimentsActivity extends AppActivity {
         try {
             final Experiment EXPR = (Experiment) this.mapping.retrieve( e.getId(), e.getTypeId() );
             TEMP_ZIP = DB.createZipForExperiment( EXPR );
-            FMAN.export( this, TEMP_ZIP, "application/zip" );
+            FMAN.export( this, TEMP_ZIP );
             this.showStatus( LOG_TAG,
                     this.getString( R.string.msgExported )
                             + ": " + LBL_EXPERIMENT

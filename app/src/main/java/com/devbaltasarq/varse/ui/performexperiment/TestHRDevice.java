@@ -37,7 +37,6 @@ import java.util.Locale;
   * The device is taken from the static attribute PerformExperimentActivity. */
 public class TestHRDevice extends AppActivity implements HRListenerActivity {
     private final static String LOG_TAG = TestHRDevice.class.getSimpleName();
-    private final static String CSV_MIME_TYPE = "text/csv";
     private enum Status {  INACTIVE, RECORDING, CANNOT_RECORD }
     private enum Finish{ EXIT, SAVE_AND_EXIT };
 
@@ -223,7 +222,7 @@ public class TestHRDevice extends AppActivity implements HRListenerActivity {
         if ( this.logInfoFile != null ) {
             if ( finishAction == Finish.SAVE_AND_EXIT ) {
                 this.ofm.getFileManager()
-                        .export( this, this.logInfoFile, CSV_MIME_TYPE );
+                        .export( this, this.logInfoFile );
             }
 
             if ( !this.logInfoFile.delete() ) {
