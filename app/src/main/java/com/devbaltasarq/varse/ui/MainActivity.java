@@ -189,6 +189,8 @@ public class MainActivity extends AppActivity
 
         if ( DRAWER.isDrawerOpen( GravityCompat.START ) ) {
             DRAWER.closeDrawer( GravityCompat.START );
+        } else {
+            this.finish();
         }
     }
 
