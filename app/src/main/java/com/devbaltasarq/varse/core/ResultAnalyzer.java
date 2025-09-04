@@ -743,7 +743,7 @@ public class ResultAnalyzer {
         float toret = 0;
 
         if ( SIGNAL_LEN > 0 ) {
-            final List<Float> DIFS_RR = new ArrayList<>( SIGNAL_LEN / 2 );
+            final List<Float> DIFS_RR = new ArrayList<>( SIGNAL_LEN - 1 );
 
             for (int i = 1; i < SIGNAL_LEN; i++) {
                 DIFS_RR.add( Math.abs( SIGNAL.get( i ) - SIGNAL.get( i - 1 ) ));
@@ -754,10 +754,12 @@ public class ResultAnalyzer {
             final int LEN_DIFFS_SIGNAL = DIFS_RR.size();
             int n = LEN_DIFFS_SIGNAL / 2;
 
-            if ( LEN_DIFFS_SIGNAL % 2 == 0 ) {
-                toret = ( DIFS_RR.get( n ) + DIFS_RR.get( n - 1 ) ) / 2;
-            } else {
-                toret = DIFS_RR.get( n );
+            if ( LEN_DIFFS_SIGNAL > 0 ) {
+                if ( LEN_DIFFS_SIGNAL % 2 == 0 ) {
+                    toret = ( DIFS_RR.get( n ) + DIFS_RR.get( n - 1 ) ) / 2;
+                } else {
+                    toret = DIFS_RR.get( n );
+                }
             }
         } else {
             Log.d( LOG_TAG, "MADRR == 0 since #signal == 0" );
