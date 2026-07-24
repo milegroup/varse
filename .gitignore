@@ -3,8 +3,9 @@ app/src/main/res/values/mail_auth.xml
 app/src/main/res/values/dropbox_token.xml
 design/dropbox_backup.md
 
-# Built application files
+# Executables
 *.apk
+*.aab
 *.ap_
 
 # Files for the ART/Dalvik VM
@@ -35,12 +36,15 @@ proguard/
 # Android Studio Navigation editor temp files
 .navigation/
 
-# Android Studio captures folder
+# Android Studio trash
 captures/
+.project
+.classpath
+.settings
 
 # Intellij
 *.iml
-.idea/
+.idea/*
 
 # Keystore files
 *.jks
