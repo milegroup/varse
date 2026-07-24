@@ -245,10 +245,9 @@ public class TestJsonConversionTests {
         final StringWriter STR_OUT = new StringWriter();
         final String RESULT_DESC_FMT = "{\"" + Id.FIELD + "\":$29871,\""
                 + Ofm.FIELD_TYPE_ID + "\":\"" + res1.getTypeId().toString() + "\","
-                + "\"" + Ofm.FIELD_NAME + "\":\"$29876\","
                 + "\"" + Ofm.FIELD_DATE + "\":$29872,"
                 + "\"" + Ofm.FIELD_TIME + "\":$29877,"
-                + "\"" + Ofm.FIELD_EXPERIMENT_ID + "\":$29874,"
+                + "\"" + Ofm.FIELD_EXPR_ID + "\":$29874,"
                 + "\"" + Ofm.FIELD_REC + "\":\"$29875\","
                 + "\"" + Ofm.FIELD_EVENTS + "\":[$29873]}";
 
@@ -282,7 +281,6 @@ public class TestJsonConversionTests {
                     .replace( "$29873", EVENTS_DESC_FMT )
                     .replace( "$29874", res1.getExperiment().getId().toString() )
                     .replace( "$29875", res1.getRec() )
-                    .replace( "$29876", res1.buildResultName() )
                     .replace( "$29877", Long.toString( res1.getDurationInMillis() ) );
 
             res1.toJSON( STR_OUT );
@@ -304,7 +302,7 @@ public class TestJsonConversionTests {
                 + "\"" + Ofm.FIELD_NAME + "\":\"$29876\","
                 + "\"" + Ofm.FIELD_DATE + "\":$29872,"
                 + "\"" + Ofm.FIELD_TIME + "\":$29877,"
-                + "\"" + Ofm.FIELD_EXPERIMENT_ID + "\":$29874,"
+                + "\"" + Ofm.FIELD_EXPR_ID + "\":$29874,"
                 + "\"" + Ofm.FIELD_REC + "\":\"$29875\","
                 + "\"" + Ofm.FIELD_EVENTS + "\":[$29873]}";
 
@@ -337,7 +335,6 @@ public class TestJsonConversionTests {
                 .replace( "$29873", EVENTS_DESC_FMT )
                 .replace( "$29874", res1.getExperiment().getId().toString() )
                 .replace( "$29875", res1.getRec() )
-                .replace( "$29876", res1.buildResultName() )
                 .replace( "$29877", Long.toString( res1.getDurationInMillis() ) );
 
         final StringReader STR_IN = new StringReader( RES_DESC );
