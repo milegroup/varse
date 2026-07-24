@@ -8,12 +8,14 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.companion.AssociationInfo;
 import android.companion.AssociationRequest;
 import android.companion.BluetoothLeDeviceFilter;
 import android.companion.CompanionDeviceManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.net.MacAddress;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,6 +38,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.IntentCompat;
 
 import com.devbaltasarq.varse.R;
 import com.devbaltasarq.varse.core.Duration;
@@ -257,10 +260,31 @@ public class PerformExperimentActivity extends AppActivity {
             if ( resultCode == RESULT_OK
               && data != null )
             {
-                final ScanResult SCAN_RESULT =
-                        data.getParcelableExtra( CompanionDeviceManager.EXTRA_DEVICE );
-                if ( SCAN_RESULT != null) {
-                    this.onDeviceFound( SCAN_RESULT.getDevice() );
+                BluetoothDevice device = null;
+
+                if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ) {
+                    final AssociationInfo ASSOC_INFO = data.getParcelableExtra(
+                            CompanionDeviceManager.EXTRA_ASSOCIATION,
+                            AssociationInfo.class );
+
+                    if ( ASSOC_INFO != null ) {
+                        final MacAddress MAC = ASSOC_INFO.getDeviceMacAddress();
+
+                        if ( MAC != null ) {
+                            device = this.bluetoothAdapter.getRemoteDevice( MAC.toString() );
+                        }
+                    }
+                } else {
+                    final ScanResult SCAN_RESULT = data.getParcelableExtra(
+                                            CompanionDeviceManager.EXTRA_DEVICE );
+
+                    if ( SCAN_RESULT != null ) {
+                        device = SCAN_RESULT.getDevice();
+                    }
+                }
+
+                if ( device != null) {
+                    this.onDeviceFound( device );
                 } else {
                     Log.d( LOG_TAG, "device: found but was null" );
                 }
