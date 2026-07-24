@@ -92,9 +92,9 @@
             android:name=".ui.showresult.ResultViewerActivity"
             android:label="@string/lblResults"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".ui.SettingsActivity"
+        <!-- <activity android:name=".ui.SettingsActivity"
             android:label="@string/action_settings"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar" /> -->
         <activity android:name=".ui.TemplatesActivity"
             android:label="@string/lblTemplates"
             android:theme="@style/AppTheme.NoActionBar" />
